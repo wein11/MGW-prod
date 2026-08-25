@@ -49,7 +49,9 @@ sellos/artistas, marketplace de servicios, jueces ponderados con artista invitad
 ## Modelo de dominio
 
 ### Módulo `users`
-- `User`: id, email, passwordHash, displayName, role (`PRODUCER` | `ARTIST`), city, createdAt.
+- `User`: id, email, passwordHash, displayName, role (`PRODUCER` | `ARTIST`), city, isAdmin
+  (boolean, default false — habilita crear challenges; no es un rol nuevo, solo un flag),
+  createdAt.
 - `ProducerProfile` (1:1 con User si role=PRODUCER): genres, bpmRange, experienceLevel,
   musicScore (derivado, no se persiste como fuente de verdad — se calcula desde `challenges`).
 - `ArtistProfile` (1:1 con User si role=ARTIST): genres, bio.
@@ -66,8 +68,9 @@ sellos/artistas, marketplace de servicios, jueces ponderados con artista invitad
 - `Challenge`: id, title, genre, bpm, key, theme, deadline, createdAt.
 - `Submission`: id, challengeId (FK Challenge), producerId (FK User), audioUrl, submittedAt.
 - `Vote`: id, submissionId (FK Submission), voterId (FK User), score (1–10), comment (opcional).
-- Music Score: no es una tabla — se calcula (suma de puntos derivados del promedio de votos
-  por submission) al pedir el ranking o el perfil.
+- Music Score: no es una tabla — se calcula al pedir el ranking o el perfil, así: cada
+  `Submission` tiene un puntaje = promedio de sus `Vote.score` (1–10); el Music Score del
+  producer = suma de los puntajes de todas sus submissions en todos los challenges.
 
 Regla de dependencia entre módulos: `marketplace` y `challenges` solo referencian `User` por
 FK, nunca al revés — así `users` no conoce a los otros dos módulos.
