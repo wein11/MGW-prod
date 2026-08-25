@@ -18,7 +18,14 @@ alcance a lo que sí lo es y es defendible con el stack impuesto, dejando el res
 (matching avanzado, monetización, marketplace de servicios) para una versión posterior fuera
 de la materia.
 
-## Restricciones del TPO (no negociables)
+## Restricciones del TPO (según la consigna vigente al 2026-08-25)
+
+**Estas restricciones vienen del profesor y pueden cambiar durante la cursada** (el stack
+exigido, las tecnologías obligatorias, o los requisitos mínimos de cada etapa). Este spec
+refleja la consigna conocida hoy — si el profesor anuncia un cambio (ej. cambia el framework,
+agrega/saca un requisito, o define Spring Security como obligatorio), hay que revisar este
+documento y las secciones afectadas antes de seguir implementando esa parte. No tratar nada acá
+como definitivo más allá de lo que efectivamente comunique la cátedra en cada clase.
 
 - Java + Spring (framework fijado por la cátedra), SQL, comunicación HTTP, API cliente-servidor.
 - Etapa 1: solo backend, demostrable con herramientas HTTP (Postman/curl), corre en localhost.
@@ -216,6 +223,9 @@ endpoints de su módulo — sirve como prueba de funcionamiento y como guión pa
 
 ## Preguntas abiertas / a confirmar
 
+- **Seguimiento continuo:** después de cada clase, chequear si el profesor cambió algo de la
+  consigna (stack, requisitos obligatorios, fechas) y actualizar este spec antes de seguir
+  implementando la parte afectada.
 - Repartición concreta de módulos entre Santiago, Mateo y Paolo — pendiente, a definir por el
   grupo después de este diseño.
 - Fechas límite de Etapa 1 y Etapa 2 — aún no confirmadas por la cátedra.
