@@ -6,7 +6,7 @@
 
 **Architecture:** Single Maven/Spring Boot project at the repo root (`projects/mgw-prod/`), matching the exact stack the cátedra's own Clase 3 skeleton generated (see `facultad/aplicaciones-interactivas/clases/2026-08-20-clase-03/demo/pom.xml`): Spring Boot 4.1.0, Java 21, Lombok. Package root is `com.mgwprod`.
 
-**Tech Stack:** Java 21, Spring Boot 4.1.0 (`spring-boot-starter-webmvc`, `spring-boot-starter-data-jpa`), MySQL 8 (`com.mysql:mysql-connector-j`), Lombok, Maven.
+**Tech Stack:** Java 21, Spring Boot 4.1.0 (`spring-boot-starter-webmvc`, `spring-boot-starter-data-jpa`), MySQL 9 (`com.mysql:mysql-connector-j`), Lombok, Maven.
 
 ## Global Constraints
 
