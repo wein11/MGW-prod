@@ -160,9 +160,12 @@ Spring Data JPA sobre MySQL (localhost:3306, mismas credenciales/convención que
 ## Autenticación
 
 Auth casera simple, sin Spring Security: tabla `Session` con token generado al hacer login,
-password hasheada (BCrypt). Se eligió así porque Spring Security es sustancialmente más
-avanzado que lo visto hasta Clase 3 — si la cátedra lo cubre más adelante en la cursada, migrar
-a Spring Security queda como mejora post-TPO, no bloqueante para la entrega.
+password hasheada con SHA-256 + salt usando solo `java.security.MessageDigest`/`SecureRandom`
+del JDK (sin BCrypt ni `spring-security-crypto` — se descartó esa opción al planificar para no
+sumar ninguna dependencia de seguridad externa al esqueleto que generó la cátedra en Clase 3).
+Se eligió auth casera en general porque Spring Security es sustancialmente más avanzado que lo
+visto hasta Clase 3 — si la cátedra lo cubre más adelante en la cursada, migrar a Spring
+Security queda como mejora post-TPO, no bloqueante para la entrega.
 
 ## Checkout / transacciones
 
