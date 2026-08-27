@@ -65,12 +65,14 @@ sellos/artistas, marketplace de servicios, jueces ponderados con artista invitad
 - `ArtistProfile` (1:1 con User si role=ARTIST): genres, bio.
 - `Session`: id, userId, token, expiresAt — soporte de la auth casera.
 
-### Módulo `marketplace`
+### Módulo `catalog`
 - `Beat`: id, producerId (FK User), title, genre, bpm, key, price, audioUrl (link externo tipo
   SoundCloud/Drive), createdAt.
-- `CartItem`: id, artistId (FK User), beatId (FK Beat), addedAt.
+
+### Módulo `orders`
+- `CartItem`: id, artistId (FK User), beatId (FK Beat, del módulo `catalog`), addedAt.
 - `Order`: id, artistId (FK User), totalAmount, status (`PAID`), createdAt.
-- `OrderItem`: id, orderId (FK Order), beatId (FK Beat), priceAtPurchase.
+- `OrderItem`: id, orderId (FK Order), beatId (FK Beat, del módulo `catalog`), priceAtPurchase.
 
 ### Módulo `challenges`
 - `Challenge`: id, title, genre, bpm, key, theme, deadline, createdAt.
@@ -80,8 +82,10 @@ sellos/artistas, marketplace de servicios, jueces ponderados con artista invitad
   `Submission` tiene un puntaje = promedio de sus `Vote.score` (1–10); el Music Score del
   producer = suma de los puntajes de todas sus submissions en todos los challenges.
 
-Regla de dependencia entre módulos: `marketplace` y `challenges` solo referencian `User` por
-FK, nunca al revés — así `users` no conoce a los otros dos módulos.
+Regla de dependencia entre módulos: `catalog` y `challenges` solo referencian `User` por FK,
+nunca al revés. `orders` referencia tanto `User` (`users`) como `Beat` (`catalog`) — es
+esperable, ya que "comprar" necesariamente depende de "qué hay para comprar" — pero nunca al
+revés: ni `users` ni `catalog` conocen `orders`.
 
 ## Endpoints
 
@@ -94,10 +98,12 @@ necesaria más allá de "es el formato de facto para APIs REST con Spring").
 - `GET /api/users/{id}` — perfil público.
 - `PUT /api/users/{id}` — editar perfil propio.
 
-**`marketplace`**
+**`catalog`**
 - `GET /api/beats` — catálogo (filtros: genre, bpm).
 - `POST /api/beats` — publicar beat (rol PRODUCER).
 - `GET /api/beats/{id}` — detalle.
+
+**`orders`**
 - `POST /api/cart/items` — agregar al carrito.
 - `DELETE /api/cart/items/{id}` — quitar del carrito.
 - `GET /api/cart` — ver carrito.
@@ -117,16 +123,21 @@ Códigos HTTP estándar: 200/201 éxito, 400 validación, 401 no autenticado, 40
 
 ## Arquitectura y capas
 
-Monolito Spring Boot (un `pom.xml`, un `mvn spring-boot:run`, una base MySQL), tres paquetes
-verticales — cada uno dueño de un integrante:
+Monolito Spring Boot (un `pom.xml`, un `mvn spring-boot:run`, una base MySQL), cuatro paquetes
+verticales — cada uno dueño de un integrante (Santiago, Mateo, Paolo, Dani):
 
 ```
 com.mgwprod.users/{controller,service,repository,model,dto}
-com.mgwprod.marketplace/{controller,service,repository,model,dto}
+com.mgwprod.catalog/{controller,service,repository,model,dto}
+com.mgwprod.orders/{controller,service,repository,model,dto}
 com.mgwprod.challenges/{controller,service,repository,model,dto}
 ```
 
-Responsabilidad de cada capa (misma estructura en los 3 paquetes):
+`catalog` y `orders` reemplazan al `marketplace` original del diseño del 25/08 — se partió en
+dos (2026-08-27) al sumarse un 4to integrante (Dani Gariboldi), ya que era el módulo con más
+superficie (4 entidades entre los dos: `Beat`, `CartItem`, `Order`, `OrderItem`).
+
+Responsabilidad de cada capa (misma estructura en los 4 paquetes):
 
 - **Controller**: solo HTTP. Mapea JSON → DTO, valida con `@Valid`, llama al Service, devuelve
   `ResponseEntity<T>`. Nunca toca la Entity ni el Repository directamente.
@@ -162,11 +173,12 @@ Spring Data JPA sobre MySQL (localhost:3306, mismas credenciales/convención que
 que ya no se usa el patrón DAO ("No se usa más el modelo arquitectónico DAO. Responde a ORM.")
 — la apuesta por JPA fue la correcta, sin necesidad de ningún cambio acá.
 
-⚠️ **Conflicto pendiente de resolver:** la misma Clase 4 enseñó `application.properties` con
-`spring.jpa.hibernate.ddl-auto=none` (esquema manual, evitando que Hibernate cree/modifique
-tablas solo) — nuestro bootstrap (ya en `main`) usa `ddl-auto=update`, que nunca fue contenido
-de clase. Decidir con Santiago si se migra a `none` + scripts SQL manuales antes de avanzar con
-más módulos.
+**Resuelto (2026-08-27):** se migró a `spring.jpa.hibernate.ddl-auto=none`, tal cual lo enseñó
+Clase 4 — Hibernate ya no crea ni modifica tablas. El esquema se mantiene a mano en
+`docs/db/schema.sql`: cada tarea que agrega una entidad nueva suma ahí su(s) `CREATE TABLE`, y
+quien la implemente corre ese script contra su MySQL local antes de levantar la app o probar
+manualmente contra la base real (los tests automatizados con Mockito/`@WebMvcTest` no la
+necesitan, solo las corridas manuales con `mvn spring-boot:run`/Postman).
 
 ## Autenticación
 
@@ -191,7 +203,8 @@ HTML5/CSS3/JavaScript plano, sin frameworks, organizado por página según el mi
 módulos:
 
 - `users`: `login.html`, `register.html`, `profile.html`.
-- `marketplace`: `catalog.html`, `cart.html`, `orders.html`.
+- `catalog`: `catalog.html`.
+- `orders`: `cart.html`, `orders.html`.
 - `challenges`: `challenges.html`, `challenge-detail.html`, `ranking.html`.
 
 Un `api.js` compartido envuelve `fetch()`, agrega el token de sesión (guardado en
@@ -228,9 +241,10 @@ cliente-servidor se mantiene aunque ambos vivan en el mismo proceso/deploy.
 | 12 | Separación negocio/datos/comunicación | Ídem punto 1 |
 | 13 | Tiempo real | Spring Boot embebido (Tomcat), sin batch/async |
 
-**Setup técnico:** un proyecto Maven (`spring-boot-starter-web`, `spring-boot-starter-data-jpa`,
-`mysql-connector-j`, `spring-boot-starter-validation`), paquetes
-`com.mgwprod.{users,marketplace,challenges}.{controller,service,repository,model,dto}`.
+**Setup técnico:** un proyecto Maven (`spring-boot-starter-webmvc`, `spring-boot-starter-data-jpa`,
+`mysql-connector-j`, `spring-boot-starter-validation`, Lombok — Spring Boot 4.1.0, igual que el
+esqueleto de Clase 3), paquetes
+`com.mgwprod.{users,catalog,orders,challenges}.{controller,service,repository,model,dto}`.
 
 **Demo de Etapa 1:** cada integrante arma una colección de Postman (o archivo `.http`) para los
 endpoints de su módulo — sirve como prueba de funcionamiento y como guión para el oral.
@@ -240,8 +254,8 @@ endpoints de su módulo — sirve como prueba de funcionamiento y como guión pa
 - **Seguimiento continuo:** después de cada clase, chequear si el profesor cambió algo de la
   consigna (stack, requisitos obligatorios, fechas) y actualizar este spec antes de seguir
   implementando la parte afectada.
-- Repartición concreta de módulos entre Santiago, Mateo y Paolo — pendiente, a definir por el
-  grupo después de este diseño.
+- Repartición concreta de los 4 módulos (`users`, `catalog`, `orders`, `challenges`) entre
+  Santiago, Mateo, Paolo y Dani — pendiente, a definir por el grupo.
 - Fechas límite de Etapa 1 y Etapa 2 — aún no confirmadas por la cátedra.
 - Si Spring Security se cubre en clases posteriores, evaluar migrar la auth casera.
 - Documentación de endpoints como Swagger/OpenAPI vs. Markdown manual — queda como stretch

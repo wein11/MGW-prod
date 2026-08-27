@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement the `users` module end to end for Etapa 1 — registration, login, and profile view/edit — as a self-contained vertical slice (Controller→Service→Repository→Entity) that `marketplace` and `challenges` can depend on for authentication.
+**Goal:** Implement the `users` module end to end for Etapa 1 — registration, login, and profile view/edit — as a self-contained vertical slice (Controller→Service→Repository→Entity) that `catalog`, `orders`, and `challenges` can depend on for authentication.
 
 **Architecture:** Spring Data JPA entities + `JpaRepository` interfaces, a `Service` layer holding all business rules, `@RestController`s exposing the endpoints from the design spec, and a homemade session-token auth (no Spring Security) enforced by a `HandlerInterceptor`. Errors flow through a shared `@RestControllerAdvice` in a new `common` package.
 
@@ -15,8 +15,9 @@
 - Password hashing: **SHA-256 + random salt, using only `java.security.MessageDigest`/`SecureRandom` from the JDK** — no BCrypt, no `spring-security-crypto`, no Spring Security. This deviates from the design spec's casual mention of "BCrypt" as an example; the actual implementation is JDK-only so we don't add a dependency beyond the cátedra's own skeleton. Functionally equivalent for the TPO's purposes (salted, one-way hash, verifiable).
 - Spring Boot 4.1.0 uses `@MockitoBean` (package `org.springframework.test.context.bean.override.mockito.MockitoBean`) for mocking beans in slice tests — **not** the older, deprecated `@MockBean`. If `mvn test` fails to resolve this import, that's a signal the actual Spring Boot version in `pom.xml` differs from 4.1.0; check with whoever set up bootstrap.
 - Auth is stateless-token based: `Authorization: Bearer <token>` header, validated against a `Session` table. The interceptor **does not** reject requests with no `Authorization` header — it only rejects a header that's present but invalid/expired. Whether an endpoint requires auth at all is each controller's own decision (checked via the `userId` request attribute being null or not).
-- Every entity relationship crosses modules only via `User` FK (per the design spec's module dependency rule) — `marketplace`/`challenges` will store a `producerId`/`artistId` `Long` column pointing at `users`, never the other way around.
-- All commands assume working directory `projects/mgw-prod/`. Continue on `feature/etapa1-bootstrap`, or create `feature/etapa1-users-module` from it — either is fine as long as it's not `main`.
+- Every entity relationship crosses modules only via `User` FK (per the design spec's module dependency rule) — `catalog`/`orders`/`challenges` will store a `producerId`/`artistId` `Long` column pointing at `users`, never the other way around.
+- **Schema is manual, not Hibernate auto-DDL:** `application.properties` sets `spring.jpa.hibernate.ddl-auto=none` (changed 2026-08-27 to match Clase 4's "Arquitectura Spring" — the cátedra teaches hand-written schema, not Spring auto-creating/modifying tables). Every task that introduces a new `@Entity` must add its `CREATE TABLE` to `docs/db/schema.sql` (one shared, growing file — later tasks append, they don't replace earlier statements) and run it against the local database before any manual verification. The plan's automated tests (Mockito/`@WebMvcTest`) never touch a real database, so this only matters for `mvn spring-boot:run` and the manual curl/Postman checks.
+- All commands assume working directory `projects/mgw-prod/`. Create a new branch (e.g. `feature/etapa1-users-module`) from `main` — the bootstrap plan's branch was already merged and deleted.
 
 ---
 
@@ -888,11 +889,76 @@ mvn test -Dtest=AuthControllerTest
 
 Expected: PASS, 3 tests green.
 
-- [ ] **Step 17: Run the full suite and commit**
+- [ ] **Step 17: Create the SQL schema for this task's entities**
+
+Since `ddl-auto=none` (see Global Constraints), Hibernate won't create these tables — you have
+to. Create `docs/db/schema.sql` at the project root with:
+
+```sql
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    display_name VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    city VARCHAR(255),
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at DATETIME NOT NULL
+);
+
+CREATE TABLE producer_profiles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    genres VARCHAR(255),
+    bpm_min INT,
+    bpm_max INT,
+    experience_level VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE artist_profiles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    genres VARCHAR(255),
+    bio TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+Run it against your local database:
+
+```bash
+mysql -u root -padmin mgw_prod < docs/db/schema.sql
+```
+
+- [ ] **Step 18: Manual smoke test against the real database**
+
+The automated tests (Mockito/`@WebMvcTest`) never touch MySQL, so this is the first real proof
+the entity mappings and the schema actually agree. Start the app and register a real user:
+
+```bash
+mvn spring-boot:run
+```
+
+In another terminal:
+
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"productor@test.com","password":"supersecret123","displayName":"DJ Test","role":"PRODUCER"}'
+```
+
+Expected: `201 Created` with a JSON body containing the new user's `id`, `email`, `role`, and a
+`producerProfile` object. If you get a SQL error instead (e.g. "Table 'mgw_prod.users' doesn't
+exist"), Step 17's script didn't run against the right database — check
+`spring.datasource.url` in `application.properties` matches the database you ran it against.
+Stop the app (Ctrl+C) once confirmed.
+
+- [ ] **Step 19: Run the full suite and commit**
 
 ```bash
 mvn test
-git add src/main/java/com/mgwprod/common src/main/java/com/mgwprod/users src/test/java/com/mgwprod/users
+git add src/main/java/com/mgwprod/common src/main/java/com/mgwprod/users src/test/java/com/mgwprod/users docs/db/schema.sql
 git commit -m "feat(users): add registration endpoint with role-specific profile creation"
 ```
 
@@ -1299,11 +1365,55 @@ mvn test -Dtest=AuthControllerTest
 
 Expected: PASS, 5 tests green (3 register + 2 login).
 
-- [ ] **Step 12: Run the full suite and commit**
+- [ ] **Step 12: Append the `sessions` table to the SQL schema**
+
+Add this to the end of `docs/db/schema.sql` (don't recreate the earlier tables — this appends):
+
+```sql
+CREATE TABLE sessions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+Run just the new statement against your local database:
+
+```bash
+mysql -u root -padmin mgw_prod <<'EOF'
+CREATE TABLE sessions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+EOF
+```
+
+- [ ] **Step 13: Manual smoke test — login against the real database**
+
+```bash
+mvn spring-boot:run
+```
+
+In another terminal (reusing the user registered in Task 1's smoke test):
+
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"productor@test.com","password":"supersecret123"}'
+```
+
+Expected: `200 OK` with a JSON body containing a `token`. Stop the app (Ctrl+C) once confirmed.
+
+- [ ] **Step 14: Run the full suite and commit**
 
 ```bash
 mvn test
-git add src/main/java/com/mgwprod/users src/test/java/com/mgwprod/users
+git add src/main/java/com/mgwprod/users src/test/java/com/mgwprod/users docs/db/schema.sql
 git commit -m "feat(users): add login endpoint with session token issuance"
 ```
 
@@ -1627,7 +1737,7 @@ git commit -m "feat(users): add public user profile endpoint"
 
 **Interfaces:**
 - Consumes: `SessionRepository.findByToken` (Task 2), `UserService.getById` internals (Task 3).
-- Produces: `request.getAttribute("userId"): Long` and `request.getAttribute("userRole"): String` — **this is what `marketplace` and `challenges` controllers read to know who's authenticated**, once this interceptor is registered globally. It never rejects a request with no `Authorization` header; each protected controller must itself check whether `userId` came back null and respond accordingly (see `updateUser` below for the pattern to copy).
+- Produces: `request.getAttribute("userId"): Long` and `request.getAttribute("userRole"): String` — **this is what `catalog`, `orders`, and `challenges` controllers read to know who's authenticated**, once this interceptor is registered globally. It never rejects a request with no `Authorization` header; each protected controller must itself check whether `userId` came back null and respond accordingly (see `updateUser` below for the pattern to copy).
 
 - [ ] **Step 1: Write the failing test for the interceptor**
 
@@ -2064,3 +2174,5 @@ git commit -m "feat(users): add session auth interceptor and protected profile u
 **Placeholder scan:** No TBD/TODO. The one deliberately-marked placeholder (`SessionRepositoryPlaceholder` in Task 1 Step 9) is explicitly called out as something to delete, not a gap to fill in later — it exists only to make clear which mock fields belong to Task 1 versus Task 2.
 
 **Type consistency:** `UserResponse`, `ProducerProfileDto`, `ArtistProfileDto` constructor signatures are identical everywhere they're used across Tasks 1, 3, and 4. `AuthService`'s constructor signature changes once, in Task 2 Step 6, with the corresponding test update in Task 2 Step 4 — both edited together so they never drift. `SessionAuthInterceptor.USER_ID_ATTRIBUTE`/`USER_ROLE_ATTRIBUTE` constants are defined once (Task 4) and are the single source of truth other modules should reference by name, not by re-typing the string `"userId"`.
+
+**Post-Clase 4 update (2026-08-27):** added Task 1 Steps 17-18 and Task 2 Steps 12-13 to create/append `docs/db/schema.sql` and manually smoke-test against the real database — required once `ddl-auto` switched from `update` to `none`. Every subsequent `CREATE TABLE` in this plan appends to the same file rather than replacing it, so Task 2's schema step explicitly says not to recreate Task 1's tables.
