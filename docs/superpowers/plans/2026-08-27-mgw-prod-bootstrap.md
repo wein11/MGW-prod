@@ -169,11 +169,20 @@ server.port=8080
 spring.datasource.url=jdbc:mysql://localhost:3306/mgw_prod
 spring.datasource.username=root
 spring.datasource.password=admin
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+# Esquema manual (docs/db/schema.sql) — Hibernate no crea/modifica tablas.
+# Convención confirmada en Clase 4 (2026-08-27, "Arquitectura Spring").
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=false
 spring.jpa.properties.hibernate.format_sql=true
 ```
+
+> **Nota post-Clase 4 (2026-08-27):** este contenido se actualizó después de que la cátedra
+> enseñara `ddl-auto=none` — la versión original de este plan (ejecutada el 27/08, antes de
+> Clase 4) usaba `ddl-auto=update`. El código real en `main` ya refleja este cambio. A partir
+> de acá, cada entidad nueva necesita su `CREATE TABLE` manual en `docs/db/schema.sql` (ver el
+> plan de `users` module).
 
 - [ ] **Step 5: Write the main application class**
 
