@@ -9,10 +9,8 @@ Trabajo Práctico Obligatorio de la materia **Aplicaciones Interactivas (UADE)**
 individual aunque el trabajo sea grupal — cada integrante debe poder explicar y defender su
 módulo.
 
-⚠️ El split de módulos en "Arquitectura" abajo todavía asume 3 personas (uno por paquete
-vertical) — con Dani sumado hay que decidir cómo se reparte el 4to lugar (partir un módulo
-existente en dos, o sumar una pieza de alcance nueva) antes de que el grupo empiece a tomar
-módulos.
+Split de módulos (4, uno por integrante) — ver "Arquitectura" abajo: `marketplace` se partió en
+`catalog` + `orders` el 2026-08-27 para darle a Dani un módulo propio.
 
 Es la primera versión (académica) de una idea de producto más grande: una plataforma de
 descubrimiento y colaboración musical para productores/artistas emergentes, con challenges
@@ -47,21 +45,20 @@ si no está). Dos etapas obligatorias:
 - **Persistencia vía Spring Data JPA/`Repository`, nunca DAO manual** — confirmado por Clase 4
   (2026-08-27, "Arquitectura Spring"): la cátedra dice explícitamente que ya no se usa el
   patrón DAO. Nuestra elección de JPA desde el diseño inicial (25/08) resultó ser la correcta.
-- ⚠️ **Pendiente de resolver:** Clase 4 enseñó `spring.jpa.hibernate.ddl-auto=none` (esquema
-  manual, sin que Hibernate cree/modifique tablas) — nuestro bootstrap (ya en `main`) usa
-  `ddl-auto=update`. Decidir con Santiago si migramos a `none` + scripts SQL manuales antes de
-  seguir con más módulos. Detalle completo en la memoria del hub
-  (`facultad-aplicaciones-interactivas.md`, update 2026-08-27).
+- **Esquema manual, no auto-DDL** — `spring.jpa.hibernate.ddl-auto=none` (cambiado el 27/08
+  desde `update`, para coincidir con lo enseñado en Clase 4). Las tablas se crean a mano vía
+  `docs/db/schema.sql`: cada módulo que agrega una entidad nueva suma ahí su `CREATE TABLE`.
 - Este proyecto **no sigue el stack default del hub** (`FastAPI/React/Postgres`) porque el
   stack viene impuesto por la cátedra.
 
 ## Arquitectura
 
-Monolito Spring Boot, un solo `pom.xml`, tres paquetes verticales — cada uno dueño de un
+Monolito Spring Boot, un solo `pom.xml`, cuatro paquetes verticales — cada uno dueño de un
 integrante, cada uno con su propio Controller/Service/Repository/Entity:
 
 - `com.mgwprod.users` — perfiles, roles (PRODUCER/ARTIST), auth.
-- `com.mgwprod.marketplace` — catálogo de beats, carrito, checkout (e-commerce core).
+- `com.mgwprod.catalog` — publicar/listar beats.
+- `com.mgwprod.orders` — carrito, checkout (depende de `catalog` para el FK a `Beat`).
 - `com.mgwprod.challenges` — challenges, submissions, votos, ranking/Music Score.
 
 Detalle completo en `docs/superpowers/specs/2026-08-25-mgw-prod-tpo-design.md`.
