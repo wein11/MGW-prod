@@ -1,0 +1,97 @@
+package com.mgwprod.users.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mgwprod.users.dto.ProducerProfileDto;
+import com.mgwprod.users.dto.RegisterRequest;
+import com.mgwprod.users.dto.UserResponse;
+import com.mgwprod.users.exception.EmailAlreadyExistsException;
+import com.mgwprod.users.model.Role;
+import com.mgwprod.users.service.AuthService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import java.time.Instant;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+class AuthControllerTest {
+
+    @Autowired
+    private WebApplicationContext context;
+
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private AuthService authService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+        objectMapper = new ObjectMapper();
+    }
+
+    @Test
+    void registerReturns201WithUserData() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("productor@test.com");
+        request.setPassword("supersecret123");
+        request.setDisplayName("DJ Test");
+        request.setRole(Role.PRODUCER);
+
+        UserResponse response = new UserResponse(1L, "productor@test.com", "DJ Test",
+                Role.PRODUCER, null, false, Instant.now(),
+                new ProducerProfileDto(null, null, null, null), null);
+
+        when(authService.register(any(RegisterRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("productor@test.com"))
+                .andExpect(jsonPath("$.role").value("PRODUCER"));
+    }
+
+    @Test
+    void registerReturns400WhenEmailIsBlank() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("");
+        request.setPassword("supersecret123");
+        request.setDisplayName("DJ Test");
+        request.setRole(Role.PRODUCER);
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void registerReturns409WhenEmailAlreadyExists() throws Exception {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("duplicado@test.com");
+        request.setPassword("supersecret123");
+        request.setDisplayName("DJ Test");
+        request.setRole(Role.ARTIST);
+
+        when(authService.register(any(RegisterRequest.class)))
+                .thenThrow(new EmailAlreadyExistsException("duplicado@test.com"));
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+    }
+}
