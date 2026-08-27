@@ -1,8 +1,9 @@
 # mgw-prod — Diseño TPO Aplicaciones Interactivas
 
-**Fecha:** 2026-08-25
-**Autores:** Santiago Weinbinder, Mateo Galluzo, Paolo Maffei
-**Estado:** aprobado por Santiago, pendiente de repartir módulos con el resto del grupo
+**Fecha:** 2026-08-25 (actualizado 2026-08-27 — grupo pasó a ser de 4)
+**Autores:** Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi
+**Estado:** aprobado por Santiago, pendiente de repartir módulos con el resto del grupo (el
+split de 3 paquetes verticales de este spec necesita revisarse para 4 personas)
 
 ## Contexto y origen
 
@@ -32,7 +33,7 @@ como definitivo más allá de lo que efectivamente comunique la cátedra en cada
 - Etapa 2: frontend en HTML5/CSS3/JavaScript plano (sin frameworks), consume la API de Etapa 1.
 - Arquitectura por capas, CRUD, persistencia SQL, validación de entrada, manejo de errores,
   documentación básica de endpoints.
-- Grupo de 3 (Santiago, Mateo, Paolo); evaluación individual — cada integrante debe poder
+- Grupo de 4 (Santiago, Mateo, Paolo, Dani); evaluación individual — cada integrante debe poder
   explicar y justificar arquitectura, patrones, y el código de su parte.
 - Solo se usa lo visto en clase. Estado real de la cursada al momento de este diseño: Clase 1
   (Java básico), Clase 2 (JDBC/Maven + patrón DAO manual), Clase 3 (esqueleto Spring Boot
@@ -156,6 +157,16 @@ Spring Data JPA sobre MySQL (localhost:3306, mismas credenciales/convención que
 - Las preguntas guía del TPO comparan explícitamente DAO vs ORM — usar JPA da material real
   para responder "¿DAO y ORM son lo mismo?" (el `Repository` de Spring Data implementa el
   patrón DAO, pero generado por el framework en vez de escrito a mano).
+
+**Confirmado en Clase 4 (2026-08-27, "Arquitectura Spring"):** la cátedra dijo explícitamente
+que ya no se usa el patrón DAO ("No se usa más el modelo arquitectónico DAO. Responde a ORM.")
+— la apuesta por JPA fue la correcta, sin necesidad de ningún cambio acá.
+
+⚠️ **Conflicto pendiente de resolver:** la misma Clase 4 enseñó `application.properties` con
+`spring.jpa.hibernate.ddl-auto=none` (esquema manual, evitando que Hibernate cree/modifique
+tablas solo) — nuestro bootstrap (ya en `main`) usa `ddl-auto=update`, que nunca fue contenido
+de clase. Decidir con Santiago si se migra a `none` + scripts SQL manuales antes de avanzar con
+más módulos.
 
 ## Autenticación
 
