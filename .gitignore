@@ -2,9 +2,6 @@ graphify-out/
 
 target/
 *.class
-.mvn/
-mvnw
-mvnw.cmd
 
 .idea/
 *.iml
