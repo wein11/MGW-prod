@@ -4,9 +4,15 @@ Hereda el contexto global de `../../CLAUDE.md` y `~/.claude/CLAUDE.md`.
 
 ## Qué es este proyecto
 
-Trabajo Práctico Obligatorio de la materia **Aplicaciones Interactivas (UADE)**. Grupo de 3:
-**Santiago Weinbinder, Mateo Galluzo, Paolo Maffei**. La evaluación es individual aunque el
-trabajo sea grupal — cada integrante debe poder explicar y defender su módulo.
+Trabajo Práctico Obligatorio de la materia **Aplicaciones Interactivas (UADE)**. Grupo de 4:
+**Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi**. La evaluación es
+individual aunque el trabajo sea grupal — cada integrante debe poder explicar y defender su
+módulo.
+
+⚠️ El split de módulos en "Arquitectura" abajo todavía asume 3 personas (uno por paquete
+vertical) — con Dani sumado hay que decidir cómo se reparte el 4to lugar (partir un módulo
+existente en dos, o sumar una pieza de alcance nueva) antes de que el grupo empiece a tomar
+módulos.
 
 Es la primera versión (académica) de una idea de producto más grande: una plataforma de
 descubrimiento y colaboración musical para productores/artistas emergentes, con challenges
@@ -38,6 +44,14 @@ si no está). Dos etapas obligatorias:
   Spring Boot (sin CORS, un solo puerto).
 - **Auth:** casera simple (password hasheada + token de sesión en tabla propia). Nada de
   Spring Security todavía — se suma solo si la cátedra lo enseña más adelante.
+- **Persistencia vía Spring Data JPA/`Repository`, nunca DAO manual** — confirmado por Clase 4
+  (2026-08-27, "Arquitectura Spring"): la cátedra dice explícitamente que ya no se usa el
+  patrón DAO. Nuestra elección de JPA desde el diseño inicial (25/08) resultó ser la correcta.
+- ⚠️ **Pendiente de resolver:** Clase 4 enseñó `spring.jpa.hibernate.ddl-auto=none` (esquema
+  manual, sin que Hibernate cree/modifique tablas) — nuestro bootstrap (ya en `main`) usa
+  `ddl-auto=update`. Decidir con Santiago si migramos a `none` + scripts SQL manuales antes de
+  seguir con más módulos. Detalle completo en la memoria del hub
+  (`facultad-aplicaciones-interactivas.md`, update 2026-08-27).
 - Este proyecto **no sigue el stack default del hub** (`FastAPI/React/Postgres`) porque el
   stack viene impuesto por la cátedra.
 
