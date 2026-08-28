@@ -1,10 +1,13 @@
 package com.mgwprod.users.controller;
 
 import tools.jackson.databind.ObjectMapper;
+import com.mgwprod.users.dto.LoginRequest;
+import com.mgwprod.users.dto.LoginResponse;
 import com.mgwprod.users.dto.ProducerProfileDto;
 import com.mgwprod.users.dto.RegisterRequest;
 import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.EmailAlreadyExistsException;
+import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.service.AuthService;
 import org.junit.jupiter.api.Test;
@@ -85,5 +88,36 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void loginReturns200WithToken() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("productor@test.com");
+        request.setPassword("supersecret123");
+
+        LoginResponse response = new LoginResponse("some-token-123", 1L, "DJ Test", Role.PRODUCER);
+
+        when(authService.login(any(LoginRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("some-token-123"));
+    }
+
+    @Test
+    void loginReturns401WithWrongCredentials() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("productor@test.com");
+        request.setPassword("wrongpassword");
+
+        when(authService.login(any(LoginRequest.class))).thenThrow(new InvalidCredentialsException());
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
     }
 }
