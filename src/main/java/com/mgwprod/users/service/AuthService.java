@@ -14,6 +14,7 @@ import com.mgwprod.users.repository.ProducerProfileRepository;
 import com.mgwprod.users.repository.UserRepository;
 import com.mgwprod.users.security.PasswordHasher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -33,6 +34,7 @@ public class AuthService {
         this.passwordHasher = passwordHasher;
     }
 
+    @Transactional
     public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException(request.getEmail());

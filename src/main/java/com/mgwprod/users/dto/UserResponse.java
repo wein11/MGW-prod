@@ -1,5 +1,6 @@
 package com.mgwprod.users.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mgwprod.users.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class UserResponse {
     private final String displayName;
     private final Role role;
     private final String city;
+    @JsonProperty("isAdmin")
     private final boolean isAdmin;
     private final Instant createdAt;
     private final ProducerProfileDto producerProfile;
