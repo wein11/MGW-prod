@@ -19,6 +19,7 @@ import com.mgwprod.users.repository.SessionRepository;
 import com.mgwprod.users.repository.UserRepository;
 import com.mgwprod.users.security.PasswordHasher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -47,6 +48,7 @@ public class AuthService {
         this.passwordHasher = passwordHasher;
     }
 
+    @Transactional
     public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException(request.getEmail());
