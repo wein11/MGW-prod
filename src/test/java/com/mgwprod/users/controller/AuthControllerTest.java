@@ -3,12 +3,10 @@ package com.mgwprod.users.controller;
 import tools.jackson.databind.ObjectMapper;
 import com.mgwprod.users.dto.LoginRequest;
 import com.mgwprod.users.dto.LoginResponse;
-import com.mgwprod.users.dto.ProducerProfileDto;
-import com.mgwprod.users.dto.RegisterRequest;
-import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.EmailAlreadyExistsException;
 import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.Role;
+import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.SessionRepository;
 import com.mgwprod.users.service.AuthService;
 import org.junit.jupiter.api.Test;
@@ -43,58 +41,55 @@ class AuthControllerTest {
 
     @Test
     void registerReturns201WithUserData() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("productor@test.com");
-        request.setPassword("supersecret123");
-        request.setDisplayName("DJ Test");
-        request.setRole(Role.PRODUCER);
+        User response = new User();
+        response.setId(1L);
+        response.setEmail("productor@test.com");
+        response.setDisplayName("DJ Test");
+        response.setRole(Role.PRODUCER);
+        response.setCreatedAt(Instant.now());
 
-        UserResponse response = new UserResponse(1L, "productor@test.com", "DJ Test",
-                Role.PRODUCER, null, false, Instant.now(),
-                new ProducerProfileDto(null, null, null, null), null);
+        when(authService.register(any(User.class))).thenReturn(response);
 
-        when(authService.register(any(RegisterRequest.class))).thenReturn(response);
+        String requestJson = """
+                {"email":"productor@test.com","password":"supersecret123","displayName":"DJ Test","role":"PRODUCER"}
+                """;
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(requestJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("productor@test.com"))
                 .andExpect(jsonPath("$.role").value("PRODUCER"))
-                // Regression check: the admin flag must serialize once, as "isAdmin"
-                // (see UserResponse field/getter name merge), not duplicated as "admin".
                 .andExpect(jsonPath("$.isAdmin").value(false))
-                .andExpect(jsonPath("$.admin").doesNotExist());
+                .andExpect(jsonPath("$.admin").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.password").doesNotExist());
     }
 
     @Test
     void registerReturns400WhenEmailIsBlank() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("");
-        request.setPassword("supersecret123");
-        request.setDisplayName("DJ Test");
-        request.setRole(Role.PRODUCER);
+        String requestJson = """
+                {"email":"","password":"supersecret123","displayName":"DJ Test","role":"PRODUCER"}
+                """;
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(requestJson))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void registerReturns409WhenEmailAlreadyExists() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("duplicado@test.com");
-        request.setPassword("supersecret123");
-        request.setDisplayName("DJ Test");
-        request.setRole(Role.ARTIST);
-
-        when(authService.register(any(RegisterRequest.class)))
+        when(authService.register(any(User.class)))
                 .thenThrow(new EmailAlreadyExistsException("duplicado@test.com"));
+
+        String requestJson = """
+                {"email":"duplicado@test.com","password":"supersecret123","displayName":"DJ Test","role":"ARTIST"}
+                """;
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(requestJson))
                 .andExpect(status().isConflict());
     }
 

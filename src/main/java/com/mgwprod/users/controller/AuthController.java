@@ -2,8 +2,7 @@ package com.mgwprod.users.controller;
 
 import com.mgwprod.users.dto.LoginRequest;
 import com.mgwprod.users.dto.LoginResponse;
-import com.mgwprod.users.dto.RegisterRequest;
-import com.mgwprod.users.dto.UserResponse;
+import com.mgwprod.users.model.User;
 import com.mgwprod.users.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,9 +23,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
-        UserResponse response = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<User> register(@Valid @RequestBody User user) {
+        User created = authService.register(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PostMapping("/login")
