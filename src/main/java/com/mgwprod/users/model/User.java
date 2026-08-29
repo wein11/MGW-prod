@@ -2,8 +2,6 @@ package com.mgwprod.users.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -73,8 +71,7 @@ public class User {
     // from isAdmin() -> "admin") so both merge into one Jackson property before being
     // renamed to "isAdmin" by @JsonProperty. Otherwise Jackson serializes it twice
     // (once as "admin" from the getter, once as "isAdmin" from the annotation).
-    @JsonProperty(value = "isAdmin", defaultValue = "false")
-    @JsonSetter(nulls = Nulls.SKIP)
+    @JsonProperty("isAdmin")
     @Column(name = "is_admin", nullable = false)
     private boolean admin = false;
 
