@@ -1,6 +1,8 @@
 package com.mgwprod.users.service;
 
+import com.mgwprod.users.dto.UpdateUserRequest;
 import com.mgwprod.users.dto.UserResponse;
+import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.ProducerProfile;
 import com.mgwprod.users.model.Role;
@@ -65,5 +67,34 @@ class UserServiceTest {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.getById(99L));
+    }
+
+    @Test
+    void updateChangesDisplayNameForOwner() {
+        User user = new User();
+        user.setId(1L);
+        user.setDisplayName("Old Name");
+        user.setRole(Role.PRODUCER);
+        user.setCreatedAt(Instant.now());
+
+        ProducerProfile profile = new ProducerProfile();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(producerProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
+
+        UpdateUserRequest request = new UpdateUserRequest();
+        request.setDisplayName("New Name");
+
+        UserResponse response = userService.update(1L, 1L, request);
+
+        assertEquals("New Name", response.getDisplayName());
+    }
+
+    @Test
+    void updateThrowsForbiddenWhenEditingSomeoneElse() {
+        UpdateUserRequest request = new UpdateUserRequest();
+        request.setDisplayName("New Name");
+
+        assertThrows(ForbiddenOperationException.class, () -> userService.update(1L, 2L, request));
     }
 }
