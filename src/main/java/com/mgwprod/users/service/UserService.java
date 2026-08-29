@@ -14,6 +14,7 @@ import com.mgwprod.users.repository.ArtistProfileRepository;
 import com.mgwprod.users.repository.ProducerProfileRepository;
 import com.mgwprod.users.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
@@ -30,12 +31,14 @@ public class UserService {
         this.artistProfileRepository = artistProfileRepository;
     }
 
+    @Transactional(readOnly = true)
     public UserResponse getById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
         return toResponse(user);
     }
 
+    @Transactional
     public UserResponse update(Long targetUserId, Long requestingUserId, UpdateUserRequest request) {
         if (!targetUserId.equals(requestingUserId)) {
             throw new ForbiddenOperationException("No podés editar el perfil de otro usuario");
