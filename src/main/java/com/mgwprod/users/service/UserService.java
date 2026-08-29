@@ -2,7 +2,9 @@ package com.mgwprod.users.service;
 
 import com.mgwprod.users.dto.ArtistProfileDto;
 import com.mgwprod.users.dto.ProducerProfileDto;
+import com.mgwprod.users.dto.UpdateUserRequest;
 import com.mgwprod.users.dto.UserResponse;
+import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.ArtistProfile;
 import com.mgwprod.users.model.ProducerProfile;
@@ -31,6 +33,53 @@ public class UserService {
     public UserResponse getById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
+        return toResponse(user);
+    }
+
+    public UserResponse update(Long targetUserId, Long requestingUserId, UpdateUserRequest request) {
+        if (!targetUserId.equals(requestingUserId)) {
+            throw new ForbiddenOperationException("No podés editar el perfil de otro usuario");
+        }
+
+        User user = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new UserNotFoundException(targetUserId));
+
+        if (request.getDisplayName() != null) {
+            user.setDisplayName(request.getDisplayName());
+        }
+        if (request.getCity() != null) {
+            user.setCity(request.getCity());
+        }
+        userRepository.save(user);
+
+        if (user.getRole() == Role.PRODUCER) {
+            ProducerProfile profile = producerProfileRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new IllegalStateException("Producer sin perfil: " + user.getId()));
+            if (request.getGenres() != null) {
+                profile.setGenres(request.getGenres());
+            }
+            if (request.getBpmMin() != null) {
+                profile.setBpmMin(request.getBpmMin());
+            }
+            if (request.getBpmMax() != null) {
+                profile.setBpmMax(request.getBpmMax());
+            }
+            if (request.getExperienceLevel() != null) {
+                profile.setExperienceLevel(request.getExperienceLevel());
+            }
+            producerProfileRepository.save(profile);
+        } else {
+            ArtistProfile profile = artistProfileRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new IllegalStateException("Artist sin perfil: " + user.getId()));
+            if (request.getGenres() != null) {
+                profile.setGenres(request.getGenres());
+            }
+            if (request.getBio() != null) {
+                profile.setBio(request.getBio());
+            }
+            artistProfileRepository.save(profile);
+        }
+
         return toResponse(user);
     }
 

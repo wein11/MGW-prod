@@ -9,6 +9,7 @@ import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.EmailAlreadyExistsException;
 import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.Role;
+import com.mgwprod.users.repository.SessionRepository;
 import com.mgwprod.users.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private SessionRepository sessionRepository;
 
     @Test
     void registerReturns201WithUserData() throws Exception {
