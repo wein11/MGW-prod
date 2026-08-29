@@ -2,8 +2,9 @@ package com.mgwprod.users.controller;
 
 import com.mgwprod.users.dto.UpdateUserRequest;
 import com.mgwprod.users.dto.UserResponse;
-import com.mgwprod.users.exception.ForbiddenOperationException;
+import com.mgwprod.users.exception.UnauthenticatedException;
 import com.mgwprod.users.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,9 +31,9 @@ public class UserController {
     @PutMapping("/{id}")
     public UserResponse updateUser(@PathVariable Long id,
                                     @RequestAttribute(name = "userId", required = false) Long requestingUserId,
-                                    @RequestBody UpdateUserRequest request) {
+                                    @Valid @RequestBody UpdateUserRequest request) {
         if (requestingUserId == null) {
-            throw new ForbiddenOperationException("Necesitás iniciar sesión para editar un perfil");
+            throw new UnauthenticatedException("Necesitás iniciar sesión para editar un perfil");
         }
         return userService.update(id, requestingUserId, request);
     }

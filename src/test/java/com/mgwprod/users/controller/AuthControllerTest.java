@@ -60,7 +60,11 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("productor@test.com"))
-                .andExpect(jsonPath("$.role").value("PRODUCER"));
+                .andExpect(jsonPath("$.role").value("PRODUCER"))
+                // Regression check: the admin flag must serialize once, as "isAdmin"
+                // (see UserResponse field/getter name merge), not duplicated as "admin".
+                .andExpect(jsonPath("$.isAdmin").value(false))
+                .andExpect(jsonPath("$.admin").doesNotExist());
     }
 
     @Test

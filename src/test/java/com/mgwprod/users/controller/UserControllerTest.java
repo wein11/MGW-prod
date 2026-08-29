@@ -81,13 +81,13 @@ class UserControllerTest {
     }
 
     @Test
-    void updateUserReturns403WhenNoUserIdAttribute() throws Exception {
+    void updateUserReturns401WhenNoUserIdAttribute() throws Exception {
         UpdateUserRequest request = new UpdateUserRequest();
         request.setDisplayName("Nuevo Nombre");
 
         mockMvc.perform(put("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 }
