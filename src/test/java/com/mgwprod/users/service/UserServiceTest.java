@@ -1,7 +1,5 @@
 package com.mgwprod.users.service;
 
-import com.mgwprod.users.dto.UpdateUserRequest;
-import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.ArtistProfile;
@@ -21,6 +19,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 class UserServiceTest {
@@ -98,31 +97,86 @@ class UserServiceTest {
     }
 
     @Test
-    void updateChangesDisplayNameForOwner() {
+    void updateUserChangesDisplayNameForOwner() {
         User user = new User();
         user.setId(1L);
         user.setDisplayName("Old Name");
         user.setRole(Role.PRODUCER);
         user.setCreatedAt(Instant.now());
 
-        ProducerProfile profile = new ProducerProfile();
-
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(producerProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UpdateUserRequest request = new UpdateUserRequest();
+        User request = new User();
         request.setDisplayName("New Name");
 
-        UserResponse response = userService.update(1L, 1L, request);
+        User response = userService.updateUser(1L, 1L, request);
 
         assertEquals("New Name", response.getDisplayName());
     }
 
     @Test
-    void updateThrowsForbiddenWhenEditingSomeoneElse() {
-        UpdateUserRequest request = new UpdateUserRequest();
+    void updateUserThrowsForbiddenWhenEditingSomeoneElse() {
+        User request = new User();
         request.setDisplayName("New Name");
 
-        assertThrows(ForbiddenOperationException.class, () -> userService.update(1L, 2L, request));
+        assertThrows(ForbiddenOperationException.class, () -> userService.updateUser(1L, 2L, request));
+    }
+
+    @Test
+    void updateProducerProfileChangesGenresForOwner() {
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.PRODUCER);
+
+        ProducerProfile profile = new ProducerProfile();
+        profile.setGenres("Old");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(producerProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
+        when(producerProfileRepository.save(any(ProducerProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProducerProfile request = new ProducerProfile();
+        request.setGenres("RKT,Trap");
+
+        ProducerProfile response = userService.updateProducerProfile(1L, 1L, request);
+
+        assertEquals("RKT,Trap", response.getGenres());
+    }
+
+    @Test
+    void updateProducerProfileThrowsForbiddenWhenUserIsNotProducer() {
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.ARTIST);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        ProducerProfile request = new ProducerProfile();
+        request.setGenres("RKT");
+
+        assertThrows(ForbiddenOperationException.class,
+                () -> userService.updateProducerProfile(1L, 1L, request));
+    }
+
+    @Test
+    void updateArtistProfileChangesBioForOwner() {
+        User user = new User();
+        user.setId(2L);
+        user.setRole(Role.ARTIST);
+
+        ArtistProfile profile = new ArtistProfile();
+        profile.setBio("Old bio");
+
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        when(artistProfileRepository.findByUserId(2L)).thenReturn(Optional.of(profile));
+        when(artistProfileRepository.save(any(ArtistProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ArtistProfile request = new ArtistProfile();
+        request.setBio("New bio");
+
+        ArtistProfile response = userService.updateArtistProfile(2L, 2L, request);
+
+        assertEquals("New bio", response.getBio());
     }
 }

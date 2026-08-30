@@ -1,9 +1,5 @@
 package com.mgwprod.users.service;
 
-import com.mgwprod.users.dto.ArtistProfileDto;
-import com.mgwprod.users.dto.ProducerProfileDto;
-import com.mgwprod.users.dto.UpdateUserRequest;
-import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.ArtistProfile;
@@ -49,13 +45,8 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse update(Long targetUserId, Long requestingUserId, UpdateUserRequest request) {
-        if (!targetUserId.equals(requestingUserId)) {
-            throw new ForbiddenOperationException("No podés editar el perfil de otro usuario");
-        }
-
-        User user = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new UserNotFoundException(targetUserId));
+    public User updateUser(Long targetUserId, Long requestingUserId, User request) {
+        User user = requireOwnership(targetUserId, requestingUserId);
 
         if (request.getDisplayName() != null) {
             user.setDisplayName(request.getDisplayName());
@@ -63,56 +54,56 @@ public class UserService {
         if (request.getCity() != null) {
             user.setCity(request.getCity());
         }
-        userRepository.save(user);
-
-        if (user.getRole() == Role.PRODUCER) {
-            ProducerProfile profile = producerProfileRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new IllegalStateException("Producer sin perfil: " + user.getId()));
-            if (request.getGenres() != null) {
-                profile.setGenres(request.getGenres());
-            }
-            if (request.getBpmMin() != null) {
-                profile.setBpmMin(request.getBpmMin());
-            }
-            if (request.getBpmMax() != null) {
-                profile.setBpmMax(request.getBpmMax());
-            }
-            if (request.getExperienceLevel() != null) {
-                profile.setExperienceLevel(request.getExperienceLevel());
-            }
-            producerProfileRepository.save(profile);
-        } else {
-            ArtistProfile profile = artistProfileRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new IllegalStateException("Artist sin perfil: " + user.getId()));
-            if (request.getGenres() != null) {
-                profile.setGenres(request.getGenres());
-            }
-            if (request.getBio() != null) {
-                profile.setBio(request.getBio());
-            }
-            artistProfileRepository.save(profile);
-        }
-
-        return toResponse(user);
+        return userRepository.save(user);
     }
 
-    private UserResponse toResponse(User user) {
-        ProducerProfileDto producerDto = null;
-        ArtistProfileDto artistDto = null;
-
-        if (user.getRole() == Role.PRODUCER) {
-            ProducerProfile profile = producerProfileRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new IllegalStateException("Producer sin perfil: " + user.getId()));
-            producerDto = new ProducerProfileDto(profile.getGenres(), profile.getBpmMin(),
-                    profile.getBpmMax(), profile.getExperienceLevel());
-        } else {
-            ArtistProfile profile = artistProfileRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new IllegalStateException("Artist sin perfil: " + user.getId()));
-            artistDto = new ArtistProfileDto(profile.getGenres(), profile.getBio());
+    @Transactional
+    public ProducerProfile updateProducerProfile(Long targetUserId, Long requestingUserId, ProducerProfile request) {
+        User user = requireOwnership(targetUserId, requestingUserId);
+        if (user.getRole() != Role.PRODUCER) {
+            throw new ForbiddenOperationException("Este usuario no tiene perfil de productor");
         }
 
-        return new UserResponse(user.getId(), user.getEmail(), user.getDisplayName(),
-                user.getRole(), user.getCity(), user.isAdmin(), user.getCreatedAt(),
-                producerDto, artistDto);
+        ProducerProfile profile = producerProfileRepository.findByUserId(targetUserId)
+                .orElseThrow(() -> new IllegalStateException("Producer sin perfil: " + targetUserId));
+        if (request.getGenres() != null) {
+            profile.setGenres(request.getGenres());
+        }
+        if (request.getBpmMin() != null) {
+            profile.setBpmMin(request.getBpmMin());
+        }
+        if (request.getBpmMax() != null) {
+            profile.setBpmMax(request.getBpmMax());
+        }
+        if (request.getExperienceLevel() != null) {
+            profile.setExperienceLevel(request.getExperienceLevel());
+        }
+        return producerProfileRepository.save(profile);
+    }
+
+    @Transactional
+    public ArtistProfile updateArtistProfile(Long targetUserId, Long requestingUserId, ArtistProfile request) {
+        User user = requireOwnership(targetUserId, requestingUserId);
+        if (user.getRole() != Role.ARTIST) {
+            throw new ForbiddenOperationException("Este usuario no tiene perfil de artista");
+        }
+
+        ArtistProfile profile = artistProfileRepository.findByUserId(targetUserId)
+                .orElseThrow(() -> new IllegalStateException("Artist sin perfil: " + targetUserId));
+        if (request.getGenres() != null) {
+            profile.setGenres(request.getGenres());
+        }
+        if (request.getBio() != null) {
+            profile.setBio(request.getBio());
+        }
+        return artistProfileRepository.save(profile);
+    }
+
+    private User requireOwnership(Long targetUserId, Long requestingUserId) {
+        if (!targetUserId.equals(requestingUserId)) {
+            throw new ForbiddenOperationException("No podés editar el perfil de otro usuario");
+        }
+        return userRepository.findById(targetUserId)
+                .orElseThrow(() -> new UserNotFoundException(targetUserId));
     }
 }
