@@ -32,10 +32,20 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponse getById(Long userId) {
-        User user = userRepository.findById(userId)
+    public User getById(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
-        return toResponse(user);
+    }
+
+    @Transactional(readOnly = true)
+    public Object getProfile(Long userId) {
+        User user = getById(userId);
+        if (user.getRole() == Role.PRODUCER) {
+            return producerProfileRepository.findByUserId(userId)
+                    .orElseThrow(() -> new IllegalStateException("Producer sin perfil: " + userId));
+        }
+        return artistProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalStateException("Artist sin perfil: " + userId));
     }
 
     @Transactional

@@ -3,6 +3,7 @@ package com.mgwprod.users.controller;
 import com.mgwprod.users.dto.UpdateUserRequest;
 import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.UnauthenticatedException;
+import com.mgwprod.users.model.User;
 import com.mgwprod.users.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,8 +25,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public UserResponse getUser(@PathVariable Long id) {
+    public User getUser(@PathVariable Long id) {
         return userService.getById(id);
+    }
+
+    @GetMapping("/{id}/profile")
+    public Object getProfile(@PathVariable Long id) {
+        return userService.getProfile(id);
     }
 
     @PutMapping("/{id}")

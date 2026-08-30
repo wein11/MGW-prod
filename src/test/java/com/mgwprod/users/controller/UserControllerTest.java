@@ -5,7 +5,9 @@ import com.mgwprod.users.dto.ProducerProfileDto;
 import com.mgwprod.users.dto.UpdateUserRequest;
 import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.UserNotFoundException;
+import com.mgwprod.users.model.ProducerProfile;
 import com.mgwprod.users.model.Role;
+import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.SessionRepository;
 import com.mgwprod.users.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -42,9 +44,11 @@ class UserControllerTest {
 
     @Test
     void getUserReturns200WithUserData() throws Exception {
-        UserResponse response = new UserResponse(1L, "productor@test.com", "DJ Test",
-                Role.PRODUCER, "Buenos Aires", false, Instant.now(),
-                new ProducerProfileDto("RKT", 90, 140, "intermediate"), null);
+        User response = new User();
+        response.setId(1L);
+        response.setDisplayName("DJ Test");
+        response.setRole(Role.PRODUCER);
+        response.setCity("Buenos Aires");
 
         when(userService.getById(1L)).thenReturn(response);
 
@@ -59,6 +63,18 @@ class UserControllerTest {
 
         mockMvc.perform(get("/api/users/99"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getProfileReturns200WithProducerProfile() throws Exception {
+        ProducerProfile profile = new ProducerProfile();
+        profile.setGenres("RKT");
+
+        when(userService.getProfile(1L)).thenReturn(profile);
+
+        mockMvc.perform(get("/api/users/1/profile"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.genres").value("RKT"));
     }
 
     @Test
