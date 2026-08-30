@@ -1,10 +1,9 @@
 package com.mgwprod.users.service;
 
-import com.mgwprod.users.dto.LoginRequest;
-import com.mgwprod.users.dto.LoginResponse;
 import com.mgwprod.users.exception.EmailAlreadyExistsException;
 import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.Role;
+import com.mgwprod.users.model.Session;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.ArtistProfileRepository;
 import com.mgwprod.users.repository.ProducerProfileRepository;
@@ -83,16 +82,13 @@ class AuthServiceTest {
         user.setDisplayName("DJ Test");
         user.setRole(Role.PRODUCER);
 
-        LoginRequest request = new LoginRequest();
-        request.setEmail("productor@test.com");
-        request.setPassword("supersecret123");
-
         when(userRepository.findByEmail("productor@test.com")).thenReturn(Optional.of(user));
+        when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        LoginResponse response = authService.login(request);
+        Session session = authService.login("productor@test.com", "supersecret123");
 
-        assertEquals(1L, response.getUserId());
-        assertEquals(Role.PRODUCER, response.getRole());
+        assertEquals(1L, session.getUser().getId());
+        assertEquals(Role.PRODUCER, session.getUser().getRole());
     }
 
     @Test
@@ -104,23 +100,23 @@ class AuthServiceTest {
         user.setPasswordHash(hasher.hash("supersecret123"));
         user.setRole(Role.PRODUCER);
 
-        LoginRequest request = new LoginRequest();
-        request.setEmail("productor@test.com");
-        request.setPassword("wrongpassword");
-
         when(userRepository.findByEmail("productor@test.com")).thenReturn(Optional.of(user));
 
-        assertThrows(InvalidCredentialsException.class, () -> authService.login(request));
+        assertThrows(InvalidCredentialsException.class,
+                () -> authService.login("productor@test.com", "wrongpassword"));
     }
 
     @Test
     void loginThrowsWhenUserNotFound() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail("noexiste@test.com");
-        request.setPassword("supersecret123");
-
         when(userRepository.findByEmail("noexiste@test.com")).thenReturn(Optional.empty());
 
-        assertThrows(InvalidCredentialsException.class, () -> authService.login(request));
+        assertThrows(InvalidCredentialsException.class,
+                () -> authService.login("noexiste@test.com", "supersecret123"));
+    }
+
+    @Test
+    void loginThrowsWhenPasswordBlank() {
+        assertThrows(InvalidCredentialsException.class,
+                () -> authService.login("productor@test.com", ""));
     }
 }

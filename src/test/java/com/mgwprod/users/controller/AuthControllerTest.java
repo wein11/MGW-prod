@@ -1,11 +1,9 @@
 package com.mgwprod.users.controller;
 
-import tools.jackson.databind.ObjectMapper;
-import com.mgwprod.users.dto.LoginRequest;
-import com.mgwprod.users.dto.LoginResponse;
 import com.mgwprod.users.exception.EmailAlreadyExistsException;
 import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.Role;
+import com.mgwprod.users.model.Session;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.SessionRepository;
 import com.mgwprod.users.service.AuthService;
@@ -19,6 +17,7 @@ import org.springframework.http.MediaType;
 import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,9 +28,6 @@ class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @MockitoBean
     private AuthService authService;
@@ -95,32 +91,33 @@ class AuthControllerTest {
 
     @Test
     void loginReturns200WithToken() throws Exception {
-        LoginRequest request = new LoginRequest();
-        request.setEmail("productor@test.com");
-        request.setPassword("supersecret123");
+        User user = new User();
+        user.setId(1L);
+        user.setDisplayName("DJ Test");
+        user.setRole(Role.PRODUCER);
 
-        LoginResponse response = new LoginResponse("some-token-123", 1L, "DJ Test", Role.PRODUCER);
+        Session session = new Session();
+        session.setToken("some-token-123");
+        session.setUser(user);
+        session.setExpiresAt(Instant.now().plusSeconds(3600));
 
-        when(authService.login(any(LoginRequest.class))).thenReturn(response);
+        when(authService.login(eq("productor@test.com"), eq("supersecret123"))).thenReturn(session);
 
         mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .param("email", "productor@test.com")
+                        .param("password", "supersecret123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("some-token-123"));
     }
 
     @Test
     void loginReturns401WithWrongCredentials() throws Exception {
-        LoginRequest request = new LoginRequest();
-        request.setEmail("productor@test.com");
-        request.setPassword("wrongpassword");
-
-        when(authService.login(any(LoginRequest.class))).thenThrow(new InvalidCredentialsException());
+        when(authService.login(eq("productor@test.com"), eq("wrongpassword")))
+                .thenThrow(new InvalidCredentialsException());
 
         mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .param("email", "productor@test.com")
+                        .param("password", "wrongpassword"))
                 .andExpect(status().isUnauthorized());
     }
 }

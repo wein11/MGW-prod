@@ -1,7 +1,5 @@
 package com.mgwprod.users.service;
 
-import com.mgwprod.users.dto.LoginRequest;
-import com.mgwprod.users.dto.LoginResponse;
 import com.mgwprod.users.exception.EmailAlreadyExistsException;
 import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.ArtistProfile;
@@ -71,11 +69,15 @@ public class AuthService {
         return user;
     }
 
-    public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+    public Session login(String email, String password) {
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            throw new InvalidCredentialsException();
+        }
+
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (!passwordHasher.matches(request.getPassword(), user.getPasswordHash())) {
+        if (!passwordHasher.matches(password, user.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
 
@@ -83,8 +85,6 @@ public class AuthService {
         session.setUser(user);
         session.setToken(UUID.randomUUID().toString());
         session.setExpiresAt(Instant.now().plus(SESSION_DURATION_HOURS, ChronoUnit.HOURS));
-        sessionRepository.save(session);
-
-        return new LoginResponse(session.getToken(), user.getId(), user.getDisplayName(), user.getRole());
+        return sessionRepository.save(session);
     }
 }
