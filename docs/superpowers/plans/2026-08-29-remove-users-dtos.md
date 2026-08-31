@@ -1459,3 +1459,13 @@ Stop the running instance (Ctrl+C) once confirmed.
 - [ ] **Step 4: Report back**
 
 No commit for this task — it's verification only. Summarize the `mvn test` result and the four smoke-test checks to Santiago before considering the module aligned with Clase 4.
+
+---
+
+## Post-execution notes (2026-08-31)
+
+All 7 tasks executed via `superpowers:subagent-driven-development`, verified end-to-end against a real local MySQL, final whole-branch review clean (no Critical findings). Full ruling history and per-task review outcomes are in the SDD run's ledger (not committed — see the git log on `refactor/users-remove-dtos` for the equivalent commit-by-commit record). Three things worth keeping visible beyond this branch, for whoever touches `catalog`/`orders`/`challenges` next:
+
+1. **`spring.jpa.properties.jakarta.persistence.validation.mode=none` is now set in `application.properties` and applies to the whole app, not just `users`.** It was added because Hibernate validates `@NotBlank`/`@Size`/etc. on every entity save by default (insert AND update), and `User.password` (a `@Transient`, register-only field) is always `null` on any `User` loaded from the DB — so without this setting, every `PUT` that saves a `User` 500s. If you add Bean Validation annotations to a new `@Entity` in another module, they will **not** be enforced automatically on save anymore — validate at the controller with `@Valid @RequestBody`, the same pattern already used here, not by relying on JPA.
+2. **`PUT /api/users/{id}` has no request validation** (no `@Valid`, no bean-validation annotations checked) — a blank-string `displayName`/`city` is silently accepted. This was already a deliberate tradeoff in the plan (avoiding a validation-group conflict between register's required fields and update's optional ones on the same `User` class); the validation-mode change above just means there's now truly zero enforcement on that path, where before there was an unintentional partial one. Not a security issue, just weaker input hygiene than the old DTO had.
+3. **The two live-only bugs found by the Task 7 smoke test (register 500, update 500) have no automated regression test** — both fixes are 1-line/1-property changes with no new test, because the existing suite mocks `userRepository.save()` and structurally can't exercise real Hibernate persist-time behavior. If this project ever adds an H2- or Testcontainers-backed slice test, `AuthService.register` and `UserService.updateUser` are the first candidates — that's the only way to close this gap for real instead of relying on a manual smoke test to catch a recurrence.
