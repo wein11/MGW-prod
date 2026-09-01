@@ -9,15 +9,22 @@ Trabajo Práctico Obligatorio de la materia **Aplicaciones Interactivas (UADE)**
 individual aunque el trabajo sea grupal — cada integrante debe poder explicar y defender su
 módulo.
 
-Split de módulos (4, uno por integrante) — ver "Arquitectura" abajo: `marketplace` se partió en
-`catalog` + `orders` el 2026-08-27 para darle a Dani un módulo propio.
+Split de módulos (4, uno por integrante) — ver "Arquitectura" abajo. Historia del split: nació
+como `marketplace`, se partió en `catalog` + `orders` el 2026-08-27 para darle a Dani un módulo
+propio; con el pivot del 2026-09-01 `orders` (carrito/checkout) se eliminó y se reemplazó por
+`collab` (toplines, comentarios, colaboraciones) como módulo de Dani.
 
 Es la primera versión (académica) de una idea de producto más grande: una plataforma de
 descubrimiento y colaboración musical para productores/artistas emergentes, con challenges
-semanales, rankings y reputación ("Music Score"). Para el TPO, el alcance se recortó a lo que
-es defendible como **e-commerce transaccional** con el stack que exige la cátedra — el resto
-del pitch original (matching avanzado, monetización, marketplace de servicios) queda fuera de
-esta entrega.
+semanales, rankings y reputación ("Music Score"). Descripción completa del producto en
+`docs/descripcion.md`.
+
+**Pivot 2026-09-01:** el profesor confirmó que el TPO ya no tiene que ser e-commerce
+transaccional. El proyecto volvió al pitch original (perfil-portfolio, publicaciones tipo red
+social, colaboración, desafíos con jurado ponderado) en vez de mantener el recorte de
+"marketplace de beats con carrito y checkout". Diseño vigente en
+`docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md`. Fuera de alcance de esta entrega:
+Talent Discovery para sellos (rol `LABEL`, búsqueda paga) — queda como visión de producto.
 
 ## Regla dura: solo lo visto en clase
 
@@ -56,12 +63,15 @@ si no está). Dos etapas obligatorias:
 Monolito Spring Boot, un solo `pom.xml`, cuatro paquetes verticales — cada uno dueño de un
 integrante, cada uno con su propio Controller/Service/Repository/Entity:
 
-- `com.mgwprod.users` — perfiles, roles (PRODUCER/ARTIST), auth.
-- `com.mgwprod.catalog` — publicar/listar beats.
-- `com.mgwprod.orders` — carrito, checkout (depende de `catalog` para el FK a `Beat`).
-- `com.mgwprod.challenges` — challenges, submissions, votos, ranking/Music Score.
+- `com.mgwprod.users` — perfiles, roles (PRODUCER/ARTIST), auth, verificación de productores.
+- `com.mgwprod.catalog` — publicar/listar beats, comentarios sobre beats.
+- `com.mgwprod.collab` — toplines de artistas sobre beats, comentarios, colaboraciones
+  (depende de `catalog` para el FK a `Beat`).
+- `com.mgwprod.challenges` — challenges con jurado ponderado, submissions, votos, resultados,
+  ranking/Music Score.
 
-Detalle completo en `docs/superpowers/specs/2026-08-25-mgw-prod-tpo-design.md`.
+Detalle completo en `docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md` (spec vigente;
+`2026-08-25-mgw-prod-tpo-design.md` queda como referencia histórica del diseño e-commerce).
 
 ## Convenciones
 
