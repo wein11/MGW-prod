@@ -1,8 +1,9 @@
 package com.mgwprod.users.controller;
 
-import com.mgwprod.users.dto.UpdateUserRequest;
-import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.UnauthenticatedException;
+import com.mgwprod.users.model.ArtistProfile;
+import com.mgwprod.users.model.ProducerProfile;
+import com.mgwprod.users.model.User;
 import com.mgwprod.users.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,17 +25,42 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public UserResponse getUser(@PathVariable Long id) {
+    public User getUser(@PathVariable Long id) {
         return userService.getById(id);
     }
 
+    @GetMapping("/{id}/profile")
+    public Object getProfile(@PathVariable Long id) {
+        return userService.getProfile(id);
+    }
+
     @PutMapping("/{id}")
-    public UserResponse updateUser(@PathVariable Long id,
-                                    @RequestAttribute(name = "userId", required = false) Long requestingUserId,
-                                    @Valid @RequestBody UpdateUserRequest request) {
+    public User updateUser(@PathVariable Long id,
+                            @RequestAttribute(name = "userId", required = false) Long requestingUserId,
+                            @RequestBody User request) {
+        requireAuthenticated(requestingUserId);
+        return userService.updateUser(id, requestingUserId, request);
+    }
+
+    @PutMapping("/{id}/producer-profile")
+    public ProducerProfile updateProducerProfile(@PathVariable Long id,
+                                                  @RequestAttribute(name = "userId", required = false) Long requestingUserId,
+                                                  @Valid @RequestBody ProducerProfile request) {
+        requireAuthenticated(requestingUserId);
+        return userService.updateProducerProfile(id, requestingUserId, request);
+    }
+
+    @PutMapping("/{id}/artist-profile")
+    public ArtistProfile updateArtistProfile(@PathVariable Long id,
+                                              @RequestAttribute(name = "userId", required = false) Long requestingUserId,
+                                              @Valid @RequestBody ArtistProfile request) {
+        requireAuthenticated(requestingUserId);
+        return userService.updateArtistProfile(id, requestingUserId, request);
+    }
+
+    private void requireAuthenticated(Long requestingUserId) {
         if (requestingUserId == null) {
             throw new UnauthenticatedException("Necesitás iniciar sesión para editar un perfil");
         }
-        return userService.update(id, requestingUserId, request);
     }
 }

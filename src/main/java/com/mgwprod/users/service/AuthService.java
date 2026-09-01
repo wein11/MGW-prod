@@ -1,11 +1,5 @@
 package com.mgwprod.users.service;
 
-import com.mgwprod.users.dto.ArtistProfileDto;
-import com.mgwprod.users.dto.LoginRequest;
-import com.mgwprod.users.dto.LoginResponse;
-import com.mgwprod.users.dto.ProducerProfileDto;
-import com.mgwprod.users.dto.RegisterRequest;
-import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.EmailAlreadyExistsException;
 import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.ArtistProfile;
@@ -49,44 +43,42 @@ public class AuthService {
     }
 
     @Transactional
-    public UserResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyExistsException(request.getEmail());
+    public User register(User incoming) {
+        if (userRepository.existsByEmail(incoming.getEmail())) {
+            throw new EmailAlreadyExistsException(incoming.getEmail());
         }
 
         User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPasswordHash(passwordHasher.hash(request.getPassword()));
-        user.setDisplayName(request.getDisplayName());
-        user.setRole(request.getRole());
-        user.setCity(request.getCity());
+        user.setEmail(incoming.getEmail());
+        user.setPasswordHash(passwordHasher.hash(incoming.getPassword()));
+        user.setPassword(incoming.getPassword());
+        user.setDisplayName(incoming.getDisplayName());
+        user.setRole(incoming.getRole());
+        user.setCity(incoming.getCity());
         user = userRepository.save(user);
-
-        ProducerProfileDto producerDto = null;
-        ArtistProfileDto artistDto = null;
 
         if (user.getRole() == Role.PRODUCER) {
             ProducerProfile profile = new ProducerProfile();
             profile.setUser(user);
             producerProfileRepository.save(profile);
-            producerDto = new ProducerProfileDto(null, null, null, null);
         } else {
             ArtistProfile profile = new ArtistProfile();
             profile.setUser(user);
             artistProfileRepository.save(profile);
-            artistDto = new ArtistProfileDto(null, null);
         }
 
-        return new UserResponse(user.getId(), user.getEmail(), user.getDisplayName(),
-                user.getRole(), user.getCity(), user.isAdmin(), user.getCreatedAt(),
-                producerDto, artistDto);
+        return user;
     }
 
-    public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+    public Session login(String email, String password) {
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            throw new InvalidCredentialsException();
+        }
+
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (!passwordHasher.matches(request.getPassword(), user.getPasswordHash())) {
+        if (!passwordHasher.matches(password, user.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
 
@@ -94,8 +86,6 @@ public class AuthService {
         session.setUser(user);
         session.setToken(UUID.randomUUID().toString());
         session.setExpiresAt(Instant.now().plus(SESSION_DURATION_HOURS, ChronoUnit.HOURS));
-        sessionRepository.save(session);
-
-        return new LoginResponse(session.getToken(), user.getId(), user.getDisplayName(), user.getRole());
+        return sessionRepository.save(session);
     }
 }
