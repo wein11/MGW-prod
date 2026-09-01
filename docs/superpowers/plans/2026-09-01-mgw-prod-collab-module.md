@@ -21,7 +21,7 @@
 
 ## Prerequisito (una sola vez, antes de la Task 1)
 
-Este plan depende de que **el PR de `catalog`** (Paolo) ya esté mergeado a `main` — `collab` necesita `BeatRepository`/`Beat` para validar el `beatId` de cada Topline. Si `catalog` todavía no está mergeado, coordiná con Paolo antes de arrancar (o, si el grupo prefiere avanzar en paralelo, hablá con Santiago para decidir si mockear temporalmente esa dependencia). Además, igual que en `catalog`, el PR de "sin DTOs" (`refactor/users-remove-dtos`) tiene que estar mergeado primero.
+Este plan depende de que **el PR de `catalog`** (Santiago + Mateo) ya esté mergeado a `main` — `collab` necesita `BeatRepository`/`Beat` para validar el `beatId` de cada Topline. Si `catalog` todavía no está mergeado, coordiná con Santiago antes de arrancar (o, si el grupo prefiere avanzar en paralelo, decidan juntos si mockear temporalmente esa dependencia). El PR de "sin DTOs" (`refactor/users-remove-dtos`, PR #1) ya está mergeado a `main` (2026-09-01), así que ese prerequisito ya está resuelto.
 
 ```bash
 git checkout main

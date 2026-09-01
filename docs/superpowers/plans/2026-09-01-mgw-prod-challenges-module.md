@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Construir el módulo `challenges` (desafíos con jurado ponderado, premios, ranking) y la extensión chica de `users` (flag `verified` en `ProducerProfile`) del pivot de mgw-prod. Dueños: Santiago + Mateo (Mateo no tiene Claude Code — trabaja en pareo con Santiago en la misma sesión).
+**Goal:** Construir el módulo `challenges` (desafíos con jurado ponderado, premios, ranking) y la extensión chica de `users` (flag `verified` en `ProducerProfile`) del pivot de mgw-prod. Dueño: Paolo. Es el módulo más pesado de los tres (9 tareas, incluye el cálculo ponderado y la orquestación del cierre con `ChallengeResult`) — arrancalo con margen de tiempo.
 
 **Architecture:** Paquete vertical `com.mgwprod.challenges` (controller/service/repository/model/exception), mismo patrón que `users`/`catalog`/`collab`: sin DTOs, Service con la lógica, Repository `JpaRepository`. El cálculo del puntaje ponderado vive en una clase separada y pura (`ChallengeScoringService`, sin dependencias de base de datos) para poder testearla con inputs directos, sin mocks de repositorios. `challenges` solo referencia `User`/`ProducerProfile` (de `users`) por FK plana, nunca al revés.
 
@@ -23,7 +23,7 @@
 
 ## Prerequisito (una sola vez, antes de la Task 1)
 
-El PR de "sin DTOs" (`refactor/users-remove-dtos`) tiene que estar mergeado a `main` antes de arrancar — este plan modifica `ProducerProfile`/`ProducerProfileRepository`, que ya cambiaron de forma en ese PR.
+El PR de "sin DTOs" (`refactor/users-remove-dtos`, PR #1) ya está mergeado a `main` (2026-09-01) — este plan ya asume la forma post-refactor de `ProducerProfile`/`ProducerProfileRepository`.
 
 ```bash
 git checkout main
@@ -2704,4 +2704,4 @@ git commit -m "feat(challenges): add results and ranking endpoints"
 
 ## Nota sobre paralelismo con `catalog`/`collab`
 
-Este plan no depende de `catalog` ni de `collab` (solo de `users`) — se puede ejecutar en paralelo con esos dos. La única coordinación necesaria es en `docs/db/schema.sql`: si los tres PRs tocan el archivo casi al mismo tiempo, van a pisarse al mergear. Acordá con Paolo y Dani un orden de merge, y quien mergee después resuelve el conflicto de `schema.sql` a mano (es solo agregar los `CREATE TABLE`/`ALTER TABLE` de todos, no hay lógica que resolver).
+Este plan no depende de `catalog` ni de `collab` (solo de `users`) — se puede ejecutar en paralelo con esos dos. La única coordinación necesaria es en `docs/db/schema.sql`: si los tres PRs tocan el archivo casi al mismo tiempo, van a pisarse al mergear. Acordá con Santiago y Dani un orden de merge, y quien mergee después resuelve el conflicto de `schema.sql` a mano (es solo agregar los `CREATE TABLE`/`ALTER TABLE` de todos, no hay lógica que resolver).
