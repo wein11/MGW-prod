@@ -73,11 +73,16 @@ Monolito Spring Boot, un solo `pom.xml`, cuatro paquetes verticales — cada uno
 integrante, cada uno con su propio Controller/Service/Repository/Entity:
 
 - `com.mgwprod.users` — perfiles, roles (PRODUCER/ARTIST), auth, verificación de productores.
-- `com.mgwprod.catalog` — publicar/listar beats, comentarios sobre beats.
+  Dueño: Santiago (ya en curso, incluye el refactor sin DTOs mergeado el 2026-09-01).
+- `com.mgwprod.catalog` — publicar/listar beats, comentarios sobre beats. Dueños: Santiago +
+  Mateo (Mateo no tiene Claude Code, trabaja en pareo con Santiago). El más liviano de los tres
+  módulos nuevos (5 tareas, CRUD directo) — asignado así a propósito por el ritmo del pareo.
 - `com.mgwprod.collab` — toplines de artistas sobre beats, comentarios, colaboraciones
-  (depende de `catalog` para el FK a `Beat`).
+  (depende de `catalog` para el FK a `Beat`). Dueño: Dani (reemplaza a su módulo anterior,
+  `orders`). Complejidad media (5 tareas, con una máquina de estados y dependencia cruzada).
 - `com.mgwprod.challenges` — challenges con jurado ponderado, submissions, votos, resultados,
-  ranking/Music Score.
+  ranking/Music Score. Dueño: Paolo. El más pesado de los tres (9 tareas: cálculo ponderado +
+  orquestación del cierre).
 
 Detalle completo en `docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md` (spec vigente;
 `2026-08-25-mgw-prod-tpo-design.md` queda como referencia histórica del diseño e-commerce).

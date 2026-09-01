@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Construir el módulo `catalog` (publicar/listar beats + comentarios) del pivot de mgw-prod, dueño: Paolo.
+**Goal:** Construir el módulo `catalog` (publicar/listar beats + comentarios) del pivot de mgw-prod. Dueños: Santiago + Mateo (Mateo no tiene Claude Code — trabaja en pareo con Santiago en la misma sesión). Es el módulo más liviano de los tres (5 tareas, CRUD directo sin lógica de negocio compleja) — pensado a propósito así, para que el ritmo de pareo sea manejable.
 
 **Architecture:** Paquete vertical `com.mgwprod.catalog` (controller/service/repository/model/exception), calcado del patrón ya usado en `com.mgwprod.users`: sin DTOs (controllers reciben/devuelven la entidad JPA directo), Service con la lógica de negocio, Repository `JpaRepository` sin lógica, `@RestControllerAdvice` global ya existente (`com.mgwprod.common.exception.GlobalExceptionHandler`) maneja los errores. `catalog` solo referencia `User` (de `users`) por FK plana (`Long producerId`/`authorId`), nunca al revés.
 
@@ -21,7 +21,7 @@
 
 ## Prerequisito (una sola vez, antes de la Task 1)
 
-El PR de "sin DTOs" (`refactor/users-remove-dtos`) tiene que estar mergeado a `main` antes de arrancar — este plan asume que `UserController`/`UserService` ya devuelven entidades directo y que `spring.jpa.properties.jakarta.persistence.validation.mode=none` ya está en `application.properties`. Confirmá con Santiago que el merge ya pasó. Después:
+El PR de "sin DTOs" (`refactor/users-remove-dtos`, PR #1) ya está mergeado a `main` (2026-09-01) — este plan ya asume que `UserController`/`UserService` devuelven entidades directo y que `spring.jpa.properties.jakarta.persistence.validation.mode=none` ya está en `application.properties`. Solo falta:
 
 ```bash
 git checkout main
