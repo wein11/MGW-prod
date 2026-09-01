@@ -1,12 +1,9 @@
 package com.mgwprod.users.service;
 
-import com.mgwprod.users.dto.LoginRequest;
-import com.mgwprod.users.dto.LoginResponse;
-import com.mgwprod.users.dto.RegisterRequest;
-import com.mgwprod.users.dto.UserResponse;
 import com.mgwprod.users.exception.EmailAlreadyExistsException;
 import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.Role;
+import com.mgwprod.users.model.Session;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.ArtistProfileRepository;
 import com.mgwprod.users.repository.ProducerProfileRepository;
@@ -18,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,21 +44,16 @@ class AuthServiceTest {
 
     @Test
     void registerCreatesUserWithProducerRole() {
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("productor@test.com");
-        request.setPassword("supersecret123");
-        request.setDisplayName("DJ Test");
-        request.setRole(Role.PRODUCER);
+        User incoming = new User();
+        incoming.setEmail("productor@test.com");
+        incoming.setPassword("supersecret123");
+        incoming.setDisplayName("DJ Test");
+        incoming.setRole(Role.PRODUCER);
 
         when(userRepository.existsByEmail("productor@test.com")).thenReturn(false);
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User user = invocation.getArgument(0);
-            user.setId(1L);
-            user.setCreatedAt(Instant.now());
-            return user;
-        });
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UserResponse response = authService.register(request);
+        User response = authService.register(incoming);
 
         assertEquals("productor@test.com", response.getEmail());
         assertEquals(Role.PRODUCER, response.getRole());
@@ -70,15 +61,15 @@ class AuthServiceTest {
 
     @Test
     void registerThrowsWhenEmailAlreadyExists() {
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("duplicado@test.com");
-        request.setPassword("supersecret123");
-        request.setDisplayName("DJ Test");
-        request.setRole(Role.ARTIST);
+        User incoming = new User();
+        incoming.setEmail("duplicado@test.com");
+        incoming.setPassword("supersecret123");
+        incoming.setDisplayName("DJ Test");
+        incoming.setRole(Role.ARTIST);
 
         when(userRepository.existsByEmail("duplicado@test.com")).thenReturn(true);
 
-        assertThrows(EmailAlreadyExistsException.class, () -> authService.register(request));
+        assertThrows(EmailAlreadyExistsException.class, () -> authService.register(incoming));
     }
 
     @Test
@@ -91,16 +82,13 @@ class AuthServiceTest {
         user.setDisplayName("DJ Test");
         user.setRole(Role.PRODUCER);
 
-        LoginRequest request = new LoginRequest();
-        request.setEmail("productor@test.com");
-        request.setPassword("supersecret123");
-
         when(userRepository.findByEmail("productor@test.com")).thenReturn(Optional.of(user));
+        when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        LoginResponse response = authService.login(request);
+        Session session = authService.login("productor@test.com", "supersecret123");
 
-        assertEquals(1L, response.getUserId());
-        assertEquals(Role.PRODUCER, response.getRole());
+        assertEquals(1L, session.getUser().getId());
+        assertEquals(Role.PRODUCER, session.getUser().getRole());
     }
 
     @Test
@@ -112,23 +100,23 @@ class AuthServiceTest {
         user.setPasswordHash(hasher.hash("supersecret123"));
         user.setRole(Role.PRODUCER);
 
-        LoginRequest request = new LoginRequest();
-        request.setEmail("productor@test.com");
-        request.setPassword("wrongpassword");
-
         when(userRepository.findByEmail("productor@test.com")).thenReturn(Optional.of(user));
 
-        assertThrows(InvalidCredentialsException.class, () -> authService.login(request));
+        assertThrows(InvalidCredentialsException.class,
+                () -> authService.login("productor@test.com", "wrongpassword"));
     }
 
     @Test
     void loginThrowsWhenUserNotFound() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail("noexiste@test.com");
-        request.setPassword("supersecret123");
-
         when(userRepository.findByEmail("noexiste@test.com")).thenReturn(Optional.empty());
 
-        assertThrows(InvalidCredentialsException.class, () -> authService.login(request));
+        assertThrows(InvalidCredentialsException.class,
+                () -> authService.login("noexiste@test.com", "supersecret123"));
+    }
+
+    @Test
+    void loginThrowsWhenPasswordBlank() {
+        assertThrows(InvalidCredentialsException.class,
+                () -> authService.login("productor@test.com", ""));
     }
 }
