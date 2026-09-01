@@ -56,10 +56,11 @@ si no está). Dos etapas obligatorias:
   desde `update`, para coincidir con lo enseñado en Clase 4). Las tablas se crean a mano vía
   `docs/db/schema.sql`: cada módulo que agrega una entidad nueva suma ahí su `CREATE TABLE`.
 - **Sin DTOs — los controllers reciben/devuelven la entidad JPA directo**, para calcar el
-  patrón de Clase 4 (ver `docs/superpowers/plans/2026-08-29-remove-users-dtos.md`, aplicado
-  primero en `users`, branch `refactor/users-remove-dtos` — pendiente de PR/merge del grupo).
-  Consecuencia importante para cualquier entidad nueva: `spring.jpa.properties.jakarta.
-  persistence.validation.mode=none` está seteado a nivel app entero, así que las anotaciones
+  patrón de Clase 4 (ver `docs/superpowers/plans/2026-08-29-remove-users-dtos.md`; aplicado
+  primero en `users`, mergeado a `main` el 2026-09-01 — PR #1). Convención obligatoria también
+  para `catalog`/`collab`/`challenges`. Consecuencia importante para cualquier entidad nueva:
+  `spring.jpa.properties.jakarta.persistence.validation.mode=none` está seteado a nivel app
+  entero, así que las anotaciones
   de Bean Validation (`@NotBlank`, `@Size`, etc.) puestas en una entidad **no se validan solas
   al guardar** — hay que validar siempre en el controller con `@Valid @RequestBody`, nunca
   confiar en que Hibernate lo haga en el `save()`.
