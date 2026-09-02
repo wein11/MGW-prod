@@ -26,6 +26,17 @@ social, colaboración, desafíos con jurado ponderado) en vez de mantener el rec
 `docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md`. Fuera de alcance de esta entrega:
 Talent Discovery para sellos (rol `LABEL`, búsqueda paga) — queda como visión de producto.
 
+**Importante para todo el equipo — esta entrega NO es e-commerce.** El PDF de la consigna
+(`docs/Trabajo Integrador de Aplicaciones Interactivas.pdf`) todavía dice "funcionalidades de
+e-commerce" porque es el enunciado genérico de la cátedra, previo a la autorización verbal del
+pivot. Para lo que tenemos que entregar ahora (Etapa 1 y Etapa 2 de este TPO) **no hace falta
+carrito, checkout, pagos ni ningún flujo transaccional de compra-venta** — el dominio elegido es
+descubrimiento y colaboración musical (perfiles, catálogo de beats, colaboración, challenges). El
+e-commerce/marketplace con transacciones reales es una idea de producto para **mucho más
+adelante**, fuera del alcance de la materia; no hay que construir nada de eso ahora. Si alguien
+del grupo ve "e-commerce" en el PDF y no entiende por qué el código no tiene nada de carrito,
+esta es la explicación.
+
 ## Regla dura: solo lo visto en clase
 
 Este proyecto es para una materia de la facultad. **No se inventa contenido que no se haya
@@ -86,6 +97,38 @@ integrante, cada uno con su propio Controller/Service/Repository/Entity:
 
 Detalle completo en `docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md` (spec vigente;
 `2026-08-25-mgw-prod-tpo-design.md` queda como referencia histórica del diseño e-commerce).
+
+### Por qué la estructura de paquetes no es igual al ejemplo de Clase 4
+
+El ejemplo que subió el profesor a webcampus (`Backend con Spring.pdf`, proyecto `webcampus` /
+entidad `Alumno`) organiza el código **por capa, plano en la raíz del package**:
+
+```
+com.uade.webcampus
+├── controller/   AlumnoController.java
+├── model/        Alumno.java
+├── repository/   AlumnoRepository.java
+└── service/      AlumnoService.java
+```
+
+Nosotros organizamos **por módulo/dueño primero, y recién adentro por capa**:
+
+```
+com.mgwprod
+├── users/        controller/ model/ repository/ service/ ...
+├── catalog/      controller/ model/ repository/ service/
+├── collab/       controller/ model/ repository/ service/
+└── challenges/   controller/ model/ repository/ service/
+```
+
+Es una decisión deliberada, no un desvío por descuido: somos 4 integrantes y la consigna dice
+que **la evaluación es individual** aunque el trabajo sea grupal — necesitamos que cada uno
+tenga su paquete autocontenido para poder explicarlo y defenderlo sin pisar el código de los
+demás en la misma carpeta `controller/`. Todo lo demás calca exactamente el patrón de Clase 4:
+capas Controller/Model/Repository/Service, JPA `Repository` sin DAO manual, sin DTOs
+(controller devuelve la entidad directo), Lombok en las entidades, inyección por constructor en
+el Service. La única diferencia real es el nivel de anidamiento del package, y responde a una
+necesidad de organización de equipo, no a un patrón distinto.
 
 ## Convenciones
 
