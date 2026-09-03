@@ -34,3 +34,6 @@ CREATE TABLE sessions (
     expires_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- Módulo challenges: flag de productor verificado (mayor peso de voto).
+ALTER TABLE producer_profiles ADD COLUMN verified BOOLEAN NOT NULL DEFAULT FALSE;
