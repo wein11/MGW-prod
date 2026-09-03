@@ -37,3 +37,20 @@ CREATE TABLE sessions (
 
 -- Módulo challenges: flag de productor verificado (mayor peso de voto).
 ALTER TABLE producer_profiles ADD COLUMN verified BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE TABLE challenges (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    genre VARCHAR(100) NOT NULL,
+    bpm INT NOT NULL,
+    music_key VARCHAR(20),
+    theme VARCHAR(255),
+    deadline DATETIME NOT NULL,
+    guest_artist_id BIGINT NOT NULL,
+    prize_first VARCHAR(255),
+    prize_second VARCHAR(255),
+    prize_third VARCHAR(255),
+    opportunity_pick_submission_id BIGINT,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (guest_artist_id) REFERENCES users(id)
+);
