@@ -34,3 +34,15 @@ CREATE TABLE sessions (
     expires_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE TABLE beats (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    producer_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    genre VARCHAR(100) NOT NULL,
+    bpm INT NOT NULL,
+    music_key VARCHAR(20),
+    audio_url VARCHAR(500) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (producer_id) REFERENCES users(id)
+);
