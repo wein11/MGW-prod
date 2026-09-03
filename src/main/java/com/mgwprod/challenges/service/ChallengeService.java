@@ -2,6 +2,7 @@ package com.mgwprod.challenges.service;
 
 import com.mgwprod.challenges.exception.ChallengeNotFoundException;
 import com.mgwprod.challenges.model.Challenge;
+import com.mgwprod.challenges.model.Submission;
 import com.mgwprod.challenges.repository.ChallengeRepository;
 import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.exception.UserNotFoundException;
@@ -18,10 +19,14 @@ public class ChallengeService {
 
     private final ChallengeRepository challengeRepository;
     private final UserRepository userRepository;
+    private final SubmissionService submissionService;
 
-    public ChallengeService(ChallengeRepository challengeRepository, UserRepository userRepository) {
+    public ChallengeService(ChallengeRepository challengeRepository,
+                             UserRepository userRepository,
+                             SubmissionService submissionService) {
         this.challengeRepository = challengeRepository;
         this.userRepository = userRepository;
+        this.submissionService = submissionService;
     }
 
     @Transactional
@@ -48,5 +53,19 @@ public class ChallengeService {
     public Challenge getById(Long id) {
         return challengeRepository.findById(id)
                 .orElseThrow(() -> new ChallengeNotFoundException(id));
+    }
+
+    @Transactional
+    public Challenge setOpportunityPick(Long challengeId, Long requestingUserId, Long submissionId) {
+        Challenge challenge = getById(challengeId);
+        if (!challenge.getGuestArtistId().equals(requestingUserId)) {
+            throw new ForbiddenOperationException("Solo el artista invitado de este challenge puede elegir su opportunity pick");
+        }
+        Submission submission = submissionService.getById(submissionId);
+        if (!submission.getChallengeId().equals(challengeId)) {
+            throw new ForbiddenOperationException("La submission no pertenece a este challenge");
+        }
+        challenge.setOpportunityPickSubmissionId(submissionId);
+        return challengeRepository.save(challenge);
     }
 }

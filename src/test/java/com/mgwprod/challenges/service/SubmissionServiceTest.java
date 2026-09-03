@@ -2,6 +2,7 @@ package com.mgwprod.challenges.service;
 
 import com.mgwprod.challenges.model.Challenge;
 import com.mgwprod.challenges.model.Submission;
+import com.mgwprod.challenges.repository.ChallengeRepository;
 import com.mgwprod.challenges.repository.SubmissionRepository;
 import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.model.Role;
@@ -31,7 +32,7 @@ class SubmissionServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private ChallengeService challengeService;
+    private ChallengeRepository challengeRepository;
 
     @InjectMocks
     private SubmissionService submissionService;
@@ -46,7 +47,7 @@ class SubmissionServiceTest {
         Challenge challenge = new Challenge();
         challenge.setId(1L);
         challenge.setDeadline(Instant.now().plusSeconds(3600));
-        when(challengeService.getById(1L)).thenReturn(challenge);
+        when(challengeRepository.findById(1L)).thenReturn(Optional.of(challenge));
 
         Submission submission = new Submission();
         submission.setAudioUrl("https://soundcloud.com/example/submission");
@@ -68,7 +69,7 @@ class SubmissionServiceTest {
         Challenge challenge = new Challenge();
         challenge.setId(1L);
         challenge.setDeadline(Instant.now().minusSeconds(3600));
-        when(challengeService.getById(1L)).thenReturn(challenge);
+        when(challengeRepository.findById(1L)).thenReturn(Optional.of(challenge));
 
         Submission submission = new Submission();
         submission.setAudioUrl("https://soundcloud.com/example/submission");

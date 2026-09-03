@@ -18,6 +18,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -101,5 +102,20 @@ class ChallengeControllerTest {
         mockMvc.perform(get("/api/challenges/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Creamos el próximo hit de RKT"));
+    }
+
+    @Test
+    void opportunityPickReturns200WhenRequesterIsGuestArtist() throws Exception {
+        Challenge response = new Challenge();
+        response.setId(100L);
+        response.setOpportunityPickSubmissionId(7L);
+
+        when(challengeService.setOpportunityPick(eq(100L), eq(99L), eq(7L))).thenReturn(response);
+
+        mockMvc.perform(put("/api/challenges/100/opportunity-pick")
+                        .requestAttr("userId", 99L)
+                        .param("submissionId", "7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.opportunityPickSubmissionId").value(7));
     }
 }

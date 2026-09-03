@@ -29,6 +29,9 @@ class ChallengeServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private SubmissionService submissionService;
+
     @InjectMocks
     private ChallengeService challengeService;
 
@@ -84,6 +87,36 @@ class ChallengeServiceTest {
         challenge.setGuestArtistId(2L);
 
         assertThatThrownBy(() -> challengeService.create(1L, challenge))
+                .isInstanceOf(ForbiddenOperationException.class);
+    }
+
+    @Test
+    void setOpportunityPickSucceedsWhenRequesterIsTheGuestArtist() {
+        Challenge challenge = new Challenge();
+        challenge.setId(100L);
+        challenge.setGuestArtistId(99L);
+        when(challengeRepository.findById(100L)).thenReturn(Optional.of(challenge));
+
+        com.mgwprod.challenges.model.Submission submission = new com.mgwprod.challenges.model.Submission();
+        submission.setId(7L);
+        submission.setChallengeId(100L);
+        when(submissionService.getById(7L)).thenReturn(submission);
+
+        when(challengeRepository.save(challenge)).thenReturn(challenge);
+
+        Challenge result = challengeService.setOpportunityPick(100L, 99L, 7L);
+
+        assertThat(result.getOpportunityPickSubmissionId()).isEqualTo(7L);
+    }
+
+    @Test
+    void setOpportunityPickThrowsWhenRequesterIsNotTheGuestArtist() {
+        Challenge challenge = new Challenge();
+        challenge.setId(100L);
+        challenge.setGuestArtistId(99L);
+        when(challengeRepository.findById(100L)).thenReturn(Optional.of(challenge));
+
+        assertThatThrownBy(() -> challengeService.setOpportunityPick(100L, 1L, 7L))
                 .isInstanceOf(ForbiddenOperationException.class);
     }
 }

@@ -9,9 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -44,5 +46,15 @@ public class ChallengeController {
     @GetMapping("/{id}")
     public Challenge getChallenge(@PathVariable Long id) {
         return challengeService.getById(id);
+    }
+
+    @PutMapping("/{id}/opportunity-pick")
+    public Challenge opportunityPick(@PathVariable Long id,
+                                      @RequestAttribute(name = "userId", required = false) Long userId,
+                                      @RequestParam Long submissionId) {
+        if (userId == null) {
+            throw new UnauthenticatedException("Necesitás iniciar sesión para esto");
+        }
+        return challengeService.setOpportunityPick(id, userId, submissionId);
     }
 }
