@@ -27,7 +27,10 @@ public class Beat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "El producer es obligatorio")
+    // Sin @NotNull: lo asigna el servicio a partir del userId autenticado, nunca
+    // viaja en el JSON del cliente — igual que id/createdAt en User.java. Con
+    // @NotNull acá, @Valid @RequestBody rechazaría siempre con 400 antes de que
+    // el service llegue a setearlo.
     @Column(name = "producer_id", nullable = false)
     private Long producerId;
 
