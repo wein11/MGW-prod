@@ -117,6 +117,51 @@ class ChallengeResultServiceTest {
                 .isInstanceOf(ForbiddenOperationException.class);
     }
 
+    @Test
+    void listResultsFiltersByProducerId() {
+        com.mgwprod.challenges.model.Submission submission = new com.mgwprod.challenges.model.Submission();
+        submission.setId(5L);
+        submission.setProducerId(11L);
+        when(submissionRepository.findByProducerId(11L)).thenReturn(List.of(submission));
+
+        ChallengeResult result = new ChallengeResult();
+        result.setSubmissionId(5L);
+        when(challengeResultRepository.findBySubmissionIdIn(List.of(5L))).thenReturn(List.of(result));
+
+        List<ChallengeResult> found = challengeResultService.listResults(11L);
+
+        assertThat(found).hasSize(1);
+    }
+
+    @Test
+    void rankingSumsPointsPerProducerDescending() {
+        com.mgwprod.challenges.model.Submission submissionA = new com.mgwprod.challenges.model.Submission();
+        submissionA.setId(1L);
+        submissionA.setProducerId(11L);
+        com.mgwprod.challenges.model.Submission submissionB = new com.mgwprod.challenges.model.Submission();
+        submissionB.setId(2L);
+        submissionB.setProducerId(12L);
+
+        ChallengeResult resultA1 = new ChallengeResult();
+        resultA1.setSubmissionId(1L);
+        resultA1.setPointsAwarded(150);
+        ChallengeResult resultB1 = new ChallengeResult();
+        resultB1.setSubmissionId(2L);
+        resultB1.setPointsAwarded(500);
+
+        when(challengeResultRepository.findAll()).thenReturn(List.of(resultA1, resultB1));
+        when(submissionRepository.findById(1L)).thenReturn(Optional.of(submissionA));
+        when(submissionRepository.findById(2L)).thenReturn(Optional.of(submissionB));
+
+        List<com.mgwprod.challenges.model.RankingEntry> ranking = challengeResultService.ranking();
+
+        assertThat(ranking).hasSize(2);
+        assertThat(ranking.get(0).producerId()).isEqualTo(12L);
+        assertThat(ranking.get(0).totalPoints()).isEqualTo(500);
+        assertThat(ranking.get(1).producerId()).isEqualTo(11L);
+        assertThat(ranking.get(1).totalPoints()).isEqualTo(150);
+    }
+
     private Vote voteFrom(Long voterId, int score) {
         Vote vote = new Vote();
         vote.setVoterId(voterId);

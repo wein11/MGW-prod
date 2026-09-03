@@ -94,6 +94,31 @@ public class ChallengeResultService {
         return results;
     }
 
+    @Transactional(readOnly = true)
+    public List<ChallengeResult> listResults(Long producerId) {
+        if (producerId != null) {
+            List<Long> submissionIds = submissionRepository.findByProducerId(producerId).stream()
+                    .map(Submission::getId)
+                    .toList();
+            return challengeResultRepository.findBySubmissionIdIn(submissionIds);
+        }
+        return challengeResultRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.mgwprod.challenges.model.RankingEntry> ranking() {
+        java.util.Map<Long, Integer> pointsByProducer = new java.util.HashMap<>();
+        for (ChallengeResult result : challengeResultRepository.findAll()) {
+            Submission submission = submissionRepository.findById(result.getSubmissionId())
+                    .orElseThrow(() -> new com.mgwprod.challenges.exception.SubmissionNotFoundException(result.getSubmissionId()));
+            pointsByProducer.merge(submission.getProducerId(), result.getPointsAwarded(), Integer::sum);
+        }
+        return pointsByProducer.entrySet().stream()
+                .map(entry -> new com.mgwprod.challenges.model.RankingEntry(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparingInt(com.mgwprod.challenges.model.RankingEntry::totalPoints).reversed())
+                .toList();
+    }
+
     private double scoreFor(Challenge challenge, Set<Long> verifiedProducerIds, Submission submission) {
         List<Vote> votes = voteRepository.findBySubmissionId(submission.getId());
         return challengeScoringService.computeScore(challenge.getGuestArtistId(), verifiedProducerIds, votes);
