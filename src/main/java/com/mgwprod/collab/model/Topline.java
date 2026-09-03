@@ -1,5 +1,6 @@
 package com.mgwprod.collab.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,7 +27,10 @@ public class Topline {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "El artista es obligatorio")
+    // Server-derived from the authenticated session (ToplineService.create), same
+    // pattern as User.passwordHash: never accepted from client JSON, so no @NotNull
+    // here — @Valid at the controller runs before the service sets this field.
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "artist_id", nullable = false)
     private Long artistId;
 
