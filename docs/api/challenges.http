@@ -1,0 +1,73 @@
+### Challenges module — colección de requests (IntelliJ HTTP Client / VS Code REST Client)
+### Base URL y token como variables. Corré primero el login del módulo users para
+### obtener un token y pegalo en @token. Ajustá los ids según tus datos de prueba.
+
+@host = http://localhost:8080
+@token = PEGAR_TOKEN_ACA
+@challengeId = 1
+@submissionId = 1
+@producerId = 2
+
+### --- users (extensión del pivot): verificar un productor (solo admin) ---
+PUT {{host}}/api/producers/{{producerId}}/verify
+Authorization: Bearer {{token}}
+
+### --- Crear un challenge (solo admin). guestArtistId debe ser rol ARTIST ---
+POST {{host}}/api/challenges
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Creamos el próximo hit de RKT",
+  "genre": "RKT",
+  "bpm": 100,
+  "key": "F#m",
+  "theme": "libre",
+  "deadline": "2026-12-31T23:59:00Z",
+  "guestArtistId": 3,
+  "prizeFirst": "$100 USD + sesión de estudio",
+  "prizeSecond": "Verificación de cuenta",
+  "prizeThird": "Badge exclusivo"
+}
+
+### --- Listar challenges ---
+GET {{host}}/api/challenges
+
+### --- Detalle de un challenge ---
+GET {{host}}/api/challenges/{{challengeId}}
+
+### --- Enviar una submission (solo PRODUCER, antes del deadline) ---
+POST {{host}}/api/challenges/{{challengeId}}/submissions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "audioUrl": "https://soundcloud.com/example/mi-produccion"
+}
+
+### --- Listar submissions de un challenge ---
+GET {{host}}/api/challenges/{{challengeId}}/submissions
+
+### --- Votar una submission (1–10, comentario opcional; un voto por usuario) ---
+POST {{host}}/api/submissions/{{submissionId}}/votes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "score": 9,
+  "comment": "Muy buena la melodía"
+}
+
+### --- Cerrar el challenge: calcula puntajes y crea el top 3 (solo admin) ---
+PUT {{host}}/api/challenges/{{challengeId}}/close
+Authorization: Bearer {{token}}
+
+### --- Opportunity pick del artista invitado (solo el guestArtist) ---
+PUT {{host}}/api/challenges/{{challengeId}}/opportunity-pick?submissionId={{submissionId}}
+Authorization: Bearer {{token}}
+
+### --- Histórico de resultados (filtro opcional por producerId) ---
+GET {{host}}/api/challenges/results?producerId={{producerId}}
+
+### --- Ranking global (suma de puntos por productor, desc) ---
+GET {{host}}/api/ranking
