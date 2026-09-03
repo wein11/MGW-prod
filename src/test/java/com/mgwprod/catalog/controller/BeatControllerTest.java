@@ -15,6 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -89,5 +90,41 @@ class BeatControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void listBeatsReturns200WithFilteredResults() throws Exception {
+        Beat beat = new Beat();
+        beat.setId(1L);
+        beat.setGenre("Trap");
+        beat.setBpm(140);
+
+        when(beatService.list("Trap", null, null)).thenReturn(java.util.List.of(beat));
+
+        mockMvc.perform(get("/api/beats").param("genre", "Trap"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].genre").value("Trap"));
+    }
+
+    @Test
+    void getBeatByIdReturns200WhenExists() throws Exception {
+        Beat beat = new Beat();
+        beat.setId(1L);
+        beat.setTitle("Trap Beat");
+
+        when(beatService.getById(1L)).thenReturn(beat);
+
+        mockMvc.perform(get("/api/beats/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Trap Beat"));
+    }
+
+    @Test
+    void getBeatByIdReturns404WhenMissing() throws Exception {
+        when(beatService.getById(99L))
+                .thenThrow(new com.mgwprod.catalog.exception.BeatNotFoundException(99L));
+
+        mockMvc.perform(get("/api/beats/99"))
+                .andExpect(status().isNotFound());
     }
 }
