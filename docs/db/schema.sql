@@ -46,3 +46,13 @@ CREATE TABLE beats (
     created_at DATETIME NOT NULL,
     FOREIGN KEY (producer_id) REFERENCES users(id)
 );
+
+CREATE TABLE beat_comments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    beat_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
+    text VARCHAR(1000) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (beat_id) REFERENCES beats(id),
+    FOREIGN KEY (author_id) REFERENCES users(id)
+);
