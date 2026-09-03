@@ -46,3 +46,11 @@ CREATE TABLE toplines (
     created_at DATETIME NOT NULL,
     FOREIGN KEY (artist_id) REFERENCES users(id)
 );
+
+CREATE TABLE collaborations (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    topline_id BIGINT NOT NULL UNIQUE,
+    status VARCHAR(20) NOT NULL,
+    decided_at DATETIME,
+    FOREIGN KEY (topline_id) REFERENCES toplines(id)
+);
