@@ -54,3 +54,13 @@ CREATE TABLE challenges (
     created_at DATETIME NOT NULL,
     FOREIGN KEY (guest_artist_id) REFERENCES users(id)
 );
+
+CREATE TABLE submissions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    challenge_id BIGINT NOT NULL,
+    producer_id BIGINT NOT NULL,
+    audio_url VARCHAR(500) NOT NULL,
+    submitted_at DATETIME NOT NULL,
+    FOREIGN KEY (challenge_id) REFERENCES challenges(id),
+    FOREIGN KEY (producer_id) REFERENCES users(id)
+);
