@@ -64,3 +64,14 @@ CREATE TABLE submissions (
     FOREIGN KEY (challenge_id) REFERENCES challenges(id),
     FOREIGN KEY (producer_id) REFERENCES users(id)
 );
+
+CREATE TABLE votes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    submission_id BIGINT NOT NULL,
+    voter_id BIGINT NOT NULL,
+    score INT NOT NULL,
+    comment VARCHAR(1000),
+    UNIQUE (submission_id, voter_id),
+    FOREIGN KEY (submission_id) REFERENCES submissions(id),
+    FOREIGN KEY (voter_id) REFERENCES users(id)
+);
