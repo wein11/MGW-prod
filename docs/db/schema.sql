@@ -54,3 +54,13 @@ CREATE TABLE collaborations (
     decided_at DATETIME,
     FOREIGN KEY (topline_id) REFERENCES toplines(id)
 );
+
+CREATE TABLE comments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    topline_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
+    text VARCHAR(1000) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (topline_id) REFERENCES toplines(id),
+    FOREIGN KEY (author_id) REFERENCES users(id)
+);
