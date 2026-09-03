@@ -75,3 +75,16 @@ CREATE TABLE votes (
     FOREIGN KEY (submission_id) REFERENCES submissions(id),
     FOREIGN KEY (voter_id) REFERENCES users(id)
 );
+
+-- rank es palabra reservada en MySQL, por eso la columna se llama rank_position.
+CREATE TABLE challenge_results (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    challenge_id BIGINT NOT NULL,
+    submission_id BIGINT NOT NULL UNIQUE,
+    rank_position INT NOT NULL,
+    points_awarded INT NOT NULL,
+    badge VARCHAR(255),
+    prize_text VARCHAR(255),
+    FOREIGN KEY (challenge_id) REFERENCES challenges(id),
+    FOREIGN KEY (submission_id) REFERENCES submissions(id)
+);
