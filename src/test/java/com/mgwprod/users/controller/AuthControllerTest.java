@@ -103,9 +103,13 @@ class AuthControllerTest {
 
         when(authService.login(eq("productor@test.com"), eq("supersecret123"))).thenReturn(session);
 
+        String requestJson = """
+                {"email":"productor@test.com","password":"supersecret123"}
+                """;
+
         mockMvc.perform(post("/api/auth/login")
-                        .param("email", "productor@test.com")
-                        .param("password", "supersecret123"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("some-token-123"));
     }
@@ -115,9 +119,13 @@ class AuthControllerTest {
         when(authService.login(eq("productor@test.com"), eq("wrongpassword")))
                 .thenThrow(new InvalidCredentialsException());
 
+        String requestJson = """
+                {"email":"productor@test.com","password":"wrongpassword"}
+                """;
+
         mockMvc.perform(post("/api/auth/login")
-                        .param("email", "productor@test.com")
-                        .param("password", "wrongpassword"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
                 .andExpect(status().isUnauthorized());
     }
 }
