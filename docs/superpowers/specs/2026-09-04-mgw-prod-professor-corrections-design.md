@@ -104,11 +104,17 @@ Nuevo paquete vertical `com.mgwprod.billing` (mismo patrón que `catalog`/`colla
   nunca de la implementación concreta — mañana, una `MercadoPagoGateway implements
   PaymentGateway` se enchufa sin tocar `SubscriptionService` ni ningún otro consumidor.
 - **Límite del plan free**: 50 producciones combinadas (`beats` + `toplines` del mismo usuario,
-  contadas juntas, no por separado). `BeatService.create` y `ToplineService.create` (en
-  `catalog`/`collab`) consultan `SubscriptionService` antes de guardar: si `plan == FREE` y el
-  conteo combinado ya es `>= 50`, lanzan `SubscriptionLimitExceededException` (403). Esto es la
-  única dependencia cruzada de `catalog`/`collab` hacia `billing` — mismo patrón de FK plana que
-  ya usan hacia `users`, nunca al revés.
+  contadas juntas, no por separado). El conteo **vive dentro de `billing`**, como un campo
+  `productionsCount` en `Subscription` — no se calcula sumando `COUNT` sobre las tablas de
+  `catalog` y `collab`, porque eso obligaría a `catalog` y `collab` a importarse mutuamente para
+  sumar sus conteos (violando la regla de dependencia unidireccional: hoy `collab` depende de
+  `catalog`, nunca al revés). En cambio, `BeatService.create` y `ToplineService.create` llaman a
+  `SubscriptionService.recordProduction(userId)` justo antes de guardar: ese método incrementa
+  `productionsCount` y, si `plan == FREE` y ya llegó a 50, lanza `SubscriptionLimitExceededException`
+  (403) sin persistir nada. Es la única dependencia cruzada — `catalog` y `collab` dependen de
+  `billing`, igual que ya dependen de `users`, nunca al revés entre ellos. El contador no
+  decrementa si se borra un beat/topline (refleja el total histórico publicado, no el catálogo
+  activo — evita gamear el límite con publicar/borrar).
 - El plan premium **no expira** — una vez aprobado el pago simulado, el usuario queda `PREMIUM`
   hasta que decida bajarlo (no hay fecha de renovación ni job de vencimiento).
 
