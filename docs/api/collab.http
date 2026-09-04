@@ -1,0 +1,48 @@
+### Collab module — HTTP collection
+### Usable directly with the VS Code "REST Client" / JetBrains HTTP Client extensions,
+### or copy each request into curl/Postman. See docs/api/collab-API.md for full docs.
+###
+### Setup: register/login an ARTIST and a PRODUCER first via users' /api/auth
+### endpoints (docs/api/users-API.md), then set @artistToken/@producerToken below.
+### Also needs an existing beatId from the catalog module.
+
+@baseUrl = http://localhost:8080
+@artistToken = REPLACE_WITH_ARTIST_SESSION_TOKEN
+@producerToken = REPLACE_WITH_PRODUCER_SESSION_TOKEN
+@beatId = 1
+
+### 1. POST /api/toplines — artist uploads a topline over a beat
+POST {{baseUrl}}/api/toplines
+Content-Type: application/json
+Authorization: Bearer {{artistToken}}
+
+{
+  "beatId": {{beatId}},
+  "audioUrl": "https://soundcloud.com/example/topline"
+}
+
+### 2. GET /api/toplines — list, filtered by beat
+GET {{baseUrl}}/api/toplines?beatId={{beatId}}
+
+### 2b. GET /api/toplines/{id} — single topline
+GET {{baseUrl}}/api/toplines/1
+
+### 3. PUT /api/collaborations/{id} — producer accepts (or rejects) the collaboration
+### created automatically by request #1 above. Replace 1 with the real collaboration id.
+PUT {{baseUrl}}/api/collaborations/1?status=ACCEPTED
+Authorization: Bearer {{producerToken}}
+
+### 3b. GET /api/collaborations — list, filtered by status
+GET {{baseUrl}}/api/collaborations?status=PENDING
+
+### 4. POST /api/toplines/{toplineId}/comments — comment on a topline
+POST {{baseUrl}}/api/toplines/1/comments
+Content-Type: application/json
+Authorization: Bearer {{producerToken}}
+
+{
+  "text": "Qué voz!"
+}
+
+### 5. GET /api/toplines/{toplineId}/comments — list comments
+GET {{baseUrl}}/api/toplines/1/comments

@@ -35,6 +35,56 @@ CREATE TABLE sessions (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE beats (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    producer_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    genre VARCHAR(100) NOT NULL,
+    bpm INT NOT NULL,
+    music_key VARCHAR(20),
+    audio_url VARCHAR(500) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (producer_id) REFERENCES users(id)
+);
+
+CREATE TABLE beat_comments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    beat_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
+    text VARCHAR(1000) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (beat_id) REFERENCES beats(id),
+    FOREIGN KEY (author_id) REFERENCES users(id)
+);
+
+CREATE TABLE toplines (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    artist_id BIGINT NOT NULL,
+    beat_id BIGINT NOT NULL,
+    audio_url VARCHAR(500) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (artist_id) REFERENCES users(id),
+    FOREIGN KEY (beat_id) REFERENCES beats(id)
+);
+
+CREATE TABLE collaborations (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    topline_id BIGINT NOT NULL UNIQUE,
+    status VARCHAR(20) NOT NULL,
+    decided_at DATETIME,
+    FOREIGN KEY (topline_id) REFERENCES toplines(id)
+);
+
+CREATE TABLE comments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    topline_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
+    text VARCHAR(1000) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (topline_id) REFERENCES toplines(id),
+    FOREIGN KEY (author_id) REFERENCES users(id)
+);
+
 -- Módulo challenges: flag de productor verificado (mayor peso de voto).
 ALTER TABLE producer_profiles ADD COLUMN verified BOOLEAN NOT NULL DEFAULT FALSE;
 
