@@ -17,6 +17,8 @@ import org.mockito.MockitoAnnotations;
 import java.time.Instant;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -178,5 +180,38 @@ class UserServiceTest {
         ArtistProfile response = userService.updateArtistProfile(2L, 2L, request);
 
         assertEquals("New bio", response.getBio());
+    }
+
+    @Test
+    void verifyProducerSetsVerifiedTrueWhenRequesterIsAdmin() {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setAdmin(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+
+        User producer = new User();
+        producer.setId(2L);
+        producer.setRole(Role.PRODUCER);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(producer));
+
+        ProducerProfile profile = new ProducerProfile();
+        profile.setVerified(false);
+        when(producerProfileRepository.findByUserId(2L)).thenReturn(Optional.of(profile));
+        when(producerProfileRepository.save(profile)).thenReturn(profile);
+
+        ProducerProfile result = userService.verifyProducer(1L, 2L);
+
+        assertThat(result.isVerified()).isTrue();
+    }
+
+    @Test
+    void verifyProducerThrowsWhenRequesterIsNotAdmin() {
+        User notAdmin = new User();
+        notAdmin.setId(1L);
+        notAdmin.setAdmin(false);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(notAdmin));
+
+        assertThatThrownBy(() -> userService.verifyProducer(1L, 2L))
+                .isInstanceOf(ForbiddenOperationException.class);
     }
 }

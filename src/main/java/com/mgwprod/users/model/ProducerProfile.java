@@ -47,4 +47,7 @@ public class ProducerProfile {
     @Size(min = 1, message = "El nivel de experiencia no puede estar vacío")
     @Column(name = "experience_level")
     private String experienceLevel;
+
+    @Column(nullable = false)
+    private boolean verified = false;
 }

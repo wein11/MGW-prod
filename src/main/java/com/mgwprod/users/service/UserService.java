@@ -99,6 +99,24 @@ public class UserService {
         return artistProfileRepository.save(profile);
     }
 
+    @Transactional
+    public ProducerProfile verifyProducer(Long requestingUserId, Long producerId) {
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException(requestingUserId));
+        if (!requester.isAdmin()) {
+            throw new ForbiddenOperationException("Solo un admin puede verificar productores");
+        }
+        User producer = userRepository.findById(producerId)
+                .orElseThrow(() -> new UserNotFoundException(producerId));
+        if (producer.getRole() != Role.PRODUCER) {
+            throw new ForbiddenOperationException("Solo se puede verificar a un productor");
+        }
+        ProducerProfile profile = producerProfileRepository.findByUserId(producerId)
+                .orElseThrow(() -> new IllegalStateException("Producer sin perfil: " + producerId));
+        profile.setVerified(true);
+        return producerProfileRepository.save(profile);
+    }
+
     private User requireOwnership(Long targetUserId, Long requestingUserId) {
         if (!targetUserId.equals(requestingUserId)) {
             throw new ForbiddenOperationException("No podés editar el perfil de otro usuario");
