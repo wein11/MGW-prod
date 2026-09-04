@@ -1,0 +1,90 @@
+### Catalog module — manual requests for Etapa 1 (Postman/curl/IntelliJ HTTP client)
+### Prerequisite: register + login a PRODUCER and an ARTIST via /api/auth/* (see users-API.md),
+### then paste the tokens below.
+
+@baseUrl = http://localhost:8080
+@producerToken = PASTE_PRODUCER_TOKEN_HERE
+@artistToken = PASTE_ARTIST_TOKEN_HERE
+
+### 1. Publish a beat (PRODUCER) — expect 201
+POST {{baseUrl}}/api/beats
+Authorization: Bearer {{producerToken}}
+Content-Type: application/json
+
+{
+  "title": "Trap Beat",
+  "genre": "Trap",
+  "bpm": 140,
+  "key": "Am",
+  "audioUrl": "https://soundcloud.com/example/trap-beat"
+}
+
+### 1b. Publish a beat as ARTIST — expect 403
+POST {{baseUrl}}/api/beats
+Authorization: Bearer {{artistToken}}
+Content-Type: application/json
+
+{
+  "title": "Trap Beat",
+  "genre": "Trap",
+  "bpm": 140,
+  "audioUrl": "https://soundcloud.com/example/trap-beat"
+}
+
+### 1c. Publish a beat unauthenticated — expect 401
+POST {{baseUrl}}/api/beats
+Content-Type: application/json
+
+{
+  "title": "Trap Beat",
+  "genre": "Trap",
+  "bpm": 140,
+  "audioUrl": "https://soundcloud.com/example/trap-beat"
+}
+
+### 2. List all beats — expect 200
+GET {{baseUrl}}/api/beats
+
+### 2b. List beats filtered by genre — expect 200
+GET {{baseUrl}}/api/beats?genre=Trap
+
+### 2c. List beats filtered by genre + bpm — expect 200
+GET {{baseUrl}}/api/beats?genre=Trap&bpm=140
+
+### 2d. List beats by producerId — expect 200
+GET {{baseUrl}}/api/beats?producerId=1
+
+### 3. Get beat detail — expect 200 (adjust id after step 1)
+GET {{baseUrl}}/api/beats/1
+
+### 3b. Get beat detail, missing id — expect 404
+GET {{baseUrl}}/api/beats/99999
+
+### 4. Comment on a beat (ARTIST or PRODUCER) — expect 201
+POST {{baseUrl}}/api/beats/1/comments
+Authorization: Bearer {{artistToken}}
+Content-Type: application/json
+
+{
+  "text": "Buenísimo el beat"
+}
+
+### 4b. Comment unauthenticated — expect 401
+POST {{baseUrl}}/api/beats/1/comments
+Content-Type: application/json
+
+{
+  "text": "Buenísimo el beat"
+}
+
+### 4c. Comment on a missing beat — expect 404
+POST {{baseUrl}}/api/beats/99999/comments
+Authorization: Bearer {{artistToken}}
+Content-Type: application/json
+
+{
+  "text": "Buenísimo el beat"
+}
+
+### 5. List comments on a beat — expect 200
+GET {{baseUrl}}/api/beats/1/comments

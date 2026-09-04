@@ -35,16 +35,36 @@ CREATE TABLE sessions (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Módulo collab. NOTA: beat_id todavía no tiene FK a beats(id) porque el módulo
--- catalog (Santiago+Mateo) no está mergeado a main todavía — sumar
--- `FOREIGN KEY (beat_id) REFERENCES beats(id)` en cuanto ese PR se mergee.
+CREATE TABLE beats (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    producer_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    genre VARCHAR(100) NOT NULL,
+    bpm INT NOT NULL,
+    music_key VARCHAR(20),
+    audio_url VARCHAR(500) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (producer_id) REFERENCES users(id)
+);
+
+CREATE TABLE beat_comments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    beat_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
+    text VARCHAR(1000) NOT NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (beat_id) REFERENCES beats(id),
+    FOREIGN KEY (author_id) REFERENCES users(id)
+);
+
 CREATE TABLE toplines (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     artist_id BIGINT NOT NULL,
     beat_id BIGINT NOT NULL,
     audio_url VARCHAR(500) NOT NULL,
     created_at DATETIME NOT NULL,
-    FOREIGN KEY (artist_id) REFERENCES users(id)
+    FOREIGN KEY (artist_id) REFERENCES users(id),
+    FOREIGN KEY (beat_id) REFERENCES beats(id)
 );
 
 CREATE TABLE collaborations (
