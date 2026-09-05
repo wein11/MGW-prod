@@ -6,7 +6,6 @@ import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.Session;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.ArtistProfileRepository;
-import com.mgwprod.users.repository.ProducerProfileRepository;
 import com.mgwprod.users.repository.SessionRepository;
 import com.mgwprod.users.repository.UserRepository;
 import com.mgwprod.users.security.PasswordHasher;
@@ -20,14 +19,14 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
-    @Mock
-    private ProducerProfileRepository producerProfileRepository;
     @Mock
     private ArtistProfileRepository artistProfileRepository;
     @Mock
@@ -38,25 +37,43 @@ class AuthServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        authService = new AuthService(userRepository, producerProfileRepository,
-                artistProfileRepository, sessionRepository, new PasswordHasher());
+        authService = new AuthService(userRepository, artistProfileRepository,
+                sessionRepository, new PasswordHasher());
     }
 
     @Test
-    void registerCreatesUserWithProducerRole() {
+    void registerCreatesArtistProfileForArtistRole() {
         User incoming = new User();
-        incoming.setEmail("productor@test.com");
+        incoming.setEmail("artista@test.com");
         incoming.setPassword("supersecret123");
         incoming.setDisplayName("DJ Test");
-        incoming.setRole(Role.PRODUCER);
+        incoming.setRole(Role.ARTIST);
 
-        when(userRepository.existsByEmail("productor@test.com")).thenReturn(false);
+        when(userRepository.existsByEmail("artista@test.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         User response = authService.register(incoming);
 
-        assertEquals("productor@test.com", response.getEmail());
-        assertEquals(Role.PRODUCER, response.getRole());
+        assertEquals("artista@test.com", response.getEmail());
+        assertEquals(Role.ARTIST, response.getRole());
+        verify(artistProfileRepository).save(any());
+    }
+
+    @Test
+    void registerDoesNotCreateArtistProfileForDiscograficaRole() {
+        User incoming = new User();
+        incoming.setEmail("discografica@test.com");
+        incoming.setPassword("supersecret123");
+        incoming.setDisplayName("Sello Test");
+        incoming.setRole(Role.DISCOGRAFICA);
+
+        when(userRepository.existsByEmail("discografica@test.com")).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User response = authService.register(incoming);
+
+        assertEquals(Role.DISCOGRAFICA, response.getRole());
+        verify(artistProfileRepository, never()).save(any());
     }
 
     @Test
@@ -77,18 +94,18 @@ class AuthServiceTest {
         PasswordHasher hasher = new PasswordHasher();
         User user = new User();
         user.setId(1L);
-        user.setEmail("productor@test.com");
+        user.setEmail("artista@test.com");
         user.setPasswordHash(hasher.hash("supersecret123"));
         user.setDisplayName("DJ Test");
-        user.setRole(Role.PRODUCER);
+        user.setRole(Role.ARTIST);
 
-        when(userRepository.findByEmail("productor@test.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("artista@test.com")).thenReturn(Optional.of(user));
         when(sessionRepository.save(any(Session.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Session session = authService.login("productor@test.com", "supersecret123");
+        Session session = authService.login("artista@test.com", "supersecret123");
 
         assertEquals(1L, session.getUser().getId());
-        assertEquals(Role.PRODUCER, session.getUser().getRole());
+        assertEquals(Role.ARTIST, session.getUser().getRole());
     }
 
     @Test
@@ -96,14 +113,14 @@ class AuthServiceTest {
         PasswordHasher hasher = new PasswordHasher();
         User user = new User();
         user.setId(1L);
-        user.setEmail("productor@test.com");
+        user.setEmail("artista@test.com");
         user.setPasswordHash(hasher.hash("supersecret123"));
-        user.setRole(Role.PRODUCER);
+        user.setRole(Role.ARTIST);
 
-        when(userRepository.findByEmail("productor@test.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("artista@test.com")).thenReturn(Optional.of(user));
 
         assertThrows(InvalidCredentialsException.class,
-                () -> authService.login("productor@test.com", "wrongpassword"));
+                () -> authService.login("artista@test.com", "wrongpassword"));
     }
 
     @Test
@@ -117,6 +134,6 @@ class AuthServiceTest {
     @Test
     void loginThrowsWhenPasswordBlank() {
         assertThrows(InvalidCredentialsException.class,
-                () -> authService.login("productor@test.com", ""));
+                () -> authService.login("artista@test.com", ""));
     }
 }
