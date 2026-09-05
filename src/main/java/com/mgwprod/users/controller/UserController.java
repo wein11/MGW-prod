@@ -2,7 +2,6 @@ package com.mgwprod.users.controller;
 
 import com.mgwprod.users.exception.UnauthenticatedException;
 import com.mgwprod.users.model.ArtistProfile;
-import com.mgwprod.users.model.ProducerProfile;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.service.UserService;
 import jakarta.validation.Valid;
@@ -30,7 +29,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/profile")
-    public Object getProfile(@PathVariable Long id) {
+    public ArtistProfile getProfile(@PathVariable Long id) {
         return userService.getProfile(id);
     }
 
@@ -40,14 +39,6 @@ public class UserController {
                             @RequestBody User request) {
         requireAuthenticated(requestingUserId);
         return userService.updateUser(id, requestingUserId, request);
-    }
-
-    @PutMapping("/{id}/producer-profile")
-    public ProducerProfile updateProducerProfile(@PathVariable Long id,
-                                                  @RequestAttribute(name = "userId", required = false) Long requestingUserId,
-                                                  @Valid @RequestBody ProducerProfile request) {
-        requireAuthenticated(requestingUserId);
-        return userService.updateProducerProfile(id, requestingUserId, request);
     }
 
     @PutMapping("/{id}/artist-profile")
