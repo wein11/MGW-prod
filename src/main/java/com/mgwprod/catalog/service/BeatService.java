@@ -1,5 +1,6 @@
 package com.mgwprod.catalog.service;
 
+import com.mgwprod.billing.service.SubscriptionService;
 import com.mgwprod.catalog.exception.BeatNotFoundException;
 import com.mgwprod.catalog.model.Beat;
 import com.mgwprod.catalog.repository.BeatRepository;
@@ -18,10 +19,13 @@ public class BeatService {
 
     private final BeatRepository beatRepository;
     private final UserRepository userRepository;
+    private final SubscriptionService subscriptionService;
 
-    public BeatService(BeatRepository beatRepository, UserRepository userRepository) {
+    public BeatService(BeatRepository beatRepository, UserRepository userRepository,
+                        SubscriptionService subscriptionService) {
         this.beatRepository = beatRepository;
         this.userRepository = userRepository;
+        this.subscriptionService = subscriptionService;
     }
 
     @Transactional
@@ -31,6 +35,7 @@ public class BeatService {
         if (producer.getRole() != Role.ARTIST) {
             throw new ForbiddenOperationException("Solo un artista puede publicar beats");
         }
+        subscriptionService.recordProduction(producerId);
         beat.setProducerId(producerId);
         return beatRepository.save(beat);
     }

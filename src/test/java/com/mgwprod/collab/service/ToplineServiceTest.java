@@ -1,5 +1,7 @@
 package com.mgwprod.collab.service;
 
+import com.mgwprod.billing.exception.SubscriptionLimitExceededException;
+import com.mgwprod.billing.service.SubscriptionService;
 import com.mgwprod.catalog.model.Beat;
 import com.mgwprod.catalog.repository.BeatRepository;
 import com.mgwprod.collab.model.CollaborationStatus;
@@ -22,6 +24,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +43,9 @@ class ToplineServiceTest {
 
     @Mock
     private BeatRepository beatRepository;
+
+    @Mock
+    private SubscriptionService subscriptionService;
 
     @InjectMocks
     private ToplineService toplineService;
@@ -88,5 +95,54 @@ class ToplineServiceTest {
 
         assertThatThrownBy(() -> toplineService.create(1L, topline))
                 .isInstanceOf(ForbiddenOperationException.class);
+    }
+
+    @Test
+    void createCallsRecordProductionBeforeSaving() {
+        User artist = new User();
+        artist.setId(1L);
+        artist.setRole(Role.ARTIST);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(artist));
+
+        Beat beat = new Beat();
+        beat.setId(2L);
+        when(beatRepository.findById(2L)).thenReturn(Optional.of(beat));
+
+        Topline topline = new Topline();
+        topline.setBeatId(2L);
+        topline.setAudioUrl("https://soundcloud.com/example/topline");
+
+        when(toplineRepository.save(any(Topline.class))).thenAnswer(invocation -> {
+            Topline saved = invocation.getArgument(0);
+            saved.setId(10L);
+            return saved;
+        });
+        when(collaborationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        toplineService.create(1L, topline);
+
+        verify(subscriptionService).recordProduction(1L);
+    }
+
+    @Test
+    void createPropagatesSubscriptionLimitExceeded() {
+        User artist = new User();
+        artist.setId(1L);
+        artist.setRole(Role.ARTIST);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(artist));
+
+        Beat beat = new Beat();
+        beat.setId(2L);
+        when(beatRepository.findById(2L)).thenReturn(Optional.of(beat));
+
+        Topline topline = new Topline();
+        topline.setBeatId(2L);
+
+        doThrow(new SubscriptionLimitExceededException())
+                .when(subscriptionService).recordProduction(1L);
+
+        assertThatThrownBy(() -> toplineService.create(1L, topline))
+                .isInstanceOf(SubscriptionLimitExceededException.class);
+        verify(toplineRepository, never()).save(any());
     }
 }
