@@ -10,7 +10,7 @@ interceptor level — each endpoint decides for itself whether auth is required.
 
 ## POST /api/auth/register
 
-Creates a new user (and its `ProducerProfile` or `ArtistProfile`, based on `role`).
+Creates a new user (and its `ArtistProfile`, only when `role = ARTIST`).
 
 - **Auth:** not required.
 - **Request body:**
@@ -20,7 +20,7 @@ Creates a new user (and its `ProducerProfile` or `ArtistProfile`, based on `role
   | `email` | string | required, must be a valid email |
   | `password` | string | required, min 8 characters |
   | `displayName` | string | required |
-  | `role` | `"PRODUCER"` \| `"ARTIST"` | required |
+  | `role` | `"ARTIST"` \| `"DISCOGRAFICA"` \| `"ADMIN"` | required |
   | `city` | string | optional |
 
 - **Response body** (`UserResponse`):
@@ -30,12 +30,13 @@ Creates a new user (and its `ProducerProfile` or `ArtistProfile`, based on `role
   | `id` | number |
   | `email` | string |
   | `displayName` | string |
-  | `role` | `"PRODUCER"` \| `"ARTIST"` |
+  | `role` | `"ARTIST"` \| `"DISCOGRAFICA"` \| `"ADMIN"` |
   | `city` | string \| null |
-  | `isAdmin` | boolean |
   | `createdAt` | ISO-8601 timestamp |
-  | `producerProfile` | object \| null — `{ genres, bpmMin, bpmMax, experienceLevel }`, present when `role = PRODUCER` |
-  | `artistProfile` | object \| null — `{ genres, bio }`, present when `role = ARTIST` |
+
+  No hay campo `isAdmin` — `ADMIN` es un valor más de `role`, no un flag separado. El
+  perfil (`ArtistProfile`) no viaja en esta respuesta; se consulta aparte con
+  `GET /api/users/{id}/profile`.
 
 - **Status codes:**
 
@@ -65,7 +66,7 @@ Authenticates a user and issues a session token (24h expiry).
   | `token` | string — pass as `Authorization: Bearer <token>` on subsequent requests |
   | `userId` | number |
   | `displayName` | string |
-  | `role` | `"PRODUCER"` \| `"ARTIST"` |
+  | `role` | `"ARTIST"` \| `"DISCOGRAFICA"` \| `"ADMIN"` |
 
 - **Status codes:**
 
@@ -106,11 +107,9 @@ string is rejected as invalid (it must either be omitted or non-empty).
   |---|---|---|---|
   | `displayName` | string | any role | if present, must be non-empty |
   | `city` | string | any role | if present, must be non-empty |
-  | `genres` | string | PRODUCER, ARTIST | if present, must be non-empty |
-  | `bpmMin` | number | PRODUCER only | if present, must be >= 1 |
-  | `bpmMax` | number | PRODUCER only | if present, must be >= 1 |
-  | `experienceLevel` | string | PRODUCER only | if present, must be non-empty |
-  | `bio` | string | ARTIST only | if present, must be non-empty |
+
+  Profile fields (`genres`, `bio`, `bpmMin`, `bpmMax`, `experienceLevel`) are not part
+  of this endpoint — see `PUT /api/users/{id}/artist-profile` below.
 
 - **Response body:** `UserResponse` (see shape above), reflecting the updated profile.
 - **Status codes:**
@@ -133,3 +132,69 @@ do this" (authenticated as a different user than the one in the path). The 403
 case genuinely stays in `UserService.update` (it needs to compare
 `targetUserId` vs `requestingUserId`); the 401 case is a controller-level check
 before the service is even called.
+
+## GET /api/users/{id}/profile
+
+Fetches a user's `ArtistProfile`. Only `role = ARTIST` users have one — every
+other role gets a 403 (there is no `DISCOGRAFICA`/`ADMIN` profile in this
+entrega).
+
+- **Auth:** not required.
+- **Path params:** `id` — user id.
+- **Response body** (`ArtistProfile`): `{ id, genres, bio, bpmMin, bpmMax, experienceLevel, verified }`.
+- **Status codes:**
+
+  | Code | When |
+  |---|---|
+  | 200 | Profile found |
+  | 403 | The user exists but is not `ARTIST` |
+  | 404 | No user with that id |
+  | 500 | Unexpected server error |
+
+## PUT /api/users/{id}/artist-profile
+
+Updates the caller's own `ArtistProfile`. All body fields are optional and
+merge into the existing profile (`null`/omitted leaves the field unchanged).
+
+- **Auth:** required — `Authorization: Bearer <token>`.
+- **Path params:** `id` — id of the user whose profile is being edited (must
+  match the caller).
+- **Request body** (all fields optional):
+
+  | Field | Type | Notes |
+  |---|---|---|
+  | `genres` | string | if present, must be non-empty |
+  | `bio` | string | if present, must be non-empty |
+  | `bpmMin` | number | if present, must be >= 1 |
+  | `bpmMax` | number | if present, must be >= 1 |
+  | `experienceLevel` | string | if present, must be non-empty |
+
+- **Response body:** the updated `ArtistProfile`.
+- **Status codes:**
+
+  | Code | When |
+  |---|---|
+  | 200 | Update applied |
+  | 401 | Not authenticated |
+  | 403 | Editing someone else's profile, or the target user is not `ARTIST` |
+  | 404 | No user with that id |
+  | 500 | Unexpected server error |
+
+## PUT /api/artists/{id}/verify
+
+Marks an artist's `ArtistProfile` as verified. Admin-only (replaces the old
+"verify producer" endpoint — every artist is verifiable now, not just
+producers).
+
+- **Auth:** required — `Authorization: Bearer <token>`, caller must be `role = ADMIN`.
+- **Path params:** `id` — id of the artist to verify.
+- **Response body:** the updated `ArtistProfile` (`verified: true`).
+- **Status codes:**
+
+  | Code | When |
+  |---|---|
+  | 200 | Verified |
+  | 401 | Not authenticated |
+  | 403 | Caller is not `ADMIN`, or the target user is not `ARTIST` |
+  | 404 | No user with that id |
+  | 500 | Unexpected server error |
