@@ -128,3 +128,12 @@ CREATE TABLE challenge_results (
     FOREIGN KEY (challenge_id) REFERENCES challenges(id),
     FOREIGN KEY (submission_id) REFERENCES submissions(id)
 );
+
+CREATE TABLE subscriptions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL UNIQUE,
+    plan VARCHAR(20) NOT NULL,
+    productions_count INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
