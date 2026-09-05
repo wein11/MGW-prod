@@ -67,14 +67,6 @@ public class User {
 
     private String city;
 
-    // Field name must match the Lombok boolean getter's implicit property name ("admin",
-    // from isAdmin() -> "admin") so both merge into one Jackson property before being
-    // renamed to "isAdmin" by @JsonProperty. Otherwise Jackson serializes it twice
-    // (once as "admin" from the getter, once as "isAdmin" from the annotation).
-    @JsonProperty("isAdmin")
-    @Column(name = "is_admin", nullable = false)
-    private boolean admin = false;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

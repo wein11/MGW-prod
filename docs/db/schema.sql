@@ -5,7 +5,6 @@ CREATE TABLE users (
     display_name VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
     city VARCHAR(255),
-    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     created_at DATETIME NOT NULL
 );
 
