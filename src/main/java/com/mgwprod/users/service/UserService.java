@@ -3,11 +3,9 @@ package com.mgwprod.users.service;
 import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.ArtistProfile;
-import com.mgwprod.users.model.ProducerProfile;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.ArtistProfileRepository;
-import com.mgwprod.users.repository.ProducerProfileRepository;
 import com.mgwprod.users.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,14 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final ProducerProfileRepository producerProfileRepository;
     private final ArtistProfileRepository artistProfileRepository;
 
-    public UserService(UserRepository userRepository,
-                        ProducerProfileRepository producerProfileRepository,
-                        ArtistProfileRepository artistProfileRepository) {
+    public UserService(UserRepository userRepository, ArtistProfileRepository artistProfileRepository) {
         this.userRepository = userRepository;
-        this.producerProfileRepository = producerProfileRepository;
         this.artistProfileRepository = artistProfileRepository;
     }
 
@@ -34,11 +28,10 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public Object getProfile(Long userId) {
+    public ArtistProfile getProfile(Long userId) {
         User user = getById(userId);
-        if (user.getRole() == Role.PRODUCER) {
-            return producerProfileRepository.findByUserId(userId)
-                    .orElseThrow(() -> new IllegalStateException("Producer sin perfil: " + userId));
+        if (user.getRole() != Role.ARTIST) {
+            throw new ForbiddenOperationException("Este usuario no tiene perfil de artista");
         }
         return artistProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException("Artist sin perfil: " + userId));
@@ -58,30 +51,6 @@ public class UserService {
     }
 
     @Transactional
-    public ProducerProfile updateProducerProfile(Long targetUserId, Long requestingUserId, ProducerProfile request) {
-        User user = requireOwnership(targetUserId, requestingUserId);
-        if (user.getRole() != Role.PRODUCER) {
-            throw new ForbiddenOperationException("Este usuario no tiene perfil de productor");
-        }
-
-        ProducerProfile profile = producerProfileRepository.findByUserId(targetUserId)
-                .orElseThrow(() -> new IllegalStateException("Producer sin perfil: " + targetUserId));
-        if (request.getGenres() != null) {
-            profile.setGenres(request.getGenres());
-        }
-        if (request.getBpmMin() != null) {
-            profile.setBpmMin(request.getBpmMin());
-        }
-        if (request.getBpmMax() != null) {
-            profile.setBpmMax(request.getBpmMax());
-        }
-        if (request.getExperienceLevel() != null) {
-            profile.setExperienceLevel(request.getExperienceLevel());
-        }
-        return producerProfileRepository.save(profile);
-    }
-
-    @Transactional
     public ArtistProfile updateArtistProfile(Long targetUserId, Long requestingUserId, ArtistProfile request) {
         User user = requireOwnership(targetUserId, requestingUserId);
         if (user.getRole() != Role.ARTIST) {
@@ -96,25 +65,34 @@ public class UserService {
         if (request.getBio() != null) {
             profile.setBio(request.getBio());
         }
+        if (request.getBpmMin() != null) {
+            profile.setBpmMin(request.getBpmMin());
+        }
+        if (request.getBpmMax() != null) {
+            profile.setBpmMax(request.getBpmMax());
+        }
+        if (request.getExperienceLevel() != null) {
+            profile.setExperienceLevel(request.getExperienceLevel());
+        }
         return artistProfileRepository.save(profile);
     }
 
     @Transactional
-    public ProducerProfile verifyProducer(Long requestingUserId, Long producerId) {
+    public ArtistProfile verifyArtist(Long requestingUserId, Long artistId) {
         User requester = userRepository.findById(requestingUserId)
                 .orElseThrow(() -> new UserNotFoundException(requestingUserId));
-        if (!requester.isAdmin()) {
-            throw new ForbiddenOperationException("Solo un admin puede verificar productores");
+        if (requester.getRole() != Role.ADMIN) {
+            throw new ForbiddenOperationException("Solo un admin puede verificar artistas");
         }
-        User producer = userRepository.findById(producerId)
-                .orElseThrow(() -> new UserNotFoundException(producerId));
-        if (producer.getRole() != Role.PRODUCER) {
-            throw new ForbiddenOperationException("Solo se puede verificar a un productor");
+        User artist = userRepository.findById(artistId)
+                .orElseThrow(() -> new UserNotFoundException(artistId));
+        if (artist.getRole() != Role.ARTIST) {
+            throw new ForbiddenOperationException("Solo se puede verificar a un artista");
         }
-        ProducerProfile profile = producerProfileRepository.findByUserId(producerId)
-                .orElseThrow(() -> new IllegalStateException("Producer sin perfil: " + producerId));
+        ArtistProfile profile = artistProfileRepository.findByUserId(artistId)
+                .orElseThrow(() -> new IllegalStateException("Artist sin perfil: " + artistId));
         profile.setVerified(true);
-        return producerProfileRepository.save(profile);
+        return artistProfileRepository.save(profile);
     }
 
     private User requireOwnership(Long targetUserId, Long requestingUserId) {
