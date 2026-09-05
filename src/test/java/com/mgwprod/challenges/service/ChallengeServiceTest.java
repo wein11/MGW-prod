@@ -39,7 +39,7 @@ class ChallengeServiceTest {
     void createSavesChallengeWhenRequesterIsAdminAndGuestIsArtist() {
         User admin = new User();
         admin.setId(1L);
-        admin.setAdmin(true);
+        admin.setRole(Role.ADMIN);
         when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
 
         User guestArtist = new User();
@@ -58,11 +58,33 @@ class ChallengeServiceTest {
     }
 
     @Test
-    void createThrowsWhenRequesterIsNotAdmin() {
-        User notAdmin = new User();
-        notAdmin.setId(1L);
-        notAdmin.setAdmin(false);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(notAdmin));
+    void createSavesChallengeWhenRequesterIsDiscografica() {
+        User discografica = new User();
+        discografica.setId(1L);
+        discografica.setRole(Role.DISCOGRAFICA);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(discografica));
+
+        User guestArtist = new User();
+        guestArtist.setId(2L);
+        guestArtist.setRole(Role.ARTIST);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(guestArtist));
+
+        Challenge challenge = new Challenge();
+        challenge.setGuestArtistId(2L);
+        challenge.setDeadline(Instant.now().plusSeconds(604800));
+        when(challengeRepository.save(any(Challenge.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Challenge saved = challengeService.create(1L, challenge);
+
+        assertThat(saved.getGuestArtistId()).isEqualTo(2L);
+    }
+
+    @Test
+    void createThrowsWhenRequesterIsArtist() {
+        User artist = new User();
+        artist.setId(1L);
+        artist.setRole(Role.ARTIST);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(artist));
 
         Challenge challenge = new Challenge();
         challenge.setGuestArtistId(2L);
@@ -75,12 +97,12 @@ class ChallengeServiceTest {
     void createThrowsWhenGuestArtistIsNotAnArtist() {
         User admin = new User();
         admin.setId(1L);
-        admin.setAdmin(true);
+        admin.setRole(Role.ADMIN);
         when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
 
         User notArtist = new User();
         notArtist.setId(2L);
-        notArtist.setRole(Role.PRODUCER);
+        notArtist.setRole(Role.DISCOGRAFICA);
         when(userRepository.findById(2L)).thenReturn(Optional.of(notArtist));
 
         Challenge challenge = new Challenge();

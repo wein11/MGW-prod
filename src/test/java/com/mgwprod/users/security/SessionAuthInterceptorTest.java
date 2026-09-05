@@ -50,7 +50,7 @@ class SessionAuthInterceptorTest {
     void setsUserAttributesForValidToken() {
         User user = new User();
         user.setId(42L);
-        user.setRole(Role.PRODUCER);
+        user.setRole(Role.ARTIST);
 
         Session session = new Session();
         session.setUser(user);
@@ -64,14 +64,14 @@ class SessionAuthInterceptorTest {
 
         assertTrue(result);
         verify(request).setAttribute(SessionAuthInterceptor.USER_ID_ATTRIBUTE, 42L);
-        verify(request).setAttribute(SessionAuthInterceptor.USER_ROLE_ATTRIBUTE, "PRODUCER");
+        verify(request).setAttribute(SessionAuthInterceptor.USER_ROLE_ATTRIBUTE, "ARTIST");
     }
 
     @Test
     void rejectsExpiredToken() {
         User user = new User();
         user.setId(42L);
-        user.setRole(Role.PRODUCER);
+        user.setRole(Role.ARTIST);
 
         Session session = new Session();
         session.setUser(user);

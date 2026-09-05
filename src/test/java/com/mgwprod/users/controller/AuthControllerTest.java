@@ -39,24 +39,24 @@ class AuthControllerTest {
     void registerReturns201WithUserData() throws Exception {
         User response = new User();
         response.setId(1L);
-        response.setEmail("productor@test.com");
+        response.setEmail("artista@test.com");
         response.setDisplayName("DJ Test");
-        response.setRole(Role.PRODUCER);
+        response.setRole(Role.ARTIST);
         response.setCreatedAt(Instant.now());
 
         when(authService.register(any(User.class))).thenReturn(response);
 
         String requestJson = """
-                {"email":"productor@test.com","password":"supersecret123","displayName":"DJ Test","role":"PRODUCER"}
+                {"email":"artista@test.com","password":"supersecret123","displayName":"DJ Test","role":"ARTIST"}
                 """;
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("productor@test.com"))
-                .andExpect(jsonPath("$.role").value("PRODUCER"))
-                .andExpect(jsonPath("$.isAdmin").value(false))
+                .andExpect(jsonPath("$.email").value("artista@test.com"))
+                .andExpect(jsonPath("$.role").value("ARTIST"))
+                .andExpect(jsonPath("$.isAdmin").doesNotExist())
                 .andExpect(jsonPath("$.admin").doesNotExist())
                 .andExpect(jsonPath("$.passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.password").doesNotExist());
@@ -65,7 +65,7 @@ class AuthControllerTest {
     @Test
     void registerReturns400WhenEmailIsBlank() throws Exception {
         String requestJson = """
-                {"email":"","password":"supersecret123","displayName":"DJ Test","role":"PRODUCER"}
+                {"email":"","password":"supersecret123","displayName":"DJ Test","role":"ARTIST"}
                 """;
 
         mockMvc.perform(post("/api/auth/register")
@@ -94,7 +94,7 @@ class AuthControllerTest {
         User user = new User();
         user.setId(1L);
         user.setDisplayName("DJ Test");
-        user.setRole(Role.PRODUCER);
+        user.setRole(Role.ARTIST);
 
         Session session = new Session();
         session.setToken("some-token-123");

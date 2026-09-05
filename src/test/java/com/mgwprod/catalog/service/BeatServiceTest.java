@@ -32,11 +32,11 @@ class BeatServiceTest {
     private BeatService beatService;
 
     @Test
-    void createSavesBeatWhenProducerIsValid() {
-        User producer = new User();
-        producer.setId(1L);
-        producer.setRole(Role.PRODUCER);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(producer));
+    void createSavesBeatWhenArtistIsValid() {
+        User artist = new User();
+        artist.setId(1L);
+        artist.setRole(Role.ARTIST);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(artist));
 
         Beat beat = new Beat();
         beat.setTitle("Trap Beat");
@@ -52,11 +52,11 @@ class BeatServiceTest {
     }
 
     @Test
-    void createThrowsWhenUserIsNotProducer() {
-        User artist = new User();
-        artist.setId(2L);
-        artist.setRole(Role.ARTIST);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(artist));
+    void createThrowsWhenUserIsDiscografica() {
+        User discografica = new User();
+        discografica.setId(2L);
+        discografica.setRole(Role.DISCOGRAFICA);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(discografica));
 
         Beat beat = new Beat();
         beat.setTitle("Trap Beat");

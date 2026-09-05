@@ -43,7 +43,7 @@ class CommentRepositoryTest {
         commenter.setEmail("commenter-comment-repo-test@example.com");
         commenter.setPasswordHash("hash");
         commenter.setDisplayName("Commenter");
-        commenter.setRole(Role.PRODUCER);
+        commenter.setRole(Role.ARTIST);
         commenter.setCreatedAt(Instant.now());
         User savedCommenter = userRepository.save(commenter);
 

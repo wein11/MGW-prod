@@ -33,8 +33,8 @@ public class ChallengeService {
     public Challenge create(Long requestingUserId, Challenge challenge) {
         User requester = userRepository.findById(requestingUserId)
                 .orElseThrow(() -> new UserNotFoundException(requestingUserId));
-        if (!requester.isAdmin()) {
-            throw new ForbiddenOperationException("Solo un admin puede crear challenges");
+        if (requester.getRole() != Role.ADMIN && requester.getRole() != Role.DISCOGRAFICA) {
+            throw new ForbiddenOperationException("Solo un admin o una discográfica pueden crear challenges");
         }
         User guestArtist = userRepository.findById(challenge.getGuestArtistId())
                 .orElseThrow(() -> new UserNotFoundException(challenge.getGuestArtistId()));

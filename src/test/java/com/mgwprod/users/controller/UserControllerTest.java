@@ -2,7 +2,7 @@ package com.mgwprod.users.controller;
 
 import tools.jackson.databind.ObjectMapper;
 import com.mgwprod.users.exception.UserNotFoundException;
-import com.mgwprod.users.model.ProducerProfile;
+import com.mgwprod.users.model.ArtistProfile;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.SessionRepository;
@@ -42,7 +42,7 @@ class UserControllerTest {
         User response = new User();
         response.setId(1L);
         response.setDisplayName("DJ Test");
-        response.setRole(Role.PRODUCER);
+        response.setRole(Role.ARTIST);
         response.setCity("Buenos Aires");
 
         when(userService.getById(1L)).thenReturn(response);
@@ -61,8 +61,8 @@ class UserControllerTest {
     }
 
     @Test
-    void getProfileReturns200WithProducerProfile() throws Exception {
-        ProducerProfile profile = new ProducerProfile();
+    void getProfileReturns200WithArtistProfile() throws Exception {
+        ArtistProfile profile = new ArtistProfile();
         profile.setGenres("RKT");
 
         when(userService.getProfile(1L)).thenReturn(profile);
@@ -80,7 +80,7 @@ class UserControllerTest {
         User response = new User();
         response.setId(1L);
         response.setDisplayName("Nuevo Nombre");
-        response.setRole(Role.PRODUCER);
+        response.setRole(Role.ARTIST);
 
         when(userService.updateUser(eq(1L), eq(1L), any(User.class))).thenReturn(response);
 
@@ -104,20 +104,29 @@ class UserControllerTest {
     }
 
     @Test
-    void updateProducerProfileReturns200WhenOwnerEditsOwnProfile() throws Exception {
-        ProducerProfile request = new ProducerProfile();
+    void updateArtistProfileReturns200WhenOwnerEditsOwnProfile() throws Exception {
+        ArtistProfile request = new ArtistProfile();
         request.setGenres("RKT,Trap");
+        request.setBpmMin(120);
+        request.setBpmMax(140);
+        request.setExperienceLevel("intermedio");
 
-        ProducerProfile response = new ProducerProfile();
+        ArtistProfile response = new ArtistProfile();
         response.setGenres("RKT,Trap");
+        response.setBpmMin(120);
+        response.setBpmMax(140);
+        response.setExperienceLevel("intermedio");
 
-        when(userService.updateProducerProfile(eq(1L), eq(1L), any(ProducerProfile.class))).thenReturn(response);
+        when(userService.updateArtistProfile(eq(1L), eq(1L), any(ArtistProfile.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/users/1/producer-profile")
+        mockMvc.perform(put("/api/users/1/artist-profile")
                         .requestAttr("userId", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.genres").value("RKT,Trap"));
+                .andExpect(jsonPath("$.genres").value("RKT,Trap"))
+                .andExpect(jsonPath("$.bpmMin").value(120))
+                .andExpect(jsonPath("$.bpmMax").value(140))
+                .andExpect(jsonPath("$.experienceLevel").value("intermedio"));
     }
 }

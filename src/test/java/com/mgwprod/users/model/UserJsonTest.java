@@ -39,15 +39,16 @@ class UserJsonTest {
     }
 
     @Test
-    void isAdminSerializesOnceAsIsAdmin() throws Exception {
+    void roleAcceptsAdminAsAnyOtherEnumValue() throws Exception {
         User user = new User();
         user.setEmail("test@test.com");
         user.setDisplayName("Test");
-        user.setRole(Role.ARTIST);
+        user.setRole(Role.ADMIN);
 
         String json = objectMapper.writeValueAsString(user);
 
-        assertTrue(json.contains("\"isAdmin\":false"));
+        assertTrue(json.contains("\"role\":\"ADMIN\""));
+        assertFalse(json.contains("\"isAdmin\""));
         assertFalse(json.contains("\"admin\":"));
     }
 }
