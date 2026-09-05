@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,4 +39,19 @@ public class ArtistProfile {
     @Size(min = 1, message = "La biografía no puede estar vacía")
     @Column(columnDefinition = "TEXT")
     private String bio;
+
+    @Min(value = 1, message = "El BPM mínimo debe ser mayor a 0")
+    @Column(name = "bpm_min")
+    private Integer bpmMin;
+
+    @Min(value = 1, message = "El BPM máximo debe ser mayor a 0")
+    @Column(name = "bpm_max")
+    private Integer bpmMax;
+
+    @Size(min = 1, message = "El nivel de experiencia no puede estar vacío")
+    @Column(name = "experience_level")
+    private String experienceLevel;
+
+    @Column(nullable = false)
+    private boolean verified = false;
 }

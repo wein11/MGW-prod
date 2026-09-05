@@ -8,21 +8,15 @@ CREATE TABLE users (
     created_at DATETIME NOT NULL
 );
 
-CREATE TABLE producer_profiles (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL UNIQUE,
-    genres VARCHAR(255),
-    bpm_min INT,
-    bpm_max INT,
-    experience_level VARCHAR(255),
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
 CREATE TABLE artist_profiles (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL UNIQUE,
     genres VARCHAR(255),
     bio TEXT,
+    bpm_min INT,
+    bpm_max INT,
+    experience_level VARCHAR(255),
+    verified BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -83,9 +77,6 @@ CREATE TABLE comments (
     FOREIGN KEY (topline_id) REFERENCES toplines(id),
     FOREIGN KEY (author_id) REFERENCES users(id)
 );
-
--- Módulo challenges: flag de productor verificado (mayor peso de voto).
-ALTER TABLE producer_profiles ADD COLUMN verified BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE challenges (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
