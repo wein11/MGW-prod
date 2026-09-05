@@ -78,10 +78,10 @@ class ToplineServiceTest {
 
     @Test
     void createThrowsWhenUserIsNotArtist() {
-        User producer = new User();
-        producer.setId(1L);
-        producer.setRole(Role.PRODUCER);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(producer));
+        User discografica = new User();
+        discografica.setId(1L);
+        discografica.setRole(Role.DISCOGRAFICA);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(discografica));
 
         Topline topline = new Topline();
         topline.setBeatId(2L);

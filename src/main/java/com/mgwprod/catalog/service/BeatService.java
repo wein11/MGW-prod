@@ -28,8 +28,8 @@ public class BeatService {
     public Beat create(Long producerId, Beat beat) {
         User producer = userRepository.findById(producerId)
                 .orElseThrow(() -> new UserNotFoundException(producerId));
-        if (producer.getRole() != Role.PRODUCER) {
-            throw new ForbiddenOperationException("Solo un productor puede publicar beats");
+        if (producer.getRole() != Role.ARTIST) {
+            throw new ForbiddenOperationException("Solo un artista puede publicar beats");
         }
         beat.setProducerId(producerId);
         return beatRepository.save(beat);

@@ -38,8 +38,8 @@ public class SubmissionService {
     public Submission create(Long challengeId, Long producerId, Submission submission) {
         User producer = userRepository.findById(producerId)
                 .orElseThrow(() -> new UserNotFoundException(producerId));
-        if (producer.getRole() != Role.PRODUCER) {
-            throw new ForbiddenOperationException("Solo un productor puede enviar una submission");
+        if (producer.getRole() != Role.ARTIST) {
+            throw new ForbiddenOperationException("Solo un artista puede enviar una submission");
         }
         Challenge challenge = challengeRepository.findById(challengeId)
                 .orElseThrow(() -> new ChallengeNotFoundException(challengeId));

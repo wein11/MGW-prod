@@ -8,9 +8,10 @@ import com.mgwprod.challenges.repository.ChallengeResultRepository;
 import com.mgwprod.challenges.repository.SubmissionRepository;
 import com.mgwprod.challenges.repository.VoteRepository;
 import com.mgwprod.users.exception.ForbiddenOperationException;
-import com.mgwprod.users.model.ProducerProfile;
+import com.mgwprod.users.model.ArtistProfile;
+import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
-import com.mgwprod.users.repository.ProducerProfileRepository;
+import com.mgwprod.users.repository.ArtistProfileRepository;
 import com.mgwprod.users.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +47,7 @@ class ChallengeResultServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private ProducerProfileRepository producerProfileRepository;
+    private ArtistProfileRepository artistProfileRepository;
 
     // Colaborador real (función pura, sin dependencias): el test provee votos reales y
     // espera el orden que produce el cálculo ponderado de verdad, no un mock. El plan
@@ -61,7 +62,7 @@ class ChallengeResultServiceTest {
     void closeCreatesTopThreeResultsOrderedByScore() {
         User admin = new User();
         admin.setId(1L);
-        admin.setAdmin(true);
+        admin.setRole(Role.ADMIN);
         when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
 
         Challenge challenge = new Challenge();
@@ -84,11 +85,11 @@ class ChallengeResultServiceTest {
         when(voteRepository.findBySubmissionId(2L)).thenReturn(List.of(voteFrom(1L, 6)));
         when(voteRepository.findBySubmissionId(3L)).thenReturn(List.of(voteFrom(1L, 9)));
 
-        when(producerProfileRepository.findByVerifiedTrue()).thenReturn(List.of());
+        when(artistProfileRepository.findByVerifiedTrue()).thenReturn(List.of());
 
-        ProducerProfile winnerProfile = new ProducerProfile();
-        when(producerProfileRepository.findByUserId(13L)).thenReturn(Optional.of(winnerProfile));
-        when(producerProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        ArtistProfile winnerProfile = new ArtistProfile();
+        when(artistProfileRepository.findByUserId(13L)).thenReturn(Optional.of(winnerProfile));
+        when(artistProfileRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         when(challengeResultRepository.save(any(ChallengeResult.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -110,7 +111,7 @@ class ChallengeResultServiceTest {
     void closeThrowsWhenRequesterIsNotAdmin() {
         User notAdmin = new User();
         notAdmin.setId(1L);
-        notAdmin.setAdmin(false);
+        notAdmin.setRole(Role.ARTIST);
         when(userRepository.findById(1L)).thenReturn(Optional.of(notAdmin));
 
         assertThatThrownBy(() -> challengeResultService.close(100L, 1L))

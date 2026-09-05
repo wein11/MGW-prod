@@ -38,11 +38,11 @@ class SubmissionServiceTest {
     private SubmissionService submissionService;
 
     @Test
-    void createSavesSubmissionWhenProducerAndDeadlineAreValid() {
-        User producer = new User();
-        producer.setId(2L);
-        producer.setRole(Role.PRODUCER);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(producer));
+    void createSavesSubmissionWhenArtistAndDeadlineAreValid() {
+        User artist = new User();
+        artist.setId(2L);
+        artist.setRole(Role.ARTIST);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(artist));
 
         Challenge challenge = new Challenge();
         challenge.setId(1L);
@@ -61,10 +61,10 @@ class SubmissionServiceTest {
 
     @Test
     void createThrowsWhenDeadlineHasPassed() {
-        User producer = new User();
-        producer.setId(2L);
-        producer.setRole(Role.PRODUCER);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(producer));
+        User artist = new User();
+        artist.setId(2L);
+        artist.setRole(Role.ARTIST);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(artist));
 
         Challenge challenge = new Challenge();
         challenge.setId(1L);
@@ -79,11 +79,11 @@ class SubmissionServiceTest {
     }
 
     @Test
-    void createThrowsWhenUserIsNotProducer() {
-        User artist = new User();
-        artist.setId(2L);
-        artist.setRole(Role.ARTIST);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(artist));
+    void createThrowsWhenUserIsDiscografica() {
+        User discografica = new User();
+        discografica.setId(2L);
+        discografica.setRole(Role.DISCOGRAFICA);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(discografica));
 
         Submission submission = new Submission();
         submission.setAudioUrl("https://soundcloud.com/example/submission");
