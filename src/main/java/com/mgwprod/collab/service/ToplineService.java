@@ -1,5 +1,6 @@
 package com.mgwprod.collab.service;
 
+import com.mgwprod.billing.service.SubscriptionService;
 import com.mgwprod.catalog.exception.BeatNotFoundException;
 import com.mgwprod.catalog.repository.BeatRepository;
 import com.mgwprod.collab.exception.ToplineNotFoundException;
@@ -25,15 +26,18 @@ public class ToplineService {
     private final CollaborationRepository collaborationRepository;
     private final UserRepository userRepository;
     private final BeatRepository beatRepository;
+    private final SubscriptionService subscriptionService;
 
     public ToplineService(ToplineRepository toplineRepository,
                            CollaborationRepository collaborationRepository,
                            UserRepository userRepository,
-                           BeatRepository beatRepository) {
+                           BeatRepository beatRepository,
+                           SubscriptionService subscriptionService) {
         this.toplineRepository = toplineRepository;
         this.collaborationRepository = collaborationRepository;
         this.userRepository = userRepository;
         this.beatRepository = beatRepository;
+        this.subscriptionService = subscriptionService;
     }
 
     @Transactional
@@ -45,6 +49,8 @@ public class ToplineService {
         }
         beatRepository.findById(topline.getBeatId())
                 .orElseThrow(() -> new BeatNotFoundException(topline.getBeatId()));
+
+        subscriptionService.recordProduction(artistId);
 
         topline.setArtistId(artistId);
         Topline saved = toplineRepository.save(topline);
