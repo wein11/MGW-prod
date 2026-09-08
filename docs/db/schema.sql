@@ -65,7 +65,7 @@ CREATE TABLE collaborations (
     topline_id BIGINT NOT NULL UNIQUE,
     status VARCHAR(20) NOT NULL,
     decided_at DATETIME,
-    FOREIGN KEY (topline_id) REFERENCES toplines(id)
+    FOREIGN KEY (topline_id) REFERENCES toplines(id) ON DELETE CASCADE
 );
 
 CREATE TABLE comments (
@@ -74,7 +74,7 @@ CREATE TABLE comments (
     author_id BIGINT NOT NULL,
     text VARCHAR(1000) NOT NULL,
     created_at DATETIME NOT NULL,
-    FOREIGN KEY (topline_id) REFERENCES toplines(id),
+    FOREIGN KEY (topline_id) REFERENCES toplines(id) ON DELETE CASCADE,
     FOREIGN KEY (author_id) REFERENCES users(id)
 );
 

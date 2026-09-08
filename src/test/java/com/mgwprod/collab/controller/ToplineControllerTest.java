@@ -13,9 +13,12 @@ import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -78,5 +81,34 @@ class ToplineControllerTest {
         mockMvc.perform(get("/api/toplines").param("beatId", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].beatId").value(2));
+    }
+
+    @Test
+    void updateToplineReturns200ForOwner() throws Exception {
+        Topline response = new Topline();
+        response.setId(1L);
+        response.setAudioUrl("https://new.url");
+        when(toplineService.update(eq(1L), eq(1L), any(Topline.class))).thenReturn(response);
+
+        mockMvc.perform(put("/api/toplines/1")
+                        .requestAttr("userId", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"audioUrl\":\"https://new.url\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.audioUrl").value("https://new.url"));
+    }
+
+    @Test
+    void deleteToplineReturns204ForOwner() throws Exception {
+        mockMvc.perform(delete("/api/toplines/1").requestAttr("userId", 1L))
+                .andExpect(status().isNoContent());
+
+        verify(toplineService).delete(1L, 1L);
+    }
+
+    @Test
+    void deleteToplineReturns401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(delete("/api/toplines/1"))
+                .andExpect(status().isUnauthorized());
     }
 }
