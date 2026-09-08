@@ -16,7 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -128,5 +131,28 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.bpmMin").value(120))
                 .andExpect(jsonPath("$.bpmMax").value(140))
                 .andExpect(jsonPath("$.experienceLevel").value("intermedio"));
+    }
+
+    @Test
+    void deleteUserReturns204ForOwner() throws Exception {
+        mockMvc.perform(delete("/api/users/1").requestAttr("userId", 1L))
+                .andExpect(status().isNoContent());
+
+        verify(userService).delete(1L, 1L);
+    }
+
+    @Test
+    void deleteUserReturns401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(delete("/api/users/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deleteUserReturns409WhenUserHasContent() throws Exception {
+        doThrow(new com.mgwprod.users.exception.UserHasContentException(1L))
+                .when(userService).delete(1L, 1L);
+
+        mockMvc.perform(delete("/api/users/1").requestAttr("userId", 1L))
+                .andExpect(status().isConflict());
     }
 }

@@ -1,6 +1,7 @@
 package com.mgwprod.users.service;
 
 import com.mgwprod.users.exception.ForbiddenOperationException;
+import com.mgwprod.users.exception.UserHasContentException;
 import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.ArtistProfile;
 import com.mgwprod.users.model.Role;
@@ -93,6 +94,24 @@ public class UserService {
                 .orElseThrow(() -> new IllegalStateException("Artist sin perfil: " + artistId));
         profile.setVerified(true);
         return artistProfileRepository.save(profile);
+    }
+
+    @Transactional
+    public void delete(Long targetUserId, Long requestingUserId) {
+        getById(targetUserId);
+        if (!targetUserId.equals(requestingUserId)) {
+            User requester = userRepository.findById(requestingUserId)
+                    .orElseThrow(() -> new UserNotFoundException(requestingUserId));
+            if (requester.getRole() != Role.ADMIN) {
+                throw new ForbiddenOperationException("Solo el propio usuario o un admin pueden borrar esta cuenta");
+            }
+        }
+        try {
+            userRepository.deleteById(targetUserId);
+            userRepository.flush();
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new UserHasContentException(targetUserId);
+        }
     }
 
     private User requireOwnership(Long targetUserId, Long requestingUserId) {
