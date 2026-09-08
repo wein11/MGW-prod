@@ -46,7 +46,7 @@ CREATE TABLE beat_comments (
     author_id BIGINT NOT NULL,
     text VARCHAR(1000) NOT NULL,
     created_at DATETIME NOT NULL,
-    FOREIGN KEY (beat_id) REFERENCES beats(id),
+    FOREIGN KEY (beat_id) REFERENCES beats(id) ON DELETE CASCADE,
     FOREIGN KEY (author_id) REFERENCES users(id)
 );
 
@@ -57,7 +57,7 @@ CREATE TABLE toplines (
     audio_url VARCHAR(500) NOT NULL,
     created_at DATETIME NOT NULL,
     FOREIGN KEY (artist_id) REFERENCES users(id),
-    FOREIGN KEY (beat_id) REFERENCES beats(id)
+    FOREIGN KEY (beat_id) REFERENCES beats(id) ON DELETE CASCADE
 );
 
 CREATE TABLE collaborations (

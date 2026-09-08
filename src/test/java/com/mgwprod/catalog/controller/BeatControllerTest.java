@@ -14,9 +14,12 @@ import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -126,5 +129,34 @@ class BeatControllerTest {
 
         mockMvc.perform(get("/api/beats/99"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateBeatReturns200ForOwner() throws Exception {
+        Beat response = new Beat();
+        response.setId(1L);
+        response.setTitle("New Title");
+        when(beatService.update(eq(1L), eq(1L), any(Beat.class))).thenReturn(response);
+
+        mockMvc.perform(put("/api/beats/1")
+                        .requestAttr("userId", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"New Title\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("New Title"));
+    }
+
+    @Test
+    void deleteBeatReturns204ForOwner() throws Exception {
+        mockMvc.perform(delete("/api/beats/1").requestAttr("userId", 1L))
+                .andExpect(status().isNoContent());
+
+        verify(beatService).delete(1L, 1L);
+    }
+
+    @Test
+    void deleteBeatReturns401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(delete("/api/beats/1"))
+                .andExpect(status().isUnauthorized());
     }
 }
