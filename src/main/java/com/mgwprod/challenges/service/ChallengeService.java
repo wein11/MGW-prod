@@ -4,6 +4,7 @@ import com.mgwprod.challenges.exception.ChallengeNotFoundException;
 import com.mgwprod.challenges.model.Challenge;
 import com.mgwprod.challenges.model.Submission;
 import com.mgwprod.challenges.repository.ChallengeRepository;
+import com.mgwprod.challenges.repository.ChallengeResultRepository;
 import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.Role;
@@ -20,13 +21,16 @@ public class ChallengeService {
     private final ChallengeRepository challengeRepository;
     private final UserRepository userRepository;
     private final SubmissionService submissionService;
+    private final ChallengeResultRepository challengeResultRepository;
 
     public ChallengeService(ChallengeRepository challengeRepository,
                              UserRepository userRepository,
-                             SubmissionService submissionService) {
+                             SubmissionService submissionService,
+                             ChallengeResultRepository challengeResultRepository) {
         this.challengeRepository = challengeRepository;
         this.userRepository = userRepository;
         this.submissionService = submissionService;
+        this.challengeResultRepository = challengeResultRepository;
     }
 
     @Transactional
@@ -41,6 +45,7 @@ public class ChallengeService {
         if (guestArtist.getRole() != Role.ARTIST) {
             throw new ForbiddenOperationException("El artista invitado debe tener rol ARTIST");
         }
+        challenge.setCreatedBy(requestingUserId);
         return challengeRepository.save(challenge);
     }
 
@@ -67,5 +72,36 @@ public class ChallengeService {
         }
         challenge.setOpportunityPickSubmissionId(submissionId);
         return challengeRepository.save(challenge);
+    }
+
+    @Transactional
+    public Challenge update(Long id, Long requestingUserId, Challenge request) {
+        Challenge challenge = getById(id);
+        requireOwnerOrAdmin(challenge.getCreatedBy(), requestingUserId);
+        if (challengeResultRepository.existsByChallengeId(id)) {
+            throw new ForbiddenOperationException("No se puede editar un challenge ya cerrado");
+        }
+        if (request.getTitle() != null) challenge.setTitle(request.getTitle());
+        if (request.getTheme() != null) challenge.setTheme(request.getTheme());
+        if (request.getDeadline() != null) challenge.setDeadline(request.getDeadline());
+        return challengeRepository.save(challenge);
+    }
+
+    @Transactional
+    public void delete(Long id, Long requestingUserId) {
+        Challenge challenge = getById(id);
+        requireOwnerOrAdmin(challenge.getCreatedBy(), requestingUserId);
+        challengeRepository.deleteById(id);
+    }
+
+    private void requireOwnerOrAdmin(Long ownerId, Long requestingUserId) {
+        if (ownerId.equals(requestingUserId)) {
+            return;
+        }
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException(requestingUserId));
+        if (requester.getRole() != Role.ADMIN) {
+            throw new ForbiddenOperationException("Solo quien creó el challenge o un admin pueden hacer esto");
+        }
     }
 }

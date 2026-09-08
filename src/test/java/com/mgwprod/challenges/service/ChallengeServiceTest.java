@@ -2,6 +2,7 @@ package com.mgwprod.challenges.service;
 
 import com.mgwprod.challenges.model.Challenge;
 import com.mgwprod.challenges.repository.ChallengeRepository;
+import com.mgwprod.challenges.repository.ChallengeResultRepository;
 import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
@@ -18,6 +19,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +33,9 @@ class ChallengeServiceTest {
 
     @Mock
     private SubmissionService submissionService;
+
+    @Mock
+    private ChallengeResultRepository challengeResultRepository;
 
     @InjectMocks
     private ChallengeService challengeService;
@@ -140,5 +145,72 @@ class ChallengeServiceTest {
 
         assertThatThrownBy(() -> challengeService.setOpportunityPick(100L, 1L, 7L))
                 .isInstanceOf(ForbiddenOperationException.class);
+    }
+
+    @Test
+    void createSetsCreatedByToRequester() {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setRole(Role.ADMIN);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+
+        User guestArtist = new User();
+        guestArtist.setId(2L);
+        guestArtist.setRole(Role.ARTIST);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(guestArtist));
+
+        Challenge challenge = new Challenge();
+        challenge.setGuestArtistId(2L);
+        challenge.setDeadline(Instant.now().plusSeconds(604800));
+        when(challengeRepository.save(any(Challenge.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Challenge created = challengeService.create(1L, challenge);
+
+        assertThat(created.getCreatedBy()).isEqualTo(1L);
+    }
+
+    @Test
+    void updateAllowsCreatorBeforeClose() {
+        Challenge challenge = new Challenge();
+        challenge.setId(100L);
+        challenge.setCreatedBy(1L);
+        challenge.setTitle("Viejo");
+        when(challengeRepository.findById(100L)).thenReturn(Optional.of(challenge));
+        when(challengeResultRepository.existsByChallengeId(100L)).thenReturn(false);
+        when(challengeRepository.save(challenge)).thenReturn(challenge);
+
+        Challenge request = new Challenge();
+        request.setTitle("Nuevo");
+
+        Challenge updated = challengeService.update(100L, 1L, request);
+
+        assertThat(updated.getTitle()).isEqualTo("Nuevo");
+    }
+
+    @Test
+    void updateThrowsWhenChallengeAlreadyClosed() {
+        Challenge challenge = new Challenge();
+        challenge.setId(100L);
+        challenge.setCreatedBy(1L);
+        when(challengeRepository.findById(100L)).thenReturn(Optional.of(challenge));
+        when(challengeResultRepository.existsByChallengeId(100L)).thenReturn(true);
+
+        Challenge request = new Challenge();
+        request.setTitle("Nuevo");
+
+        assertThatThrownBy(() -> challengeService.update(100L, 1L, request))
+                .isInstanceOf(ForbiddenOperationException.class);
+    }
+
+    @Test
+    void deleteAllowsCreatorOrAdmin() {
+        Challenge challenge = new Challenge();
+        challenge.setId(100L);
+        challenge.setCreatedBy(1L);
+        when(challengeRepository.findById(100L)).thenReturn(Optional.of(challenge));
+
+        challengeService.delete(100L, 1L);
+
+        verify(challengeRepository).deleteById(100L);
     }
 }

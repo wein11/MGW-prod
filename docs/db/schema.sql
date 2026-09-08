@@ -80,6 +80,7 @@ CREATE TABLE comments (
 
 CREATE TABLE challenges (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    created_by BIGINT NOT NULL,
     title VARCHAR(255) NOT NULL,
     genre VARCHAR(100) NOT NULL,
     bpm INT NOT NULL,
@@ -92,7 +93,8 @@ CREATE TABLE challenges (
     prize_third VARCHAR(255),
     opportunity_pick_submission_id BIGINT,
     created_at DATETIME NOT NULL,
-    FOREIGN KEY (guest_artist_id) REFERENCES users(id)
+    FOREIGN KEY (guest_artist_id) REFERENCES users(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
 CREATE TABLE submissions (
@@ -101,7 +103,7 @@ CREATE TABLE submissions (
     producer_id BIGINT NOT NULL,
     audio_url VARCHAR(500) NOT NULL,
     submitted_at DATETIME NOT NULL,
-    FOREIGN KEY (challenge_id) REFERENCES challenges(id),
+    FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE,
     FOREIGN KEY (producer_id) REFERENCES users(id)
 );
 
@@ -112,7 +114,7 @@ CREATE TABLE votes (
     score INT NOT NULL,
     comment VARCHAR(1000),
     UNIQUE (submission_id, voter_id),
-    FOREIGN KEY (submission_id) REFERENCES submissions(id),
+    FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
     FOREIGN KEY (voter_id) REFERENCES users(id)
 );
 
@@ -125,6 +127,6 @@ CREATE TABLE challenge_results (
     points_awarded INT NOT NULL,
     badge VARCHAR(255),
     prize_text VARCHAR(255),
-    FOREIGN KEY (challenge_id) REFERENCES challenges(id),
-    FOREIGN KEY (submission_id) REFERENCES submissions(id)
+    FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE,
+    FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE
 );
