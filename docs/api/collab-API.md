@@ -163,3 +163,45 @@ Lists comments on a topline.
   |---|---|
   | 200 | (empty array if no comments) |
   | 404 | No topline with `toplineId` |
+
+## PUT /api/toplines/{id}
+
+Edits a topline. Owner (the artist) or an `ADMIN` only. Only `audioUrl` is editable.
+
+- **Auth:** required.
+- **Path params:** `id` — topline id.
+- **Request body:** `{ "audioUrl": string }` (optional).
+- **Response body:** the updated `Topline`.
+- **Status codes:**
+
+  | Code | When |
+  |---|---|
+  | 200 | Updated |
+  | 401 | Not authenticated |
+  | 403 | Caller is neither the topline's owner nor an `ADMIN` |
+  | 404 | No topline with that id |
+
+## DELETE /api/toplines/{id}
+
+Deletes a topline (physical delete). Its `collaborations` and `comments` cascade
+(`ON DELETE CASCADE`). Owner or `ADMIN` only.
+
+- **Auth:** required.
+- **Status codes:** `204` deleted · `401` not authenticated · `403` not owner/admin · `404` no topline.
+
+## DELETE /api/collaborations/{id}
+
+Deletes a collaboration. Either party may do it — the artist who owns the topline, or the
+producer who owns the referenced beat — or an `ADMIN`.
+
+- **Auth:** required.
+- **Path params:** `id` — collaboration id.
+- **Response body:** none.
+- **Status codes:**
+
+  | Code | When |
+  |---|---|
+  | 204 | Deleted |
+  | 401 | Not authenticated |
+  | 403 | Caller is neither party (nor admin) |
+  | 404 | No collaboration with that id (or its topline/beat is missing) |
