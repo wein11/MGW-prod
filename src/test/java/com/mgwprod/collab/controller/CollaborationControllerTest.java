@@ -12,7 +12,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,6 +62,20 @@ class CollaborationControllerTest {
     void decideReturns401WhenNotAuthenticated() throws Exception {
         mockMvc.perform(put("/api/collaborations/1")
                         .param("status", "ACCEPTED"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deleteReturns204ForAParty() throws Exception {
+        mockMvc.perform(delete("/api/collaborations/1").requestAttr("userId", 2L))
+                .andExpect(status().isNoContent());
+
+        verify(collaborationService).delete(1L, 2L);
+    }
+
+    @Test
+    void deleteReturns401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(delete("/api/collaborations/1"))
                 .andExpect(status().isUnauthorized());
     }
 }

@@ -211,3 +211,32 @@ con `@Column(nullable = false)` pero **sin** `@NotNull`: los completa el service
 el token, no vienen en el body. Ponerles `@NotNull` rompería el `@Valid @RequestBody` del
 controller, que corre antes de que el service los asigne. La integridad la garantizan la columna
 NOT NULL y el service, que siempre los setea.
+
+## PUT /api/challenges/{id}
+
+Edita un challenge. Solo quien lo creó (`createdBy`) o un `ADMIN`. **No se puede editar un
+challenge ya cerrado** (si existe algún `ChallengeResult` para él). Editables: `title`,
+`theme`, `deadline`.
+
+- **Auth:** required.
+- **Path params:** `id` — challenge id.
+- **Response body:** el `Challenge` actualizado.
+- **Status codes:**
+
+  | Code | When |
+  |---|---|
+  | 200 | Actualizado |
+  | 401 | No autenticado |
+  | 403 | No es el creador ni admin, o el challenge ya está cerrado |
+  | 404 | No existe el challenge |
+
+## DELETE /api/challenges/{id}
+
+Borra un challenge (borrado físico). Sus `submissions`, `votes` y `challenge_results`
+cascadean (`ON DELETE CASCADE`). Solo el creador o un `ADMIN`.
+
+- **Auth:** required.
+- **Status codes:** `204` borrado · `401` no autenticado · `403` no creador/admin · `404` no existe.
+
+Nota: `Challenge.createdBy` lo setea el servicio desde el requester autenticado al crear el
+challenge (READ_ONLY, no viaja en el body) — es lo que habilita el chequeo de ownership acá.

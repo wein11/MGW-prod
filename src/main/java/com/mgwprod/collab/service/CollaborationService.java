@@ -55,4 +55,20 @@ public class CollaborationService {
         }
         return collaborationRepository.findAll();
     }
+
+    @Transactional
+    public void delete(Long id, Long requestingUserId) {
+        Collaboration collaboration = collaborationRepository.findById(id)
+                .orElseThrow(() -> new CollaborationNotFoundException(id));
+        Topline topline = toplineService.getById(collaboration.getToplineId());
+        Beat beat = beatRepository.findById(topline.getBeatId())
+                .orElseThrow(() -> new BeatNotFoundException(topline.getBeatId()));
+
+        boolean isArtist = topline.getArtistId().equals(requestingUserId);
+        boolean isProducer = beat.getProducerId().equals(requestingUserId);
+        if (!isArtist && !isProducer) {
+            throw new ForbiddenOperationException("Solo las partes de esta colaboración pueden borrarla");
+        }
+        collaborationRepository.deleteById(id);
+    }
 }

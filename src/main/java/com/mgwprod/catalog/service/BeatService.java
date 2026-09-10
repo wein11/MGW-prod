@@ -57,4 +57,35 @@ public class BeatService {
         return beatRepository.findById(id)
                 .orElseThrow(() -> new BeatNotFoundException(id));
     }
+
+    @Transactional
+    public Beat update(Long id, Long requestingUserId, Beat request) {
+        Beat beat = getById(id);
+        requireOwnerOrAdmin(beat.getProducerId(), requestingUserId);
+
+        if (request.getTitle() != null) beat.setTitle(request.getTitle());
+        if (request.getGenre() != null) beat.setGenre(request.getGenre());
+        if (request.getBpm() != null) beat.setBpm(request.getBpm());
+        if (request.getKey() != null) beat.setKey(request.getKey());
+        if (request.getAudioUrl() != null) beat.setAudioUrl(request.getAudioUrl());
+        return beatRepository.save(beat);
+    }
+
+    @Transactional
+    public void delete(Long id, Long requestingUserId) {
+        Beat beat = getById(id);
+        requireOwnerOrAdmin(beat.getProducerId(), requestingUserId);
+        beatRepository.deleteById(id);
+    }
+
+    private void requireOwnerOrAdmin(Long ownerId, Long requestingUserId) {
+        if (ownerId.equals(requestingUserId)) {
+            return;
+        }
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException(requestingUserId));
+        if (requester.getRole() != Role.ADMIN) {
+            throw new ForbiddenOperationException("Solo el dueño del beat o un admin pueden hacer esto");
+        }
+    }
 }

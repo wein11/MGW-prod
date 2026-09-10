@@ -138,3 +138,38 @@ Lists all comments on a beat.
   | 200 | Always (empty array if no comments) |
   | 404 | No beat with `beatId` |
   | 500 | Unexpected server error |
+
+## PUT /api/beats/{id}
+
+Edits a beat. Owner (the producer) or an `ADMIN` only. Body fields are optional; a field
+sent `null` leaves the current value unchanged.
+
+- **Auth:** required.
+- **Path params:** `id` — beat id.
+- **Request body** (all optional): `title`, `genre`, `bpm`, `key`, `audioUrl`.
+- **Response body:** the updated `Beat`.
+- **Status codes:**
+
+  | Code | When |
+  |---|---|
+  | 200 | Updated |
+  | 401 | Not authenticated |
+  | 403 | Caller is neither the beat's owner nor an `ADMIN` |
+  | 404 | No beat with that id |
+
+## DELETE /api/beats/{id}
+
+Deletes a beat (physical delete). Its `beat_comments` and `toplines` cascade
+(`ON DELETE CASCADE`). Owner or `ADMIN` only.
+
+- **Auth:** required.
+- **Path params:** `id` — beat id.
+- **Response body:** none.
+- **Status codes:**
+
+  | Code | When |
+  |---|---|
+  | 204 | Deleted |
+  | 401 | Not authenticated |
+  | 403 | Caller is neither the beat's owner nor an `ADMIN` |
+  | 404 | No beat with that id |

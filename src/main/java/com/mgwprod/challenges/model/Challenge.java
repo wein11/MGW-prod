@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
@@ -26,6 +27,12 @@ public class Challenge {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Server-derived desde el requester autenticado (ChallengeService.create) — mismo
+    // patrón que Topline.artistId: nunca viaja en el JSON del cliente.
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Column(name = "created_by", nullable = false)
+    private Long createdBy;
 
     @NotBlank(message = "El título es obligatorio")
     @Column(nullable = false)

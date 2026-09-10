@@ -6,6 +6,7 @@ import com.mgwprod.users.exception.UnauthenticatedException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,6 +47,26 @@ public class ChallengeController {
     @GetMapping("/{id}")
     public Challenge getChallenge(@PathVariable Long id) {
         return challengeService.getById(id);
+    }
+
+    @PutMapping("/{id}")
+    public Challenge updateChallenge(@PathVariable Long id,
+                                      @RequestAttribute(name = "userId", required = false) Long userId,
+                                      @RequestBody Challenge challenge) {
+        if (userId == null) {
+            throw new UnauthenticatedException("Necesitás iniciar sesión para editar un challenge");
+        }
+        return challengeService.update(id, userId, challenge);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteChallenge(@PathVariable Long id,
+                                                 @RequestAttribute(name = "userId", required = false) Long userId) {
+        if (userId == null) {
+            throw new UnauthenticatedException("Necesitás iniciar sesión para borrar un challenge");
+        }
+        challengeService.delete(id, userId);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/opportunity-pick")

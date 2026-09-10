@@ -6,9 +6,11 @@ import com.mgwprod.users.exception.UnauthenticatedException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,5 +48,25 @@ public class ToplineController {
     @GetMapping("/{id}")
     public Topline getTopline(@PathVariable Long id) {
         return toplineService.getById(id);
+    }
+
+    @PutMapping("/{id}")
+    public Topline updateTopline(@PathVariable Long id,
+                                  @RequestAttribute(name = "userId", required = false) Long userId,
+                                  @RequestBody Topline topline) {
+        if (userId == null) {
+            throw new UnauthenticatedException("Necesitás iniciar sesión para editar un topline");
+        }
+        return toplineService.update(id, userId, topline);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTopline(@PathVariable Long id,
+                                               @RequestAttribute(name = "userId", required = false) Long userId) {
+        if (userId == null) {
+            throw new UnauthenticatedException("Necesitás iniciar sesión para borrar un topline");
+        }
+        toplineService.delete(id, userId);
+        return ResponseEntity.noContent().build();
     }
 }

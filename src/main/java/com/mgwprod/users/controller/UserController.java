@@ -5,6 +5,8 @@ import com.mgwprod.users.model.ArtistProfile;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -47,6 +49,14 @@ public class UserController {
                                               @Valid @RequestBody ArtistProfile request) {
         requireAuthenticated(requestingUserId);
         return userService.updateArtistProfile(id, requestingUserId, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id,
+                                            @RequestAttribute(name = "userId", required = false) Long requestingUserId) {
+        requireAuthenticated(requestingUserId);
+        userService.delete(id, requestingUserId);
+        return ResponseEntity.noContent().build();
     }
 
     private void requireAuthenticated(Long requestingUserId) {

@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,6 +80,74 @@ class CollaborationServiceTest {
         when(beatRepository.findById(2L)).thenReturn(Optional.of(beat));
 
         assertThatThrownBy(() -> collaborationService.decide(1L, 999L, CollaborationStatus.ACCEPTED))
+                .isInstanceOf(ForbiddenOperationException.class);
+    }
+
+    @Test
+    void deleteAllowsTheArtistWhoOwnsTheTopline() {
+        Topline topline = new Topline();
+        topline.setId(5L);
+        topline.setArtistId(2L);
+        topline.setBeatId(10L);
+        when(toplineService.getById(5L)).thenReturn(topline);
+
+        Collaboration collab = new Collaboration();
+        collab.setId(1L);
+        collab.setToplineId(5L);
+        when(collaborationRepository.findById(1L)).thenReturn(Optional.of(collab));
+
+        Beat beat = new Beat();
+        beat.setId(10L);
+        beat.setProducerId(3L);
+        when(beatRepository.findById(10L)).thenReturn(Optional.of(beat));
+
+        collaborationService.delete(1L, 2L); // artistId
+
+        verify(collaborationRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteAllowsTheProducerWhoOwnsTheBeat() {
+        Topline topline = new Topline();
+        topline.setId(5L);
+        topline.setArtistId(2L);
+        topline.setBeatId(10L);
+        when(toplineService.getById(5L)).thenReturn(topline);
+
+        Collaboration collab = new Collaboration();
+        collab.setId(1L);
+        collab.setToplineId(5L);
+        when(collaborationRepository.findById(1L)).thenReturn(Optional.of(collab));
+
+        Beat beat = new Beat();
+        beat.setId(10L);
+        beat.setProducerId(3L);
+        when(beatRepository.findById(10L)).thenReturn(Optional.of(beat));
+
+        collaborationService.delete(1L, 3L); // producer dueño del beat
+
+        verify(collaborationRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteThrowsWhenRequesterIsNeitherParty() {
+        Topline topline = new Topline();
+        topline.setId(5L);
+        topline.setArtistId(2L);
+        topline.setBeatId(10L);
+        when(toplineService.getById(5L)).thenReturn(topline);
+
+        Collaboration collab = new Collaboration();
+        collab.setId(1L);
+        collab.setToplineId(5L);
+        when(collaborationRepository.findById(1L)).thenReturn(Optional.of(collab));
+
+        Beat beat = new Beat();
+        beat.setId(10L);
+        beat.setProducerId(3L);
+        when(beatRepository.findById(10L)).thenReturn(Optional.of(beat));
+
+        assertThatThrownBy(() -> collaborationService.delete(1L, 99L))
                 .isInstanceOf(ForbiddenOperationException.class);
     }
 }
