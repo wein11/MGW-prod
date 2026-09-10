@@ -17,7 +17,7 @@ CREATE TABLE artist_profiles (
     bpm_max INT,
     experience_level VARCHAR(255),
     verified BOOLEAN NOT NULL DEFAULT FALSE,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE sessions (
@@ -25,7 +25,7 @@ CREATE TABLE sessions (
     user_id BIGINT NOT NULL,
     token VARCHAR(255) NOT NULL UNIQUE,
     expires_at DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE beats (
