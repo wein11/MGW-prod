@@ -15,7 +15,9 @@ import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -117,5 +119,34 @@ class ChallengeControllerTest {
                         .param("submissionId", "7"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.opportunityPickSubmissionId").value(7));
+    }
+
+    @Test
+    void updateChallengeReturns200ForCreator() throws Exception {
+        Challenge response = new Challenge();
+        response.setId(100L);
+        response.setTitle("Nuevo");
+        when(challengeService.update(eq(100L), eq(1L), any(Challenge.class))).thenReturn(response);
+
+        mockMvc.perform(put("/api/challenges/100")
+                        .requestAttr("userId", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Nuevo\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Nuevo"));
+    }
+
+    @Test
+    void deleteChallengeReturns204ForCreator() throws Exception {
+        mockMvc.perform(delete("/api/challenges/100").requestAttr("userId", 1L))
+                .andExpect(status().isNoContent());
+
+        verify(challengeService).delete(100L, 1L);
+    }
+
+    @Test
+    void deleteChallengeReturns401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(delete("/api/challenges/100"))
+                .andExpect(status().isUnauthorized());
     }
 }

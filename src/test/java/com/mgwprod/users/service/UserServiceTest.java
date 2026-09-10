@@ -20,6 +20,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class UserServiceTest {
@@ -224,6 +226,44 @@ class UserServiceTest {
         when(userRepository.findById(2L)).thenReturn(Optional.of(discografica));
 
         assertThatThrownBy(() -> userService.verifyArtist(1L, 2L))
+                .isInstanceOf(ForbiddenOperationException.class);
+    }
+
+    @Test
+    void deleteRemovesUserWithNoContent() {
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        userService.delete(1L, 1L);
+
+        verify(userRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteThrowsConflictWhenUserHasContent() {
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        doThrow(new org.springframework.dao.DataIntegrityViolationException("FK violation"))
+                .when(userRepository).deleteById(1L);
+
+        assertThatThrownBy(() -> userService.delete(1L, 1L))
+                .isInstanceOf(com.mgwprod.users.exception.UserHasContentException.class);
+    }
+
+    @Test
+    void deleteThrowsWhenRequesterIsNotOwnerOrAdmin() {
+        User target = new User();
+        target.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(target));
+
+        User requester = new User();
+        requester.setId(2L);
+        requester.setRole(Role.ARTIST);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(requester));
+
+        assertThatThrownBy(() -> userService.delete(1L, 2L))
                 .isInstanceOf(ForbiddenOperationException.class);
     }
 }

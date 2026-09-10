@@ -28,6 +28,7 @@ class ChallengeRepositoryTest {
         challenge.setTheme("libre");
         challenge.setDeadline(Instant.now().plus(7, ChronoUnit.DAYS));
         challenge.setGuestArtistId(1L);
+        challenge.setCreatedBy(1L);
 
         Challenge saved = challengeRepository.save(challenge);
 

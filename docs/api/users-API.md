@@ -198,3 +198,23 @@ producers).
   | 403 | Caller is not `ADMIN`, or the target user is not `ARTIST` |
   | 404 | No user with that id |
   | 500 | Unexpected server error |
+
+## DELETE /api/users/{id}
+
+Deletes a user account (physical delete). The user themselves or an `ADMIN` only. The FKs
+from `beats`/`toplines`/`challenges`/`comments`/`votes` toward `users(id)` are **not**
+cascaded on purpose, so deleting a user who still has content fails the referential-integrity
+check and is reported as `409` rather than orphaning or cascading their history.
+
+- **Auth:** required.
+- **Path params:** `id` — user id to delete.
+- **Response body:** none.
+- **Status codes:**
+
+  | Code | When |
+  |---|---|
+  | 204 | Deleted |
+  | 401 | Not authenticated |
+  | 403 | Caller is neither the account owner nor an `ADMIN` |
+  | 404 | No user with that id |
+  | 409 | The user still has associated content (beats, toplines, challenges, comments, votes, …) |

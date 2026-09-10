@@ -145,4 +145,66 @@ class ToplineServiceTest {
                 .isInstanceOf(SubscriptionLimitExceededException.class);
         verify(toplineRepository, never()).save(any());
     }
+
+    @Test
+    void updateAllowsOwnerToChangeAudioUrl() {
+        Topline existing = new Topline();
+        existing.setId(1L);
+        existing.setArtistId(1L);
+        existing.setAudioUrl("https://old.url");
+        when(toplineRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(toplineRepository.save(any(Topline.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Topline request = new Topline();
+        request.setAudioUrl("https://new.url");
+
+        Topline updated = toplineService.update(1L, 1L, request);
+
+        assertThat(updated.getAudioUrl()).isEqualTo("https://new.url");
+    }
+
+    @Test
+    void updateThrowsWhenRequesterIsNotOwnerOrAdmin() {
+        User other = new User();
+        other.setId(2L);
+        other.setRole(Role.ARTIST);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(other));
+
+        Topline existing = new Topline();
+        existing.setId(1L);
+        existing.setArtistId(1L);
+        when(toplineRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> toplineService.update(1L, 2L, new Topline()))
+                .isInstanceOf(ForbiddenOperationException.class);
+    }
+
+    @Test
+    void deleteRemovesToplineWhenRequesterIsOwner() {
+        Topline existing = new Topline();
+        existing.setId(1L);
+        existing.setArtistId(1L);
+        when(toplineRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        toplineService.delete(1L, 1L);
+
+        verify(toplineRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteAllowsAdminEvenIfNotOwner() {
+        User admin = new User();
+        admin.setId(9L);
+        admin.setRole(Role.ADMIN);
+        when(userRepository.findById(9L)).thenReturn(Optional.of(admin));
+
+        Topline existing = new Topline();
+        existing.setId(1L);
+        existing.setArtistId(1L);
+        when(toplineRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        toplineService.delete(1L, 9L);
+
+        verify(toplineRepository).deleteById(1L);
+    }
 }

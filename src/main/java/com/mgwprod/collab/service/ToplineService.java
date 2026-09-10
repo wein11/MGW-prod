@@ -79,4 +79,32 @@ public class ToplineService {
         return toplineRepository.findById(id)
                 .orElseThrow(() -> new ToplineNotFoundException(id));
     }
+
+    @Transactional
+    public Topline update(Long id, Long requestingUserId, Topline request) {
+        Topline topline = getById(id);
+        requireOwnerOrAdmin(topline.getArtistId(), requestingUserId);
+        if (request.getAudioUrl() != null) {
+            topline.setAudioUrl(request.getAudioUrl());
+        }
+        return toplineRepository.save(topline);
+    }
+
+    @Transactional
+    public void delete(Long id, Long requestingUserId) {
+        Topline topline = getById(id);
+        requireOwnerOrAdmin(topline.getArtistId(), requestingUserId);
+        toplineRepository.deleteById(id);
+    }
+
+    private void requireOwnerOrAdmin(Long ownerId, Long requestingUserId) {
+        if (ownerId.equals(requestingUserId)) {
+            return;
+        }
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException(requestingUserId));
+        if (requester.getRole() != Role.ADMIN) {
+            throw new ForbiddenOperationException("Solo el dueño del topline o un admin pueden hacer esto");
+        }
+    }
 }

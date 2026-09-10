@@ -109,4 +109,66 @@ class BeatServiceTest {
                 .isInstanceOf(SubscriptionLimitExceededException.class);
         verify(beatRepository, never()).save(any());
     }
+
+    @Test
+    void updateAllowsOwnerToChangeFields() {
+        Beat existing = new Beat();
+        existing.setId(1L);
+        existing.setProducerId(1L);
+        existing.setTitle("Old Title");
+        when(beatRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(beatRepository.save(any(Beat.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Beat request = new Beat();
+        request.setTitle("New Title");
+
+        Beat updated = beatService.update(1L, 1L, request);
+
+        assertThat(updated.getTitle()).isEqualTo("New Title");
+    }
+
+    @Test
+    void updateThrowsWhenRequesterIsNotOwnerOrAdmin() {
+        User other = new User();
+        other.setId(2L);
+        other.setRole(Role.ARTIST);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(other));
+
+        Beat existing = new Beat();
+        existing.setId(1L);
+        existing.setProducerId(1L);
+        when(beatRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> beatService.update(1L, 2L, new Beat()))
+                .isInstanceOf(ForbiddenOperationException.class);
+    }
+
+    @Test
+    void deleteRemovesBeatWhenRequesterIsOwner() {
+        Beat existing = new Beat();
+        existing.setId(1L);
+        existing.setProducerId(1L);
+        when(beatRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        beatService.delete(1L, 1L);
+
+        verify(beatRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteAllowsAdminEvenIfNotOwner() {
+        User admin = new User();
+        admin.setId(9L);
+        admin.setRole(Role.ADMIN);
+        when(userRepository.findById(9L)).thenReturn(Optional.of(admin));
+
+        Beat existing = new Beat();
+        existing.setId(1L);
+        existing.setProducerId(1L);
+        when(beatRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        beatService.delete(1L, 9L);
+
+        verify(beatRepository).deleteById(1L);
+    }
 }

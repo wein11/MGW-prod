@@ -4,6 +4,8 @@ import com.mgwprod.collab.model.Collaboration;
 import com.mgwprod.collab.model.CollaborationStatus;
 import com.mgwprod.collab.service.CollaborationService;
 import com.mgwprod.users.exception.UnauthenticatedException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -37,5 +39,15 @@ public class CollaborationController {
     @GetMapping
     public List<Collaboration> list(@RequestParam(required = false) CollaborationStatus status) {
         return collaborationService.listByStatus(status);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCollaboration(@PathVariable Long id,
+                                                     @RequestAttribute(name = "userId", required = false) Long userId) {
+        if (userId == null) {
+            throw new UnauthenticatedException("Necesitás iniciar sesión para borrar una colaboración");
+        }
+        collaborationService.delete(id, userId);
+        return ResponseEntity.noContent().build();
     }
 }
