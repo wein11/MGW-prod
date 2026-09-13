@@ -213,4 +213,16 @@ class ChallengeServiceTest {
 
         verify(challengeRepository).deleteById(100L);
     }
+
+    @Test
+    void deleteThrowsWhenChallengeAlreadyClosed() {
+        Challenge challenge = new Challenge();
+        challenge.setId(100L);
+        challenge.setCreatedBy(1L);
+        when(challengeRepository.findById(100L)).thenReturn(Optional.of(challenge));
+        when(challengeResultRepository.existsByChallengeId(100L)).thenReturn(true);
+
+        assertThatThrownBy(() -> challengeService.delete(100L, 1L))
+                .isInstanceOf(ForbiddenOperationException.class);
+    }
 }

@@ -9,6 +9,10 @@ import com.mgwprod.collab.model.CollaborationStatus;
 import com.mgwprod.collab.model.Topline;
 import com.mgwprod.collab.repository.CollaborationRepository;
 import com.mgwprod.users.exception.ForbiddenOperationException;
+import com.mgwprod.users.exception.UserNotFoundException;
+import com.mgwprod.users.model.Role;
+import com.mgwprod.users.model.User;
+import com.mgwprod.users.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +25,16 @@ public class CollaborationService {
     private final CollaborationRepository collaborationRepository;
     private final ToplineService toplineService;
     private final BeatRepository beatRepository;
+    private final UserRepository userRepository;
 
     public CollaborationService(CollaborationRepository collaborationRepository,
                                  ToplineService toplineService,
-                                 BeatRepository beatRepository) {
+                                 BeatRepository beatRepository,
+                                 UserRepository userRepository) {
         this.collaborationRepository = collaborationRepository;
         this.toplineService = toplineService;
         this.beatRepository = beatRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -67,7 +74,11 @@ public class CollaborationService {
         boolean isArtist = topline.getArtistId().equals(requestingUserId);
         boolean isProducer = beat.getProducerId().equals(requestingUserId);
         if (!isArtist && !isProducer) {
-            throw new ForbiddenOperationException("Solo las partes de esta colaboración pueden borrarla");
+            User requester = userRepository.findById(requestingUserId)
+                    .orElseThrow(() -> new UserNotFoundException(requestingUserId));
+            if (requester.getRole() != Role.ADMIN) {
+                throw new ForbiddenOperationException("Solo las partes de esta colaboración o un admin pueden borrarla");
+            }
         }
         collaborationRepository.deleteById(id);
     }
