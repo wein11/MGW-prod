@@ -15,22 +15,22 @@ Regla de dependencia: `challenges` referencia a `users` (por FK plana `guestArti
 
 ---
 
-## PUT /api/producers/{id}/verify
+## PUT /api/artists/{id}/verify
 
-Marca `ProducerProfile.verified = true`. Vive en el módulo `users` pero es parte del pivot de
-challenges (el peso de voto de productores verificados).
+Marca `ArtistProfile.verified = true`. Vive en el módulo `users` pero es parte del pivot de
+challenges (el peso de voto de artistas verificados).
 
-- **Auth:** required. Solo un **admin** (`User.isAdmin = true`) puede verificar.
-- **Path params:** `id` — user id del productor a verificar.
+- **Auth:** required. Solo un **admin** (`role = ADMIN`) puede verificar.
+- **Path params:** `id` — user id del artista a verificar.
 - **Request body:** ninguno.
-- **Response body:** `ProducerProfile` (`{ id, genres, bpmMin, bpmMax, experienceLevel, verified }`).
+- **Response body:** `ArtistProfile` (`{ id, genres, bio, bpmMin, bpmMax, experienceLevel, verified }`).
 - **Status codes:**
 
   | Code | When |
   |---|---|
-  | 200 | Productor verificado |
+  | 200 | Artista verificado |
   | 401 | No autenticado (sin token válido) |
-  | 403 | Autenticado pero no admin, o el `id` no corresponde a un usuario con rol PRODUCER |
+  | 403 | Autenticado pero no admin, o el `id` no corresponde a un usuario con rol ARTIST |
   | 404 | No existe usuario con ese `id` |
 
 ---
@@ -96,7 +96,7 @@ Lista las submissions de un challenge.
 Envía una producción a un challenge. `challengeId` (path) y `producerId` (del token) los
 completa el servidor; el cliente solo manda `audioUrl`.
 
-- **Auth:** required. Solo rol **PRODUCER**. El deadline no debe haber pasado.
+- **Auth:** required. Solo rol **ARTIST**. El deadline no debe haber pasado.
 - **Request body:** `{ "audioUrl": string }` (required, no vacío).
 - **Response body:** `Submission` (`{ id, challengeId, producerId, audioUrl, submittedAt }`).
 - **Status codes:**
@@ -106,7 +106,7 @@ completa el servidor; el cliente solo manda `audioUrl`.
   | 201 | Submission creada |
   | 400 | `audioUrl` vacío o JSON malformado |
   | 401 | No autenticado |
-  | 403 | No es PRODUCER, o el deadline del challenge ya pasó |
+  | 403 | No es ARTIST, o el deadline del challenge ya pasó |
   | 404 | El challenge no existe |
 
 ---

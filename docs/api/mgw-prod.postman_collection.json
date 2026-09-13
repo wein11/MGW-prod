@@ -1,0 +1,533 @@
+{
+  "info": {
+    "name": "mgw-prod",
+    "description": "Etapa 1 — colección de defensa del TPO. Cubre los 5 módulos (users, catalog, collab, challenges, billing). Requiere el Environment 'mgw-prod local' (base_url=http://localhost:8080).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" }
+  ],
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "POST /api/auth/register (ARTIST)",
+          "event": [{ "listen": "prerequest", "script": { "exec": [
+            "pm.variables.set('artistEmailGenerated', 'artist' + Date.now() + '@mgw.test');"
+          ] } }, { "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('artistUserId', body.id);",
+            "pm.environment.set('artistEmail', pm.variables.get('artistEmailGenerated'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{artistEmailGenerated}}\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Artist Demo\",\n  \"role\": \"ARTIST\",\n  \"city\": \"Buenos Aires\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "POST /api/auth/register (DISCOGRAFICA)",
+          "event": [{ "listen": "prerequest", "script": { "exec": [
+            "pm.variables.set('producerEmailGenerated', 'disco' + Date.now() + '@mgw.test');"
+          ] } }, { "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('producerUserId', body.id);",
+            "pm.environment.set('producerEmail', pm.variables.get('producerEmailGenerated'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{producerEmailGenerated}}\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Discografica Demo\",\n  \"role\": \"DISCOGRAFICA\",\n  \"city\": \"Rosario\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "POST /api/auth/login (ARTIST)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('artistToken', body.token);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{artistEmail}}\",\n  \"password\": \"secret123\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] },
+            "description": "Requiere haber corrido antes 'POST /api/auth/register (ARTIST)' en esta misma corrida — ese request setea automáticamente la variable de entorno artistEmail."
+          }
+        },
+        {
+          "name": "POST /api/auth/login (DISCOGRAFICA)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('producerToken', body.token);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{producerEmail}}\",\n  \"password\": \"secret123\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "POST /api/auth/register (ADMIN)",
+          "event": [{ "listen": "prerequest", "script": { "exec": [
+            "pm.variables.set('adminEmailGenerated', 'admin' + Date.now() + '@mgw.test');"
+          ] } }, { "listen": "test", "script": { "exec": [
+            "pm.environment.set('adminEmail', pm.variables.get('adminEmailGenerated'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmailGenerated}}\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Admin Demo\",\n  \"role\": \"ADMIN\",\n  \"city\": \"Buenos Aires\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] },
+            "description": "La entidad User no restringe el role en el register — cualquiera puede auto-asignarse ADMIN. Es un gap de seguridad conocido del proyecto (fuera del alcance de Etapa 1), aprovechado acá solo para sembrar un admin de prueba sin tocar la BD a mano."
+          }
+        },
+        {
+          "name": "POST /api/auth/login (ADMIN)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('adminToken', body.token);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"secret123\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "GET /api/users/{id}",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/{{artistUserId}}", "host": ["{{base_url}}"], "path": ["api", "users", "{{artistUserId}}"] }
+          }
+        },
+        {
+          "name": "GET /api/users/{id}/profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/{{artistUserId}}/profile", "host": ["{{base_url}}"], "path": ["api", "users", "{{artistUserId}}", "profile"] }
+          }
+        },
+        {
+          "name": "PUT /api/users/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{artistToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"displayName\": \"Artist Demo Updated\",\n  \"city\": \"Córdoba\"\n}" },
+            "url": { "raw": "{{base_url}}/api/users/{{artistUserId}}", "host": ["{{base_url}}"], "path": ["api", "users", "{{artistUserId}}"] }
+          }
+        },
+        {
+          "name": "PUT /api/users/{id}/artist-profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{artistToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"genres\": \"Trap, RKT\",\n  \"bio\": \"Artista de prueba para la defensa del TPO\",\n  \"bpmMin\": 90,\n  \"bpmMax\": 150,\n  \"experienceLevel\": \"Intermedio\"\n}" },
+            "url": { "raw": "{{base_url}}/api/users/{{artistUserId}}/artist-profile", "host": ["{{base_url}}"], "path": ["api", "users", "{{artistUserId}}", "artist-profile"] }
+          }
+        },
+        {
+          "name": "PUT /api/artists/{id}/verify (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{base_url}}/api/artists/{{artistUserId}}/verify", "host": ["{{base_url}}"], "path": ["api", "artists", "{{artistUserId}}", "verify"] }
+          }
+        },
+        {
+          "name": "POST /api/auth/register (disposable, for DELETE demo)",
+          "event": [{ "listen": "prerequest", "script": { "exec": [
+            "pm.variables.set('disposableEmailGenerated', 'disposable' + Date.now() + '@mgw.test');"
+          ] } }, { "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('disposableUserId', body.id);",
+            "pm.environment.set('disposableEmail', pm.variables.get('disposableEmailGenerated'));"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{disposableEmailGenerated}}\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Disposable Artist\",\n  \"role\": \"ARTIST\",\n  \"city\": \"La Plata\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] },
+            "description": "Usuario descartable solo para la demo de DELETE — no se reutiliza artistUserId/artistToken porque el resto de la Collection (Catalog, Collab, Challenges, Billing) depende de que ese usuario siga existiendo."
+          }
+        },
+        {
+          "name": "POST /api/auth/login (disposable)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('disposableToken', body.token);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{disposableEmail}}\",\n  \"password\": \"secret123\"\n}" },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "DELETE /api/users/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{disposableToken}}" }],
+            "url": { "raw": "{{base_url}}/api/users/{{disposableUserId}}", "host": ["{{base_url}}"], "path": ["api", "users", "{{disposableUserId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog (Beats)",
+      "item": [
+        {
+          "name": "POST /api/beats",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('beatId', body.id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{artistToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Trap Beat\",\n  \"genre\": \"Trap\",\n  \"bpm\": 140,\n  \"key\": \"Am\",\n  \"audioUrl\": \"https://soundcloud.com/example/trap-beat\"\n}" },
+            "url": { "raw": "{{base_url}}/api/beats", "host": ["{{base_url}}"], "path": ["api", "beats"] }
+          }
+        },
+        {
+          "name": "GET /api/beats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/beats?genre=Trap", "host": ["{{base_url}}"], "path": ["api", "beats"], "query": [{ "key": "genre", "value": "Trap" }] }
+          }
+        },
+        {
+          "name": "GET /api/beats/{id}",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/beats/{{beatId}}", "host": ["{{base_url}}"], "path": ["api", "beats", "{{beatId}}"] }
+          }
+        },
+        {
+          "name": "PUT /api/beats/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{artistToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Trap Beat (Remix)\",\n  \"bpm\": 145\n}" },
+            "url": { "raw": "{{base_url}}/api/beats/{{beatId}}", "host": ["{{base_url}}"], "path": ["api", "beats", "{{beatId}}"] }
+          }
+        },
+        {
+          "name": "POST /api/beats/{beatId}/comments",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{producerToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"text\": \"Muy buen beat!\"\n}" },
+            "url": { "raw": "{{base_url}}/api/beats/{{beatId}}/comments", "host": ["{{base_url}}"], "path": ["api", "beats", "{{beatId}}", "comments"] }
+          }
+        },
+        {
+          "name": "GET /api/beats/{beatId}/comments",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/beats/{{beatId}}/comments", "host": ["{{base_url}}"], "path": ["api", "beats", "{{beatId}}", "comments"] }
+          }
+        },
+        {
+          "name": "POST /api/beats (disposable, for DELETE demo)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('disposableBeatId', body.id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{artistToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Beat descartable\",\n  \"genre\": \"Trap\",\n  \"bpm\": 120,\n  \"audioUrl\": \"https://soundcloud.com/example/disposable-beat\"\n}" },
+            "url": { "raw": "{{base_url}}/api/beats", "host": ["{{base_url}}"], "path": ["api", "beats"] },
+            "description": "No se reutiliza el beatId principal porque Collab y Challenges lo necesitan vivo más adelante en la Collection."
+          }
+        },
+        {
+          "name": "DELETE /api/beats/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{artistToken}}" }],
+            "url": { "raw": "{{base_url}}/api/beats/{{disposableBeatId}}", "host": ["{{base_url}}"], "path": ["api", "beats", "{{disposableBeatId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Collab (Toplines & Collaborations)",
+      "item": [
+        {
+          "name": "POST /api/toplines",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('toplineId', body.id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{artistToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"beatId\": {{beatId}},\n  \"audioUrl\": \"https://soundcloud.com/example/topline\"\n}" },
+            "url": { "raw": "{{base_url}}/api/toplines", "host": ["{{base_url}}"], "path": ["api", "toplines"] }
+          }
+        },
+        {
+          "name": "GET /api/toplines",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/toplines?beatId={{beatId}}", "host": ["{{base_url}}"], "path": ["api", "toplines"], "query": [{ "key": "beatId", "value": "{{beatId}}" }] }
+          }
+        },
+        {
+          "name": "GET /api/toplines/{id}",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/toplines/{{toplineId}}", "host": ["{{base_url}}"], "path": ["api", "toplines", "{{toplineId}}"] }
+          }
+        },
+        {
+          "name": "PUT /api/toplines/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{artistToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"audioUrl\": \"https://soundcloud.com/example/topline-v2\"\n}" },
+            "url": { "raw": "{{base_url}}/api/toplines/{{toplineId}}", "host": ["{{base_url}}"], "path": ["api", "toplines", "{{toplineId}}"] }
+          }
+        },
+        {
+          "name": "POST /api/toplines/{toplineId}/comments",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{producerToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"text\": \"Me encanta esta melodía\"\n}" },
+            "url": { "raw": "{{base_url}}/api/toplines/{{toplineId}}/comments", "host": ["{{base_url}}"], "path": ["api", "toplines", "{{toplineId}}", "comments"] }
+          }
+        },
+        {
+          "name": "GET /api/toplines/{toplineId}/comments",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/toplines/{{toplineId}}/comments", "host": ["{{base_url}}"], "path": ["api", "toplines", "{{toplineId}}", "comments"] }
+          }
+        },
+        {
+          "name": "GET /api/collaborations",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "if (Array.isArray(body) && body.length) { pm.environment.set('collaborationId', body[0].id); }"
+          ] } }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/collaborations?status=PENDING", "host": ["{{base_url}}"], "path": ["api", "collaborations"], "query": [{ "key": "status", "value": "PENDING" }] }
+          }
+        },
+        {
+          "name": "PUT /api/collaborations/{id} (accept)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{artistToken}}" }],
+            "url": { "raw": "{{base_url}}/api/collaborations/{{collaborationId}}?status=ACCEPTED", "host": ["{{base_url}}"], "path": ["api", "collaborations", "{{collaborationId}}"], "query": [{ "key": "status", "value": "ACCEPTED" }] },
+            "description": "Solo puede decidir quien publicó el beat referenciado por el topline (Beat.producerId) — en esta Collection ese dueño es siempre artistUserId, no producerToken/producerUserId (esos son un usuario DISCOGRAFICA, un concepto de negocio distinto al 'producer' que aparece en Beat/Collaboration)."
+          }
+        },
+        {
+          "name": "DELETE /api/collaborations/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{artistToken}}" }],
+            "url": { "raw": "{{base_url}}/api/collaborations/{{collaborationId}}", "host": ["{{base_url}}"], "path": ["api", "collaborations", "{{collaborationId}}"] }
+          }
+        },
+        {
+          "name": "DELETE /api/toplines/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{artistToken}}" }],
+            "url": { "raw": "{{base_url}}/api/toplines/{{toplineId}}", "host": ["{{base_url}}"], "path": ["api", "toplines", "{{toplineId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Challenges",
+      "item": [
+        {
+          "name": "POST /api/challenges (admin)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('challengeId', body.id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Creamos el próximo hit de RKT\",\n  \"genre\": \"RKT\",\n  \"bpm\": 100,\n  \"key\": \"F#m\",\n  \"theme\": \"libre\",\n  \"deadline\": \"2026-12-31T23:59:00Z\",\n  \"guestArtistId\": {{artistUserId}},\n  \"prizeFirst\": \"$100 USD + sesión de estudio\",\n  \"prizeSecond\": \"Verificación de cuenta\",\n  \"prizeThird\": \"Badge exclusivo\"\n}" },
+            "url": { "raw": "{{base_url}}/api/challenges", "host": ["{{base_url}}"], "path": ["api", "challenges"] }
+          }
+        },
+        {
+          "name": "GET /api/challenges",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/challenges", "host": ["{{base_url}}"], "path": ["api", "challenges"] }
+          }
+        },
+        {
+          "name": "GET /api/challenges/{id}",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/challenges/{{challengeId}}", "host": ["{{base_url}}"], "path": ["api", "challenges", "{{challengeId}}"] }
+          }
+        },
+        {
+          "name": "PUT /api/challenges/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"theme\": \"libre, con instrumento en vivo\"\n}" },
+            "url": { "raw": "{{base_url}}/api/challenges/{{challengeId}}", "host": ["{{base_url}}"], "path": ["api", "challenges", "{{challengeId}}"] }
+          }
+        },
+        {
+          "name": "POST /api/challenges/{challengeId}/submissions",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json();",
+            "pm.environment.set('submissionId', body.id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{artistToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"audioUrl\": \"https://soundcloud.com/example/submission\"\n}" },
+            "url": { "raw": "{{base_url}}/api/challenges/{{challengeId}}/submissions", "host": ["{{base_url}}"], "path": ["api", "challenges", "{{challengeId}}", "submissions"] },
+            "description": "Requiere role=ARTIST (docs/api/challenges-API.md estaba desactualizado y decía PRODUCER; corregido junto con esta Collection)."
+          }
+        },
+        {
+          "name": "GET /api/challenges/{challengeId}/submissions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/challenges/{{challengeId}}/submissions", "host": ["{{base_url}}"], "path": ["api", "challenges", "{{challengeId}}", "submissions"] }
+          }
+        },
+        {
+          "name": "POST /api/submissions/{submissionId}/votes",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"score\": 9,\n  \"comment\": \"Excelente producción\"\n}" },
+            "url": { "raw": "{{base_url}}/api/submissions/{{submissionId}}/votes", "host": ["{{base_url}}"], "path": ["api", "submissions", "{{submissionId}}", "votes"] }
+          }
+        },
+        {
+          "name": "PUT /api/challenges/{id}/opportunity-pick",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{artistToken}}" }],
+            "url": { "raw": "{{base_url}}/api/challenges/{{challengeId}}/opportunity-pick?submissionId={{submissionId}}", "host": ["{{base_url}}"], "path": ["api", "challenges", "{{challengeId}}", "opportunity-pick"], "query": [{ "key": "submissionId", "value": "{{submissionId}}" }] },
+            "description": "Solo el guestArtistId del challenge puede elegir su opportunity pick — en esta Collection el challenge se crea con guestArtistId=artistUserId."
+          }
+        },
+        {
+          "name": "PUT /api/challenges/{id}/close",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{base_url}}/api/challenges/{{challengeId}}/close", "host": ["{{base_url}}"], "path": ["api", "challenges", "{{challengeId}}", "close"] }
+          }
+        },
+        {
+          "name": "GET /api/challenges/results",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/challenges/results?producerId={{producerUserId}}", "host": ["{{base_url}}"], "path": ["api", "challenges", "results"], "query": [{ "key": "producerId", "value": "{{producerUserId}}" }] }
+          }
+        },
+        {
+          "name": "GET /api/ranking",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/ranking", "host": ["{{base_url}}"], "path": ["api", "ranking"] }
+          }
+        },
+        {
+          "name": "DELETE /api/challenges/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{base_url}}/api/challenges/{{challengeId}}", "host": ["{{base_url}}"], "path": ["api", "challenges", "{{challengeId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Billing (Subscriptions)",
+      "item": [
+        {
+          "name": "GET /api/subscriptions/me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{artistToken}}" }],
+            "url": { "raw": "{{base_url}}/api/subscriptions/me", "host": ["{{base_url}}"], "path": ["api", "subscriptions", "me"] },
+            "description": "Crea la suscripción FREE en el primer llamado (getOrCreate)."
+          }
+        },
+        {
+          "name": "POST /api/subscriptions/upgrade",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{artistToken}}" }],
+            "url": { "raw": "{{base_url}}/api/subscriptions/upgrade", "host": ["{{base_url}}"], "path": ["api", "subscriptions", "upgrade"] }
+          }
+        },
+        {
+          "name": "PUT /api/subscriptions/downgrade",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{artistToken}}" }],
+            "url": { "raw": "{{base_url}}/api/subscriptions/downgrade", "host": ["{{base_url}}"], "path": ["api", "subscriptions", "downgrade"] }
+          }
+        }
+      ]
+    }
+  ]
+}
