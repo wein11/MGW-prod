@@ -12,7 +12,7 @@ below mirror the JPA entity fields exactly.
 
 ## POST /api/beats
 
-Publishes a new beat. Only users with `role = PRODUCER` may call this.
+Publishes a new beat. Only users with `role = ARTIST` may call this.
 
 - **Auth:** required — `Authorization: Bearer <token>`.
 - **Request body:**
