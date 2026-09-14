@@ -4,6 +4,7 @@ import com.mgwprod.billing.service.SubscriptionService;
 import com.mgwprod.catalog.exception.BeatNotFoundException;
 import com.mgwprod.catalog.model.Beat;
 import com.mgwprod.catalog.repository.BeatRepository;
+import com.mgwprod.common.exception.InvalidFieldException;
 import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.Role;
@@ -68,11 +69,31 @@ public class BeatService {
         Beat beat = getById(id);
         requireOwnerOrAdmin(beat.getProducerId(), requestingUserId);
 
-        if (request.getTitle() != null) beat.setTitle(request.getTitle());
-        if (request.getGenre() != null) beat.setGenre(request.getGenre());
-        if (request.getBpm() != null) beat.setBpm(request.getBpm());
+        if (request.getTitle() != null) {
+            if (request.getTitle().isBlank()) {
+                throw new InvalidFieldException("El título no puede estar vacío");
+            }
+            beat.setTitle(request.getTitle());
+        }
+        if (request.getGenre() != null) {
+            if (request.getGenre().isBlank()) {
+                throw new InvalidFieldException("El género no puede estar vacío");
+            }
+            beat.setGenre(request.getGenre());
+        }
+        if (request.getBpm() != null) {
+            if (request.getBpm() < 1) {
+                throw new InvalidFieldException("El BPM debe ser mayor a 0");
+            }
+            beat.setBpm(request.getBpm());
+        }
         if (request.getKey() != null) beat.setKey(request.getKey());
-        if (request.getAudioUrl() != null) beat.setAudioUrl(request.getAudioUrl());
+        if (request.getAudioUrl() != null) {
+            if (request.getAudioUrl().isBlank()) {
+                throw new InvalidFieldException("El link de audio no puede estar vacío");
+            }
+            beat.setAudioUrl(request.getAudioUrl());
+        }
         return beatRepository.save(beat);
     }
 

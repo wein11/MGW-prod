@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,6 +81,19 @@ class SubscriptionServiceTest {
         Subscription upgraded = subscriptionService.upgrade(1L);
 
         assertThat(upgraded.getPlan()).isEqualTo(SubscriptionPlan.PREMIUM);
+    }
+
+    @Test
+    void upgradeIsIdempotentAndDoesNotChargeAgainIfAlreadyPremium() {
+        Subscription subscription = new Subscription();
+        subscription.setUserId(1L);
+        subscription.setPlan(SubscriptionPlan.PREMIUM);
+        when(subscriptionRepository.findByUserId(1L)).thenReturn(Optional.of(subscription));
+
+        Subscription result = subscriptionService.upgrade(1L);
+
+        assertThat(result.getPlan()).isEqualTo(SubscriptionPlan.PREMIUM);
+        verify(paymentGateway, never()).charge(anyLong(), any(BigDecimal.class));
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.mgwprod.billing.service.SubscriptionService;
 import com.mgwprod.catalog.exception.BeatNotFoundException;
 import com.mgwprod.catalog.repository.BeatRepository;
 import com.mgwprod.collab.exception.ToplineNotFoundException;
+import com.mgwprod.common.exception.InvalidFieldException;
 import com.mgwprod.collab.model.Collaboration;
 import com.mgwprod.collab.model.CollaborationStatus;
 import com.mgwprod.collab.model.Topline;
@@ -85,6 +86,9 @@ public class ToplineService {
         Topline topline = getById(id);
         requireOwnerOrAdmin(topline.getArtistId(), requestingUserId);
         if (request.getAudioUrl() != null) {
+            if (request.getAudioUrl().isBlank()) {
+                throw new InvalidFieldException("El link de audio no puede estar vacío");
+            }
             topline.setAudioUrl(request.getAudioUrl());
         }
         return toplineRepository.save(topline);

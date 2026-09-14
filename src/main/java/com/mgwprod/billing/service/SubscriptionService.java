@@ -53,6 +53,9 @@ public class SubscriptionService {
     @Transactional
     public Subscription upgrade(Long userId) {
         Subscription subscription = getOrCreate(userId);
+        if (subscription.getPlan() == SubscriptionPlan.PREMIUM) {
+            return subscription;
+        }
         PaymentResult result = paymentGateway.charge(userId, PREMIUM_PRICE_USD);
         if (result.approved()) {
             subscription.setPlan(SubscriptionPlan.PREMIUM);

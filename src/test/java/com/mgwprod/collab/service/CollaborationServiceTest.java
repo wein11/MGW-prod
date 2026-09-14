@@ -7,6 +7,9 @@ import com.mgwprod.collab.model.CollaborationStatus;
 import com.mgwprod.collab.model.Topline;
 import com.mgwprod.collab.repository.CollaborationRepository;
 import com.mgwprod.users.exception.ForbiddenOperationException;
+import com.mgwprod.users.model.Role;
+import com.mgwprod.users.model.User;
+import com.mgwprod.users.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,6 +34,9 @@ class CollaborationServiceTest {
 
     @Mock
     private BeatRepository beatRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private CollaborationService collaborationService;
@@ -147,7 +153,40 @@ class CollaborationServiceTest {
         beat.setProducerId(3L);
         when(beatRepository.findById(10L)).thenReturn(Optional.of(beat));
 
+        User other = new User();
+        other.setId(99L);
+        other.setRole(Role.ARTIST);
+        when(userRepository.findById(99L)).thenReturn(Optional.of(other));
+
         assertThatThrownBy(() -> collaborationService.delete(1L, 99L))
                 .isInstanceOf(ForbiddenOperationException.class);
+    }
+
+    @Test
+    void deleteAllowsAdminEvenIfNeitherParty() {
+        Topline topline = new Topline();
+        topline.setId(5L);
+        topline.setArtistId(2L);
+        topline.setBeatId(10L);
+        when(toplineService.getById(5L)).thenReturn(topline);
+
+        Collaboration collab = new Collaboration();
+        collab.setId(1L);
+        collab.setToplineId(5L);
+        when(collaborationRepository.findById(1L)).thenReturn(Optional.of(collab));
+
+        Beat beat = new Beat();
+        beat.setId(10L);
+        beat.setProducerId(3L);
+        when(beatRepository.findById(10L)).thenReturn(Optional.of(beat));
+
+        User admin = new User();
+        admin.setId(9L);
+        admin.setRole(Role.ADMIN);
+        when(userRepository.findById(9L)).thenReturn(Optional.of(admin));
+
+        collaborationService.delete(1L, 9L);
+
+        verify(collaborationRepository).deleteById(1L);
     }
 }

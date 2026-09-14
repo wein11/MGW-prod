@@ -5,6 +5,7 @@ import com.mgwprod.challenges.model.Challenge;
 import com.mgwprod.challenges.model.Submission;
 import com.mgwprod.challenges.repository.ChallengeRepository;
 import com.mgwprod.challenges.repository.ChallengeResultRepository;
+import com.mgwprod.common.exception.InvalidFieldException;
 import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.Role;
@@ -81,7 +82,12 @@ public class ChallengeService {
         if (challengeResultRepository.existsByChallengeId(id)) {
             throw new ForbiddenOperationException("No se puede editar un challenge ya cerrado");
         }
-        if (request.getTitle() != null) challenge.setTitle(request.getTitle());
+        if (request.getTitle() != null) {
+            if (request.getTitle().isBlank()) {
+                throw new InvalidFieldException("El título no puede estar vacío");
+            }
+            challenge.setTitle(request.getTitle());
+        }
         if (request.getTheme() != null) challenge.setTheme(request.getTheme());
         if (request.getDeadline() != null) challenge.setDeadline(request.getDeadline());
         return challengeRepository.save(challenge);
@@ -91,6 +97,9 @@ public class ChallengeService {
     public void delete(Long id, Long requestingUserId) {
         Challenge challenge = getById(id);
         requireOwnerOrAdmin(challenge.getCreatedBy(), requestingUserId);
+        if (challengeResultRepository.existsByChallengeId(id)) {
+            throw new ForbiddenOperationException("No se puede borrar un challenge ya cerrado");
+        }
         challengeRepository.deleteById(id);
     }
 
