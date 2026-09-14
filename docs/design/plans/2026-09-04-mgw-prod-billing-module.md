@@ -1,6 +1,5 @@
 # Módulo `billing` — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Construir el módulo `billing` (suscripción free/premium + pago simulado) del pedido del profesor. Dueño: Dani.
 
@@ -18,7 +17,7 @@ git checkout -b feature/billing-module
 
 **Tech Stack:** Java 21+, Spring Boot 4.1.0, Spring Data JPA, MySQL, Lombok, JUnit 5 + Mockito + MockMvc.
 
-**Spec:** `docs/superpowers/specs/2026-09-04-mgw-prod-professor-corrections-design.md` (sección 3).
+**Spec:** `docs/design/specs/2026-09-04-mgw-prod-professor-corrections-design.md` (sección 3).
 
 ## Global Constraints
 

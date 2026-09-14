@@ -1,6 +1,5 @@
 # Módulo `challenges` + verificación de productores — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Construir el módulo `challenges` (desafíos con jurado ponderado, premios, ranking) y la extensión chica de `users` (flag `verified` en `ProducerProfile`) del pivot de mgw-prod. Dueño: Paolo. Es el módulo más pesado de los tres (9 tareas, incluye el cálculo ponderado y la orquestación del cierre con `ChallengeResult`) — arrancalo con margen de tiempo.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Java 21+, Spring Boot 4.1.0, Spring Data JPA, MySQL, Lombok, JUnit 5 + Mockito + MockMvc.
 
-**Spec:** `docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md` (secciones "Módulo `challenges`", "Cálculo del puntaje ponderado" y "Endpoints").
+**Spec:** `docs/design/specs/2026-09-01-mgw-prod-pivot-design.md` (secciones "Módulo `challenges`", "Cálculo del puntaje ponderado" y "Endpoints").
 
 ## Global Constraints
 

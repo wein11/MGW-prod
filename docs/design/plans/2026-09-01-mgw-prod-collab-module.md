@@ -1,6 +1,5 @@
 # Módulo `collab` — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Construir el módulo `collab` (toplines de artistas sobre beats, comentarios, colaboraciones) del pivot de mgw-prod, dueño: Dani. Reemplaza al viejo módulo `orders` (carrito/checkout, nunca implementado en código — solo existía en specs viejas).
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Java 21+, Spring Boot 4.1.0, Spring Data JPA, MySQL, Lombok, JUnit 5 + Mockito + MockMvc.
 
-**Spec:** `docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md` (secciones "Módulo `collab`" y "Endpoints").
+**Spec:** `docs/design/specs/2026-09-01-mgw-prod-pivot-design.md` (secciones "Módulo `collab`" y "Endpoints").
 
 ## Global Constraints
 

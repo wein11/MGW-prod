@@ -1,6 +1,5 @@
 # CRUD completo (User/Beat/Topline/Collaboration/Challenge) — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Agregar los verbos update/delete que faltan en las entidades principales (`User`, `Beat`, `Topline`, `Collaboration`, `Challenge`) para cumplir el pedido del profesor de "CRUD funcional en todas las entidades". Dueño: Paolo.
 
@@ -16,7 +15,7 @@ git checkout -b feature/crud-completion
 
 **Tech Stack:** Java 21+, Spring Boot 4.1.0, Spring Data JPA, MySQL, Lombok, JUnit 5 + Mockito + MockMvc.
 
-**Spec:** `docs/superpowers/specs/2026-09-04-mgw-prod-professor-corrections-design.md` (sección 2).
+**Spec:** `docs/design/specs/2026-09-04-mgw-prod-professor-corrections-design.md` (sección 2).
 
 ## Global Constraints
 

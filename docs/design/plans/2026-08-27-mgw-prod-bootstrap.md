@@ -1,6 +1,5 @@
 # mgw-prod Bootstrap Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Stand up a runnable Spring Boot project connected to a local MySQL database, so the `users`/`marketplace`/`challenges` module plans have a project to build into.
 
@@ -13,7 +12,7 @@
 - Java version: **21** (matches cátedra skeleton).
 - Spring Boot parent version: **4.1.0** (matches cátedra skeleton — do not use an older 3.x tutorial's artifact names; this version splits the old `spring-boot-starter-web` into `spring-boot-starter-webmvc`, and splits `spring-boot-starter-test` into `spring-boot-starter-data-jpa-test` + `spring-boot-starter-webmvc-test`).
 - Lombok is available and wired into both `compile` and `test-compile` via `maven-compiler-plugin` annotationProcessorPaths (copied verbatim from the cátedra skeleton) — use Lombok annotations (`@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`) instead of hand-written boilerplate.
-- **Two deliberate additions beyond the cátedra skeleton**, both justified in the design spec (`docs/superpowers/specs/2026-08-25-mgw-prod-tpo-design.md`):
+- **Two deliberate additions beyond the cátedra skeleton**, both justified in the design spec (`docs/design/specs/2026-08-25-mgw-prod-tpo-design.md`):
   - `spring-boot-starter-validation` — needed for `@Valid`/Bean Validation on request DTOs (not pulled in by `webmvc` alone in this Spring Boot version).
   - No Spring Security. Auth is homemade (see the `users` module plan) using only the JDK's `java.security.MessageDigest` — no BCrypt, no `spring-security-crypto`, to avoid depending on anything not seen in class.
 - MySQL local connection matches Clase 2's `DataBaseConnection.java` convention: user `root`, password `admin`, host `localhost:3306`. Database name: `mgw_prod`.

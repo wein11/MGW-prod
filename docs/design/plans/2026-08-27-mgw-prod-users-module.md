@@ -1,6 +1,5 @@
 # mgw-prod `users` Module Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement the `users` module end to end for Etapa 1 — registration, login, and profile view/edit — as a self-contained vertical slice (Controller→Service→Repository→Entity) that `catalog`, `orders`, and `challenges` can depend on for authentication.
 

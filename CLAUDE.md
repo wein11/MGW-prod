@@ -23,7 +23,7 @@ semanales, rankings y reputación ("Music Score"). Descripción completa del pro
 transaccional. El proyecto volvió al pitch original (perfil-portfolio, publicaciones tipo red
 social, colaboración, desafíos con jurado ponderado) en vez de mantener el recorte de
 "marketplace de beats con carrito y checkout". Diseño vigente en
-`docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md`. Fuera de alcance de esta entrega:
+`docs/design/specs/2026-09-01-mgw-prod-pivot-design.md`. Fuera de alcance de esta entrega:
 Talent Discovery para sellos (rol `LABEL`, búsqueda paga) — queda como visión de producto.
 
 **Importante para todo el equipo — esta entrega NO es e-commerce.** El PDF de la consigna
@@ -67,7 +67,7 @@ si no está). Dos etapas obligatorias:
   desde `update`, para coincidir con lo enseñado en Clase 4). Las tablas se crean a mano vía
   `docs/db/schema.sql`: cada módulo que agrega una entidad nueva suma ahí su `CREATE TABLE`.
 - **Sin DTOs — los controllers reciben/devuelven la entidad JPA directo**, para calcar el
-  patrón de Clase 4 (ver `docs/superpowers/plans/2026-08-29-remove-users-dtos.md`; aplicado
+  patrón de Clase 4 (ver `docs/design/plans/2026-08-29-remove-users-dtos.md`; aplicado
   primero en `users`, mergeado a `main` el 2026-09-01 — PR #1). Convención obligatoria también
   para `catalog`/`collab`/`challenges`. Consecuencia importante para cualquier entidad nueva:
   `spring.jpa.properties.jakarta.persistence.validation.mode=none` está seteado a nivel app
@@ -95,7 +95,7 @@ integrante, cada uno con su propio Controller/Service/Repository/Entity:
   ranking/Music Score. Dueño: Paolo. El más pesado de los tres (9 tareas: cálculo ponderado +
   orquestación del cierre).
 
-Detalle completo en `docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md` (spec vigente;
+Detalle completo en `docs/design/specs/2026-09-01-mgw-prod-pivot-design.md` (spec vigente;
 `2026-08-25-mgw-prod-tpo-design.md` queda como referencia histórica del diseño e-commerce).
 
 ### Por qué la estructura de paquetes no es igual al ejemplo de Clase 4

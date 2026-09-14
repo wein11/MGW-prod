@@ -3,7 +3,7 @@
 **Fecha:** 2026-09-01
 **Autores:** Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi
 **Estado:** propuesto, pendiente de repartir con el resto del grupo
-**Reemplaza:** `docs/superpowers/specs/2026-08-25-mgw-prod-tpo-design.md` (queda como referencia
+**Reemplaza:** `docs/design/specs/2026-08-25-mgw-prod-tpo-design.md` (queda como referencia
 histórica de por qué el proyecto empezó siendo e-commerce)
 
 ## Por qué este pivot

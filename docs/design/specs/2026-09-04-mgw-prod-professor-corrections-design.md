@@ -3,7 +3,7 @@
 **Fecha:** 2026-09-04
 **Autores:** Santiago Weinbinder, Paolo Maffei, Dani Gariboldi
 **Estado:** aprobado, pendiente de escribir los planes de implementación de CRUD y Billing
-**Amplía:** `docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md` (sigue vigente; este
+**Amplía:** `docs/design/specs/2026-09-01-mgw-prod-pivot-design.md` (sigue vigente; este
 documento describe únicamente lo que cambia)
 
 ## Por qué este cambio
@@ -65,7 +65,7 @@ de `PUT /api/producers/{id}/verify` a `PUT /api/artists/{id}/verify`.
 
 **Dueño de esta parte: Santiago.** Es la base — bloquea a las otras dos, porque tanto el CRUD
 (autorización dueño-o-admin) como Billing (quién tiene suscripción) asumen el enum `Role` nuevo.
-Plan de implementación: `docs/superpowers/plans/2026-09-04-mgw-prod-roles-migration.md`.
+Plan de implementación: `docs/design/plans/2026-09-04-mgw-prod-roles-migration.md`.
 
 ## 2. CRUD completo en las entidades principales
 
@@ -87,7 +87,7 @@ conversación, sin aportar nada a la evaluación de "CRUD por entidad".
 
 **Dueño de esta parte: Paolo.** Arranca desde `main` una vez mergeada la parte de Roles (el
 chequeo dueño-o-admin usa `role == ADMIN`). Plan de implementación:
-`docs/superpowers/plans/2026-09-04-mgw-prod-crud-completion.md`.
+`docs/design/plans/2026-09-04-mgw-prod-crud-completion.md`.
 
 ## 3. Suscripción y pago simulado (módulo `billing`)
 
@@ -131,7 +131,7 @@ No hay `DELETE`: todo `ARTIST` tiene siempre exactamente una fila de `Subscripti
 es actualizar el plan a `FREE`, no borrar el registro.
 
 **Dueño de esta parte: Dani.** Arranca desde `main` una vez mergeada la parte de Roles. Plan de
-implementación: `docs/superpowers/plans/2026-09-04-mgw-prod-billing-module.md`.
+implementación: `docs/design/plans/2026-09-04-mgw-prod-billing-module.md`.
 
 ## Orden de ejecución
 

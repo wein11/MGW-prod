@@ -1,6 +1,5 @@
 # Migración de roles (ARTIST/DISCOGRAFICA/ADMIN) — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Migrar `Role` de `{PRODUCER, ARTIST}` a `{ARTIST, DISCOGRAFICA, ADMIN}`, eliminar el flag `users.is_admin`, y fusionar `producer_profiles`+`artist_profiles` en una sola tabla `artist_profiles`. Es la base de la que dependen los otros dos correcciones del profesor (CRUD completo y billing) — se ejecuta y mergea primero. Dueño: Santiago.
 
@@ -8,7 +7,7 @@
 
 **Tech Stack:** Java 21+, Spring Boot 4.1.0, Spring Data JPA, MySQL, Lombok, JUnit 5 + Mockito + MockMvc.
 
-**Spec:** `docs/superpowers/specs/2026-09-04-mgw-prod-professor-corrections-design.md` (sección 1).
+**Spec:** `docs/design/specs/2026-09-04-mgw-prod-professor-corrections-design.md` (sección 1).
 
 ## Global Constraints
 

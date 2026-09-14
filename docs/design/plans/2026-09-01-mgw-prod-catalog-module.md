@@ -1,14 +1,13 @@
 # Módulo `catalog` — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Construir el módulo `catalog` (publicar/listar beats + comentarios) del pivot de mgw-prod. Dueños: Santiago + Mateo (Mateo no tiene Claude Code — trabaja en pareo con Santiago en la misma sesión). Es el módulo más liviano de los tres (5 tareas, CRUD directo sin lógica de negocio compleja) — pensado a propósito así, para que el ritmo de pareo sea manejable.
+**Goal:** Construir el módulo `catalog` (publicar/listar beats + comentarios) del pivot de mgw-prod. Dueños: Santiago + Mateo (Mateo trabaja en pareo con Santiago en la misma sesión). Es el módulo más liviano de los tres (5 tareas, CRUD directo sin lógica de negocio compleja) — pensado a propósito así, para que el ritmo de pareo sea manejable.
 
 **Architecture:** Paquete vertical `com.mgwprod.catalog` (controller/service/repository/model/exception), calcado del patrón ya usado en `com.mgwprod.users`: sin DTOs (controllers reciben/devuelven la entidad JPA directo), Service con la lógica de negocio, Repository `JpaRepository` sin lógica, `@RestControllerAdvice` global ya existente (`com.mgwprod.common.exception.GlobalExceptionHandler`) maneja los errores. `catalog` solo referencia `User` (de `users`) por FK plana (`Long producerId`/`authorId`), nunca al revés.
 
 **Tech Stack:** Java 21+, Spring Boot 4.1.0, Spring Data JPA, MySQL, Lombok, JUnit 5 + Mockito + MockMvc.
 
-**Spec:** `docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md` (secciones "Módulo `catalog`" y "Endpoints").
+**Spec:** `docs/design/specs/2026-09-01-mgw-prod-pivot-design.md` (secciones "Módulo `catalog`" y "Endpoints").
 
 ## Global Constraints
 

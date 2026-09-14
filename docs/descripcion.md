@@ -113,4 +113,4 @@ la cátedra exigía una aplicación transaccional de e-commerce. Cuando el profe
 ese requisito ya no aplica, el grupo decidió volver a la idea de producto original en vez de
 mantener el recorte de e-commerce. El diseño técnico completo de este pivot —modelo de datos,
 endpoints, y qué código se borra/agrega— está en
-`docs/superpowers/specs/2026-09-01-mgw-prod-pivot-design.md`.
+`docs/design/specs/2026-09-01-mgw-prod-pivot-design.md`.
