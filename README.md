@@ -143,6 +143,10 @@ Ninguna de las dos corrompe datos ni afecta el flujo normal de uso/demo.
 
 ## Documentación
 
+- `docs/GUIA-TECNICA-EQUIPO.md` — guía técnica por módulo (arquitectura, lógica de negocio,
+  decisiones de diseño) para que cada integrante pueda explicar y defender el proyecto.
+- `docs/INFORME-TPO.md` — informe formal de la entrega, con la validación funcional
+  end-to-end vía Postman.
 - `docs/design/specs/2026-09-01-mgw-prod-pivot-design.md` — diseño vigente (post-pivot, dominio actual).
 - `docs/design/specs/2026-09-04-mgw-prod-professor-corrections-design.md` — diseño de las correcciones del profesor (roles, CRUD completo, billing).
 - `docs/design/plans/*.md` — planes de implementación por módulo (desglose de tareas, decisiones puntuales).
