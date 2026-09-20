@@ -1,13 +1,9 @@
 package com.mgwprod.challenges.service;
 
-import com.mgwprod.challenges.exception.ChallengeNotFoundException;
-import com.mgwprod.challenges.exception.SubmissionNotFoundException;
 import com.mgwprod.challenges.model.Challenge;
 import com.mgwprod.challenges.model.Submission;
 import com.mgwprod.challenges.repository.ChallengeRepository;
 import com.mgwprod.challenges.repository.SubmissionRepository;
-import com.mgwprod.users.exception.ForbiddenOperationException;
-import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.UserRepository;
@@ -17,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 
+// Lógica de negocio de las entregas a un challenge: crear (mientras no pasó el
+// deadline), listar y buscar.
 @Service
 public class SubmissionService {
 
@@ -34,19 +32,33 @@ public class SubmissionService {
         this.challengeRepository = challengeRepository;
     }
 
+    // El controller la usa para devolver 403 antes de crear.
+    @Transactional(readOnly = true)
+    public boolean isArtist(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        return user != null && user.getRole() == Role.ARTIST;
+    }
+
+    @Transactional(readOnly = true)
+    public Challenge getChallenge(Long challengeId) {
+        return challengeRepository.findById(challengeId).orElse(null);
+    }
+
+    // El controller la usa para devolver 403 si alguien intenta mandar una submission
+    // después de la fecha límite del challenge.
+    @Transactional(readOnly = true)
+    public boolean isPastDeadline(Challenge challenge) {
+        return Instant.now().isAfter(challenge.getDeadline());
+    }
+
+    // Devuelve null si el challenge no existe.
     @Transactional
     public Submission create(Long challengeId, Long producerId, Submission submission) {
-        User producer = userRepository.findById(producerId)
-                .orElseThrow(() -> new UserNotFoundException(producerId));
-        if (producer.getRole() != Role.ARTIST) {
-            throw new ForbiddenOperationException("Solo un artista puede enviar una submission");
+        Challenge challenge = getChallenge(challengeId);
+        if (challenge == null) {
+            return null;
         }
-        Challenge challenge = challengeRepository.findById(challengeId)
-                .orElseThrow(() -> new ChallengeNotFoundException(challengeId));
-        if (Instant.now().isAfter(challenge.getDeadline())) {
-            throw new ForbiddenOperationException("El deadline de este challenge ya pasó");
-        }
-        submission.setChallengeId(challengeId);
+        submission.setChallenge(challenge);
         submission.setProducerId(producerId);
         return submissionRepository.save(submission);
     }
@@ -58,7 +70,6 @@ public class SubmissionService {
 
     @Transactional(readOnly = true)
     public Submission getById(Long id) {
-        return submissionRepository.findById(id)
-                .orElseThrow(() -> new SubmissionNotFoundException(id));
+        return submissionRepository.findById(id).orElse(null);
     }
 }

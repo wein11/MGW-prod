@@ -1,7 +1,5 @@
 package com.mgwprod.users.service;
 
-import com.mgwprod.users.exception.ForbiddenOperationException;
-import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.ArtistProfile;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
@@ -16,9 +14,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -56,22 +52,40 @@ class UserServiceTest {
     }
 
     @Test
-    void getByIdThrowsWhenUserDoesNotExist() {
+    void getByIdReturnsNullWhenUserDoesNotExist() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class, () -> userService.getById(99L));
+        assertThat(userService.getById(99L)).isNull();
     }
 
     @Test
-    void getProfileReturnsArtistProfileForArtist() {
+    void isArtistIsTrueForArtistRole() {
         User user = new User();
-        user.setId(2L);
         user.setRole(Role.ARTIST);
 
+        assertThat(userService.isArtist(user)).isTrue();
+    }
+
+    @Test
+    void isArtistIsFalseForOtherRoles() {
+        User user = new User();
+        user.setRole(Role.DISCOGRAFICA);
+
+        assertThat(userService.isArtist(user)).isFalse();
+    }
+
+    @Test
+    void isAdminIsTrueForAdminRole() {
+        User user = new User();
+        user.setRole(Role.ADMIN);
+
+        assertThat(userService.isAdmin(user)).isTrue();
+    }
+
+    @Test
+    void getProfileReturnsArtistProfile() {
         ArtistProfile profile = new ArtistProfile();
         profile.setBio("bio");
-
-        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
         when(artistProfileRepository.findByUserId(2L)).thenReturn(Optional.of(profile));
 
         ArtistProfile response = userService.getProfile(2L);
@@ -80,14 +94,9 @@ class UserServiceTest {
     }
 
     @Test
-    void getProfileThrowsForbiddenWhenUserIsNotArtist() {
-        User user = new User();
-        user.setId(3L);
-        user.setRole(Role.DISCOGRAFICA);
-
-        when(userRepository.findById(3L)).thenReturn(Optional.of(user));
-
-        assertThrows(ForbiddenOperationException.class, () -> userService.getProfile(3L));
+    void isOwnerIsTrueWhenIdsMatch() {
+        assertThat(userService.isOwner(1L, 1L)).isTrue();
+        assertThat(userService.isOwner(1L, 2L)).isFalse();
     }
 
     @Test
@@ -104,30 +113,27 @@ class UserServiceTest {
         User request = new User();
         request.setDisplayName("New Name");
 
-        User response = userService.updateUser(1L, 1L, request);
+        User response = userService.updateUser(1L, request);
 
         assertEquals("New Name", response.getDisplayName());
     }
 
     @Test
-    void updateUserThrowsForbiddenWhenEditingSomeoneElse() {
+    void updateUserReturnsNullWhenMissing() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
         User request = new User();
         request.setDisplayName("New Name");
 
-        assertThrows(ForbiddenOperationException.class, () -> userService.updateUser(1L, 2L, request));
+        assertThat(userService.updateUser(1L, request)).isNull();
     }
 
     @Test
     void updateArtistProfileChangesGenresAndBioForOwner() {
-        User user = new User();
-        user.setId(1L);
-        user.setRole(Role.ARTIST);
-
         ArtistProfile profile = new ArtistProfile();
         profile.setGenres("Old");
         profile.setBio("Old bio");
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(artistProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
         when(artistProfileRepository.save(any(ArtistProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -135,7 +141,7 @@ class UserServiceTest {
         request.setGenres("RKT,Trap");
         request.setBio("New bio");
 
-        ArtistProfile response = userService.updateArtistProfile(1L, 1L, request);
+        ArtistProfile response = userService.updateArtistProfile(1L, request);
 
         assertEquals("RKT,Trap", response.getGenres());
         assertEquals("New bio", response.getBio());
@@ -143,13 +149,8 @@ class UserServiceTest {
 
     @Test
     void updateArtistProfileChangesProducerFieldsForOwner() {
-        User user = new User();
-        user.setId(1L);
-        user.setRole(Role.ARTIST);
-
         ArtistProfile profile = new ArtistProfile();
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(artistProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
         when(artistProfileRepository.save(any(ArtistProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -158,7 +159,7 @@ class UserServiceTest {
         request.setBpmMax(140);
         request.setExperienceLevel("intermedio");
 
-        ArtistProfile response = userService.updateArtistProfile(1L, 1L, request);
+        ArtistProfile response = userService.updateArtistProfile(1L, request);
 
         assertEquals(120, response.getBpmMin());
         assertEquals(140, response.getBpmMax());
@@ -166,104 +167,30 @@ class UserServiceTest {
     }
 
     @Test
-    void updateArtistProfileThrowsForbiddenWhenUserIsNotArtist() {
-        User user = new User();
-        user.setId(1L);
-        user.setRole(Role.DISCOGRAFICA);
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        ArtistProfile request = new ArtistProfile();
-        request.setGenres("RKT");
-
-        assertThrows(ForbiddenOperationException.class,
-                () -> userService.updateArtistProfile(1L, 1L, request));
-    }
-
-    @Test
-    void verifyArtistSetsVerifiedTrueWhenRequesterIsAdmin() {
-        User admin = new User();
-        admin.setId(1L);
-        admin.setRole(Role.ADMIN);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
-
-        User artist = new User();
-        artist.setId(2L);
-        artist.setRole(Role.ARTIST);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(artist));
-
+    void verifyArtistSetsVerifiedTrue() {
         ArtistProfile profile = new ArtistProfile();
         profile.setVerified(false);
         when(artistProfileRepository.findByUserId(2L)).thenReturn(Optional.of(profile));
         when(artistProfileRepository.save(profile)).thenReturn(profile);
 
-        ArtistProfile result = userService.verifyArtist(1L, 2L);
+        ArtistProfile result = userService.verifyArtist(2L);
 
         assertThat(result.isVerified()).isTrue();
     }
 
     @Test
-    void verifyArtistThrowsWhenRequesterIsNotAdmin() {
-        User notAdmin = new User();
-        notAdmin.setId(1L);
-        notAdmin.setRole(Role.ARTIST);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(notAdmin));
-
-        assertThatThrownBy(() -> userService.verifyArtist(1L, 2L))
-                .isInstanceOf(ForbiddenOperationException.class);
-    }
-
-    @Test
-    void verifyArtistThrowsWhenTargetIsNotArtist() {
-        User admin = new User();
-        admin.setId(1L);
-        admin.setRole(Role.ADMIN);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
-
-        User discografica = new User();
-        discografica.setId(2L);
-        discografica.setRole(Role.DISCOGRAFICA);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(discografica));
-
-        assertThatThrownBy(() -> userService.verifyArtist(1L, 2L))
-                .isInstanceOf(ForbiddenOperationException.class);
-    }
-
-    @Test
     void deleteRemovesUserWithNoContent() {
-        User user = new User();
-        user.setId(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        boolean deleted = userService.delete(1L);
 
-        userService.delete(1L, 1L);
-
+        assertThat(deleted).isTrue();
         verify(userRepository).deleteById(1L);
     }
 
     @Test
-    void deleteThrowsConflictWhenUserHasContent() {
-        User user = new User();
-        user.setId(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    void deleteReturnsFalseWhenUserHasContent() {
         doThrow(new org.springframework.dao.DataIntegrityViolationException("FK violation"))
                 .when(userRepository).deleteById(1L);
 
-        assertThatThrownBy(() -> userService.delete(1L, 1L))
-                .isInstanceOf(com.mgwprod.users.exception.UserHasContentException.class);
-    }
-
-    @Test
-    void deleteThrowsWhenRequesterIsNotOwnerOrAdmin() {
-        User target = new User();
-        target.setId(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(target));
-
-        User requester = new User();
-        requester.setId(2L);
-        requester.setRole(Role.ARTIST);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(requester));
-
-        assertThatThrownBy(() -> userService.delete(1L, 2L))
-                .isInstanceOf(ForbiddenOperationException.class);
+        assertThat(userService.delete(1L)).isFalse();
     }
 }

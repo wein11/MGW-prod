@@ -1,8 +1,11 @@
 package com.mgwprod.challenges.controller;
 
+import com.mgwprod.challenges.model.Challenge;
 import com.mgwprod.challenges.model.ChallengeResult;
 import com.mgwprod.challenges.service.ChallengeResultService;
-import com.mgwprod.users.exception.UnauthenticatedException;
+import com.mgwprod.challenges.service.ChallengeService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -10,21 +13,34 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+// Su propio controller, separado de ChallengeController, porque cerrar un challenge es
+// una acción de admin bastante distinta al CRUD normal — dispara todo el cálculo de
+// puntajes y resultados de ChallengeResultService.
 @RestController
 public class ChallengeCloseController {
 
     private final ChallengeResultService challengeResultService;
+    private final ChallengeService challengeService;
 
-    public ChallengeCloseController(ChallengeResultService challengeResultService) {
+    public ChallengeCloseController(ChallengeResultService challengeResultService, ChallengeService challengeService) {
         this.challengeResultService = challengeResultService;
+        this.challengeService = challengeService;
     }
 
+    // Solo un admin puede cerrar un challenge.
     @PutMapping("/api/challenges/{id}/close")
-    public List<ChallengeResult> close(@PathVariable Long id,
-                                        @RequestAttribute(name = "userId", required = false) Long requestingUserId) {
+    public ResponseEntity<List<ChallengeResult>> close(@PathVariable Long id,
+                                                        @RequestAttribute(name = "userId", required = false) Long requestingUserId) {
         if (requestingUserId == null) {
-            throw new UnauthenticatedException("Necesitás iniciar sesión para cerrar un challenge");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-        return challengeResultService.close(id, requestingUserId);
+        if (!challengeResultService.isAdmin(requestingUserId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+        Challenge challenge = challengeService.getById(id);
+        if (challenge == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(challengeResultService.close(challenge));
     }
 }

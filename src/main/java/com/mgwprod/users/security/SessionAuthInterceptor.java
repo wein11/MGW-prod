@@ -9,6 +9,10 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.time.Instant;
 import java.util.Optional;
 
+// Se ejecuta antes de cada método de controller (se registra en WebConfig). Lee el
+// header "Authorization: Bearer <token>", busca ese token en la tabla de sesiones y,
+// si es válido, guarda el userId/role del que llama como atributos del request para
+// que los controllers los lean con @RequestAttribute.
 public class SessionAuthInterceptor implements HandlerInterceptor {
 
     public static final String USER_ID_ATTRIBUTE = "userId";
@@ -23,6 +27,10 @@ public class SessionAuthInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String header = request.getHeader("Authorization");
+        // Sin header o de otro tipo: deja pasar el request sin autenticar. El
+        // controller es quien decide si ese endpoint necesita login (chequeando si
+        // USER_ID_ATTRIBUTE quedó seteado) — este interceptor solo resuelve quién es
+        // el que llama, no rechaza requests por su cuenta.
         if (header == null || !header.startsWith("Bearer ")) {
             return true;
         }
@@ -30,6 +38,8 @@ public class SessionAuthInterceptor implements HandlerInterceptor {
         String token = header.substring("Bearer ".length());
         Optional<Session> sessionOpt = sessionRepository.findByToken(token);
 
+        // Acá sí se manda un header Bearer pero es inválido/expirado: se rechaza
+        // directamente, porque un token malo es distinto a no mandar ninguno.
         if (sessionOpt.isEmpty() || sessionOpt.get().getExpiresAt().isBefore(Instant.now())) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;

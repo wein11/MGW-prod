@@ -2,8 +2,6 @@ package com.mgwprod.catalog.controller;
 
 import com.mgwprod.catalog.model.BeatComment;
 import com.mgwprod.catalog.service.BeatCommentService;
-import com.mgwprod.users.exception.UnauthenticatedException;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+// Endpoints anidados bajo /api/beats/{beatId}/comments.
 @RestController
 @RequestMapping("/api/beats/{beatId}/comments")
 public class BeatCommentController {
@@ -26,19 +25,31 @@ public class BeatCommentController {
         this.beatCommentService = beatCommentService;
     }
 
+    // El 404 se decide recién después de llamar al service (no antes), porque
+    // beatCommentService.create ya hace el chequeo de si el beat existe.
     @PostMapping
     public ResponseEntity<BeatComment> createComment(@PathVariable Long beatId,
                                                        @RequestAttribute(name = "userId", required = false) Long userId,
-                                                       @Valid @RequestBody BeatComment comment) {
+                                                       @RequestBody BeatComment comment) {
         if (userId == null) {
-            throw new UnauthenticatedException("Necesitás iniciar sesión para comentar");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        if (comment.getText() == null || comment.getText().isBlank()) {
+            return ResponseEntity.badRequest().body(null);
         }
         BeatComment created = beatCommentService.create(beatId, userId, comment);
+        if (created == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping
-    public List<BeatComment> listComments(@PathVariable Long beatId) {
-        return beatCommentService.listByBeat(beatId);
+    public ResponseEntity<List<BeatComment>> listComments(@PathVariable Long beatId) {
+        List<BeatComment> comments = beatCommentService.listByBeat(beatId);
+        if (comments == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(comments);
     }
 }

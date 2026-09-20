@@ -1,5 +1,6 @@
 package com.mgwprod.challenges.controller;
 
+import com.mgwprod.challenges.model.Challenge;
 import com.mgwprod.challenges.model.Submission;
 import com.mgwprod.challenges.service.SubmissionService;
 import com.mgwprod.users.repository.SessionRepository;
@@ -10,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
+
+import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,11 +42,18 @@ class SubmissionControllerTest {
         Submission request = new Submission();
         request.setAudioUrl("https://soundcloud.com/example/submission");
 
+        Challenge challenge = new Challenge();
+        challenge.setId(1L);
+        challenge.setDeadline(Instant.now().plusSeconds(3600));
+
         Submission response = new Submission();
         response.setId(1L);
-        response.setChallengeId(1L);
+        response.setChallenge(challenge);
         response.setProducerId(2L);
 
+        when(submissionService.isArtist(2L)).thenReturn(true);
+        when(submissionService.getChallenge(1L)).thenReturn(challenge);
+        when(submissionService.isPastDeadline(challenge)).thenReturn(false);
         when(submissionService.create(eq(1L), eq(2L), any(Submission.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/challenges/1/submissions")
@@ -66,15 +76,32 @@ class SubmissionControllerTest {
     }
 
     @Test
+    void createSubmissionReturns404WhenChallengeMissing() throws Exception {
+        Submission request = new Submission();
+        request.setAudioUrl("https://soundcloud.com/example/submission");
+
+        when(submissionService.isArtist(2L)).thenReturn(true);
+        when(submissionService.getChallenge(1L)).thenReturn(null);
+
+        mockMvc.perform(post("/api/challenges/1/submissions")
+                        .requestAttr("userId", 2L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void listSubmissionsReturns200() throws Exception {
+        Challenge challenge = new Challenge();
+        challenge.setId(1L);
         Submission submission = new Submission();
         submission.setId(1L);
-        submission.setChallengeId(1L);
+        submission.setChallenge(challenge);
 
         when(submissionService.listByChallenge(1L)).thenReturn(java.util.List.of(submission));
 
         mockMvc.perform(get("/api/challenges/1/submissions"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].challengeId").value(1));
+                .andExpect(jsonPath("$[0].challenge.id").value(1));
     }
 }

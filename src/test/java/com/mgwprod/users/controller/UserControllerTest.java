@@ -1,7 +1,6 @@
 package com.mgwprod.users.controller;
 
 import tools.jackson.databind.ObjectMapper;
-import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.ArtistProfile;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
@@ -16,7 +15,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -57,7 +55,7 @@ class UserControllerTest {
 
     @Test
     void getUserReturns404WhenUserDoesNotExist() throws Exception {
-        when(userService.getById(99L)).thenThrow(new UserNotFoundException(99L));
+        when(userService.getById(99L)).thenReturn(null);
 
         mockMvc.perform(get("/api/users/99"))
                 .andExpect(status().isNotFound());
@@ -65,9 +63,14 @@ class UserControllerTest {
 
     @Test
     void getProfileReturns200WithArtistProfile() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.ARTIST);
         ArtistProfile profile = new ArtistProfile();
         profile.setGenres("RKT");
 
+        when(userService.getById(1L)).thenReturn(user);
+        when(userService.isArtist(user)).thenReturn(true);
         when(userService.getProfile(1L)).thenReturn(profile);
 
         mockMvc.perform(get("/api/users/1/profile"))
@@ -80,12 +83,16 @@ class UserControllerTest {
         User request = new User();
         request.setDisplayName("Nuevo Nombre");
 
+        User existing = new User();
+        existing.setId(1L);
         User response = new User();
         response.setId(1L);
         response.setDisplayName("Nuevo Nombre");
         response.setRole(Role.ARTIST);
 
-        when(userService.updateUser(eq(1L), eq(1L), any(User.class))).thenReturn(response);
+        when(userService.isOwner(1L, 1L)).thenReturn(true);
+        when(userService.getById(1L)).thenReturn(existing);
+        when(userService.updateUser(eq(1L), any(User.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/users/1")
                         .requestAttr("userId", 1L)
@@ -107,6 +114,20 @@ class UserControllerTest {
     }
 
     @Test
+    void updateUserReturns403WhenEditingSomeoneElse() throws Exception {
+        User request = new User();
+        request.setDisplayName("Nuevo Nombre");
+
+        when(userService.isOwner(1L, 2L)).thenReturn(false);
+
+        mockMvc.perform(put("/api/users/1")
+                        .requestAttr("userId", 2L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void updateArtistProfileReturns200WhenOwnerEditsOwnProfile() throws Exception {
         ArtistProfile request = new ArtistProfile();
         request.setGenres("RKT,Trap");
@@ -114,13 +135,20 @@ class UserControllerTest {
         request.setBpmMax(140);
         request.setExperienceLevel("intermedio");
 
+        User existing = new User();
+        existing.setId(1L);
+        existing.setRole(Role.ARTIST);
+
         ArtistProfile response = new ArtistProfile();
         response.setGenres("RKT,Trap");
         response.setBpmMin(120);
         response.setBpmMax(140);
         response.setExperienceLevel("intermedio");
 
-        when(userService.updateArtistProfile(eq(1L), eq(1L), any(ArtistProfile.class))).thenReturn(response);
+        when(userService.isOwner(1L, 1L)).thenReturn(true);
+        when(userService.getById(1L)).thenReturn(existing);
+        when(userService.isArtist(existing)).thenReturn(true);
+        when(userService.updateArtistProfile(eq(1L), any(ArtistProfile.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/users/1/artist-profile")
                         .requestAttr("userId", 1L)
@@ -135,10 +163,16 @@ class UserControllerTest {
 
     @Test
     void deleteUserReturns204ForOwner() throws Exception {
+        User target = new User();
+        target.setId(1L);
+        when(userService.getById(1L)).thenReturn(target);
+        when(userService.isOwner(1L, 1L)).thenReturn(true);
+        when(userService.delete(1L)).thenReturn(true);
+
         mockMvc.perform(delete("/api/users/1").requestAttr("userId", 1L))
                 .andExpect(status().isNoContent());
 
-        verify(userService).delete(1L, 1L);
+        verify(userService).delete(1L);
     }
 
     @Test
@@ -149,8 +183,11 @@ class UserControllerTest {
 
     @Test
     void deleteUserReturns409WhenUserHasContent() throws Exception {
-        doThrow(new com.mgwprod.users.exception.UserHasContentException(1L))
-                .when(userService).delete(1L, 1L);
+        User target = new User();
+        target.setId(1L);
+        when(userService.getById(1L)).thenReturn(target);
+        when(userService.isOwner(1L, 1L)).thenReturn(true);
+        when(userService.delete(1L)).thenReturn(false);
 
         mockMvc.perform(delete("/api/users/1").requestAttr("userId", 1L))
                 .andExpect(status().isConflict());

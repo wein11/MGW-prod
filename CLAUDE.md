@@ -69,12 +69,25 @@ si no está). Dos etapas obligatorias:
 - **Sin DTOs — los controllers reciben/devuelven la entidad JPA directo**, para calcar el
   patrón de Clase 4 (ver `docs/design/plans/2026-08-29-remove-users-dtos.md`; aplicado
   primero en `users`, mergeado a `main` el 2026-09-01 — PR #1). Convención obligatoria también
-  para `catalog`/`collab`/`challenges`. Consecuencia importante para cualquier entidad nueva:
-  `spring.jpa.properties.jakarta.persistence.validation.mode=none` está seteado a nivel app
-  entero, así que las anotaciones
-  de Bean Validation (`@NotBlank`, `@Size`, etc.) puestas en una entidad **no se validan solas
-  al guardar** — hay que validar siempre en el controller con `@Valid @RequestBody`, nunca
-  confiar en que Hibernate lo haga en el `save()`.
+  para `catalog`/`collab`/`challenges`.
+- **Sin Bean Validation, sin excepciones custom, sin `@RestControllerAdvice`** (refactor
+  2026-09-19, rama `refactor/match-catedra-style`): ninguna de las tres cosas aparece en el
+  material de cátedra visto hasta la Clase 7, así que se sacaron para que el código se pueda
+  defender sin mezclar patrones no vistos. Estilo vigente en los 4 módulos:
+  - **Validación de campos (400):** `if` a mano en el controller antes de llamar al service
+    (nada de `@NotBlank`/`@Valid`).
+  - **No encontrado (404):** el service devuelve `null` (`.orElse(null)` en vez de
+    `.orElseThrow()`); el controller chequea `== null` y arma el `ResponseEntity` a mano.
+  - **Prohibido/rol inválido (403) y conflicto (409):** el service expone un método booleano
+    (`canModify`, `isArtist`, `isOwner`, `isClosed`, etc.) que el controller consulta *antes*
+    de mutar nada, en vez de tirar y atrapar una excepción.
+  - Excepción real de la regla: `DataIntegrityViolationException` de Spring/JDBC (por ejemplo
+    al borrar un `User` con contenido asociado) sigue atrapándose con try/catch, porque es una
+    excepción del framework, no una nuestra — ahí el service la traduce a un `boolean`.
+  - Relaciones JPA reales (`@OneToOne`/`@OneToMany`/`@ManyToOne`) de la Clase 7 agregadas en
+    `users` (`ArtistProfile.user`, ya existía), `catalog` (`BeatComment.beat`), `collab`
+    (`Topline.beat`) y `challenges` (`Submission.challenge`) — una por módulo/dueño, para que
+    cada integrante tenga su propio ejemplo en la defensa.
 - Este proyecto **no sigue el stack default del hub** (`FastAPI/React/Postgres`) porque el
   stack viene impuesto por la cátedra.
 

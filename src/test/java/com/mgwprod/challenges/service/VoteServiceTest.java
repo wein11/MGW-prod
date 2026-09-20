@@ -3,7 +3,6 @@ package com.mgwprod.challenges.service;
 import com.mgwprod.challenges.model.Submission;
 import com.mgwprod.challenges.model.Vote;
 import com.mgwprod.challenges.repository.VoteRepository;
-import com.mgwprod.users.exception.ForbiddenOperationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,7 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -28,11 +26,17 @@ class VoteServiceTest {
     private VoteService voteService;
 
     @Test
-    void createSavesVoteWhenSubmissionExistsAndNoDuplicate() {
+    void alreadyVotedReflectsRepository() {
+        when(voteRepository.existsBySubmissionIdAndVoterId(1L, 2L)).thenReturn(true);
+
+        assertThat(voteService.alreadyVoted(1L, 2L)).isTrue();
+    }
+
+    @Test
+    void createSavesVoteWhenSubmissionExists() {
         Submission submission = new Submission();
         submission.setId(1L);
         when(submissionService.getById(1L)).thenReturn(submission);
-        when(voteRepository.existsBySubmissionIdAndVoterId(1L, 2L)).thenReturn(false);
 
         Vote vote = new Vote();
         vote.setScore(9);
@@ -45,16 +49,12 @@ class VoteServiceTest {
     }
 
     @Test
-    void createThrowsWhenVoterAlreadyVotedThisSubmission() {
-        Submission submission = new Submission();
-        submission.setId(1L);
-        when(submissionService.getById(1L)).thenReturn(submission);
-        when(voteRepository.existsBySubmissionIdAndVoterId(1L, 2L)).thenReturn(true);
+    void createReturnsNullWhenSubmissionMissing() {
+        when(submissionService.getById(1L)).thenReturn(null);
 
         Vote vote = new Vote();
         vote.setScore(9);
 
-        assertThatThrownBy(() -> voteService.create(1L, 2L, vote))
-                .isInstanceOf(ForbiddenOperationException.class);
+        assertThat(voteService.create(1L, 2L, vote)).isNull();
     }
 }

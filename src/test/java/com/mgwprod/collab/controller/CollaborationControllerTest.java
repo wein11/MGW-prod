@@ -3,7 +3,6 @@ package com.mgwprod.collab.controller;
 import com.mgwprod.collab.model.Collaboration;
 import com.mgwprod.collab.model.CollaborationStatus;
 import com.mgwprod.collab.service.CollaborationService;
-import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.repository.SessionRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +32,15 @@ class CollaborationControllerTest {
 
     @Test
     void decideReturns200WhenRequesterOwnsTheBeat() throws Exception {
+        Collaboration collaboration = new Collaboration();
+        collaboration.setId(1L);
         Collaboration response = new Collaboration();
         response.setId(1L);
         response.setStatus(CollaborationStatus.ACCEPTED);
 
-        when(collaborationService.decide(eq(1L), eq(5L), eq(CollaborationStatus.ACCEPTED)))
+        when(collaborationService.getById(1L)).thenReturn(collaboration);
+        when(collaborationService.canDecide(collaboration, 5L)).thenReturn(true);
+        when(collaborationService.decide(eq(1L), eq(CollaborationStatus.ACCEPTED)))
                 .thenReturn(response);
 
         mockMvc.perform(put("/api/collaborations/1")
@@ -49,13 +52,25 @@ class CollaborationControllerTest {
 
     @Test
     void decideReturns403WhenRequesterDoesNotOwnTheBeat() throws Exception {
-        when(collaborationService.decide(eq(1L), eq(999L), eq(CollaborationStatus.ACCEPTED)))
-                .thenThrow(new ForbiddenOperationException("Solo el productor dueño del beat puede decidir esta colaboración"));
+        Collaboration collaboration = new Collaboration();
+        collaboration.setId(1L);
+        when(collaborationService.getById(1L)).thenReturn(collaboration);
+        when(collaborationService.canDecide(collaboration, 999L)).thenReturn(false);
 
         mockMvc.perform(put("/api/collaborations/1")
                         .requestAttr("userId", 999L)
                         .param("status", "ACCEPTED"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void decideReturns404WhenCollaborationMissing() throws Exception {
+        when(collaborationService.getById(1L)).thenReturn(null);
+
+        mockMvc.perform(put("/api/collaborations/1")
+                        .requestAttr("userId", 5L)
+                        .param("status", "ACCEPTED"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -67,10 +82,15 @@ class CollaborationControllerTest {
 
     @Test
     void deleteReturns204ForAParty() throws Exception {
+        Collaboration collaboration = new Collaboration();
+        collaboration.setId(1L);
+        when(collaborationService.getById(1L)).thenReturn(collaboration);
+        when(collaborationService.canDelete(collaboration, 2L)).thenReturn(true);
+
         mockMvc.perform(delete("/api/collaborations/1").requestAttr("userId", 2L))
                 .andExpect(status().isNoContent());
 
-        verify(collaborationService).delete(1L, 2L);
+        verify(collaborationService).delete(1L);
     }
 
     @Test

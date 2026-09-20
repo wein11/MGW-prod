@@ -2,8 +2,6 @@ package com.mgwprod.challenges.controller;
 
 import com.mgwprod.challenges.model.Vote;
 import com.mgwprod.challenges.service.VoteService;
-import com.mgwprod.users.exception.UnauthenticatedException;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// Endpoints anidados bajo /api/submissions/{submissionId}/votes.
 @RestController
 @RequestMapping("/api/submissions/{submissionId}/votes")
 public class VoteController {
@@ -23,14 +22,25 @@ public class VoteController {
         this.voteService = voteService;
     }
 
+    // El puntaje va de 1 a 10; alreadyVoted se chequea antes de intentar crear el
+    // voto, para no depender de que la base rechace un duplicado.
     @PostMapping
     public ResponseEntity<Vote> createVote(@PathVariable Long submissionId,
                                             @RequestAttribute(name = "userId", required = false) Long userId,
-                                            @Valid @RequestBody Vote vote) {
+                                            @RequestBody Vote vote) {
         if (userId == null) {
-            throw new UnauthenticatedException("Necesitás iniciar sesión para votar");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        if (vote.getScore() == null || vote.getScore() < 1 || vote.getScore() > 10) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        if (voteService.alreadyVoted(submissionId, userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
         Vote created = voteService.create(submissionId, userId, vote);
+        if (created == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 }

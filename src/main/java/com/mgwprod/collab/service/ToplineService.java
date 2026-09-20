@@ -1,17 +1,13 @@
 package com.mgwprod.collab.service;
 
 import com.mgwprod.billing.service.SubscriptionService;
-import com.mgwprod.catalog.exception.BeatNotFoundException;
+import com.mgwprod.catalog.model.Beat;
 import com.mgwprod.catalog.repository.BeatRepository;
-import com.mgwprod.collab.exception.ToplineNotFoundException;
-import com.mgwprod.common.exception.InvalidFieldException;
 import com.mgwprod.collab.model.Collaboration;
 import com.mgwprod.collab.model.CollaborationStatus;
 import com.mgwprod.collab.model.Topline;
 import com.mgwprod.collab.repository.CollaborationRepository;
 import com.mgwprod.collab.repository.ToplineRepository;
-import com.mgwprod.users.exception.ForbiddenOperationException;
-import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.UserRepository;
@@ -20,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+// Lógica de negocio de los toplines: crear (lo que dispara una Collaboration nueva),
+// listar, editar y borrar, más los chequeos de permisos del controller.
 @Service
 public class ToplineService {
 
@@ -41,18 +39,34 @@ public class ToplineService {
         this.subscriptionService = subscriptionService;
     }
 
+    // El controller la usa para devolver 403 antes de crear.
+    @Transactional(readOnly = true)
+    public boolean isArtist(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        return user != null && user.getRole() == Role.ARTIST;
+    }
+
+    // El controller la usa para devolver 403 antes de crear.
+    // No puede ser readOnly, por la misma razón que en BeatService: por dentro puede
+    // terminar creando la suscripción del usuario si todavía no tenía una.
+    @Transactional
+    public boolean isAtProductionLimit(Long artistId) {
+        return subscriptionService.isAtProductionLimit(artistId);
+    }
+
+    // Devuelve null si el beat referenciado no existe.
+    // Al crear el topline también se crea automáticamente su Collaboration en PENDING
+    // — el artista no la pide aparte, nace junto con el topline.
     @Transactional
     public Topline create(Long artistId, Topline topline) {
-        User artist = userRepository.findById(artistId)
-                .orElseThrow(() -> new UserNotFoundException(artistId));
-        if (artist.getRole() != Role.ARTIST) {
-            throw new ForbiddenOperationException("Solo un artista puede subir un topline");
+        Beat beat = beatRepository.findById(topline.getBeat().getId()).orElse(null);
+        if (beat == null) {
+            return null;
         }
-        beatRepository.findById(topline.getBeatId())
-                .orElseThrow(() -> new BeatNotFoundException(topline.getBeatId()));
 
         subscriptionService.recordProduction(artistId);
 
+        topline.setBeat(beat);
         topline.setArtistId(artistId);
         Topline saved = toplineRepository.save(topline);
 
@@ -77,38 +91,33 @@ public class ToplineService {
 
     @Transactional(readOnly = true)
     public Topline getById(Long id) {
-        return toplineRepository.findById(id)
-                .orElseThrow(() -> new ToplineNotFoundException(id));
+        return toplineRepository.findById(id).orElse(null);
+    }
+
+    // El controller la usa para devolver 403 antes de editar/borrar.
+    @Transactional(readOnly = true)
+    public boolean canModify(Topline topline, Long requestingUserId) {
+        if (topline.getArtistId().equals(requestingUserId)) {
+            return true;
+        }
+        User requester = userRepository.findById(requestingUserId).orElse(null);
+        return requester != null && requester.getRole() == Role.ADMIN;
     }
 
     @Transactional
-    public Topline update(Long id, Long requestingUserId, Topline request) {
+    public Topline update(Long id, Topline request) {
         Topline topline = getById(id);
-        requireOwnerOrAdmin(topline.getArtistId(), requestingUserId);
+        if (topline == null) {
+            return null;
+        }
         if (request.getAudioUrl() != null) {
-            if (request.getAudioUrl().isBlank()) {
-                throw new InvalidFieldException("El link de audio no puede estar vacío");
-            }
             topline.setAudioUrl(request.getAudioUrl());
         }
         return toplineRepository.save(topline);
     }
 
     @Transactional
-    public void delete(Long id, Long requestingUserId) {
-        Topline topline = getById(id);
-        requireOwnerOrAdmin(topline.getArtistId(), requestingUserId);
+    public void delete(Long id) {
         toplineRepository.deleteById(id);
-    }
-
-    private void requireOwnerOrAdmin(Long ownerId, Long requestingUserId) {
-        if (ownerId.equals(requestingUserId)) {
-            return;
-        }
-        User requester = userRepository.findById(requestingUserId)
-                .orElseThrow(() -> new UserNotFoundException(requestingUserId));
-        if (requester.getRole() != Role.ADMIN) {
-            throw new ForbiddenOperationException("Solo el dueño del topline o un admin pueden hacer esto");
-        }
     }
 }

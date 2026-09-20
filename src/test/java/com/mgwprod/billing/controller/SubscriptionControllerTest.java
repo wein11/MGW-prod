@@ -34,6 +34,8 @@ class SubscriptionControllerTest {
         Subscription subscription = new Subscription();
         subscription.setUserId(1L);
         subscription.setPlan(SubscriptionPlan.FREE);
+        when(subscriptionService.userExists(1L)).thenReturn(true);
+        when(subscriptionService.isArtist(1L)).thenReturn(true);
         when(subscriptionService.getOrCreate(1L)).thenReturn(subscription);
 
         mockMvc.perform(get("/api/subscriptions/me").requestAttr("userId", 1L))
@@ -48,10 +50,21 @@ class SubscriptionControllerTest {
     }
 
     @Test
+    void getMeReturns403WhenNotAnArtist() throws Exception {
+        when(subscriptionService.userExists(1L)).thenReturn(true);
+        when(subscriptionService.isArtist(1L)).thenReturn(false);
+
+        mockMvc.perform(get("/api/subscriptions/me").requestAttr("userId", 1L))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void upgradeReturns200WithPremiumPlan() throws Exception {
         Subscription subscription = new Subscription();
         subscription.setUserId(1L);
         subscription.setPlan(SubscriptionPlan.PREMIUM);
+        when(subscriptionService.userExists(1L)).thenReturn(true);
+        when(subscriptionService.isArtist(1L)).thenReturn(true);
         when(subscriptionService.upgrade(1L)).thenReturn(subscription);
 
         mockMvc.perform(post("/api/subscriptions/upgrade").requestAttr("userId", 1L))
@@ -64,6 +77,8 @@ class SubscriptionControllerTest {
         Subscription subscription = new Subscription();
         subscription.setUserId(1L);
         subscription.setPlan(SubscriptionPlan.FREE);
+        when(subscriptionService.userExists(1L)).thenReturn(true);
+        when(subscriptionService.isArtist(1L)).thenReturn(true);
         when(subscriptionService.downgrade(1L)).thenReturn(subscription);
 
         mockMvc.perform(put("/api/subscriptions/downgrade").requestAttr("userId", 1L))

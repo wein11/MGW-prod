@@ -1,5 +1,7 @@
 package com.mgwprod.collab.repository;
 
+import com.mgwprod.catalog.model.Beat;
+import com.mgwprod.catalog.repository.BeatRepository;
 import com.mgwprod.collab.model.Collaboration;
 import com.mgwprod.collab.model.CollaborationStatus;
 import com.mgwprod.collab.model.Topline;
@@ -28,6 +30,9 @@ class CollaborationRepositoryTest {
     private ToplineRepository toplineRepository;
 
     @Autowired
+    private BeatRepository beatRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Test
@@ -40,9 +45,17 @@ class CollaborationRepositoryTest {
         artist.setCreatedAt(Instant.now());
         User savedArtist = userRepository.save(artist);
 
+        Beat beat = new Beat();
+        beat.setProducerId(savedArtist.getId());
+        beat.setTitle("Trap Beat");
+        beat.setGenre("Trap");
+        beat.setBpm(140);
+        beat.setAudioUrl("https://soundcloud.com/example/trap-beat");
+        Beat savedBeat = beatRepository.save(beat);
+
         Topline topline = new Topline();
         topline.setArtistId(savedArtist.getId());
-        topline.setBeatId(2L);
+        topline.setBeat(savedBeat);
         topline.setAudioUrl("https://soundcloud.com/example/topline");
         Topline savedTopline = toplineRepository.save(topline);
 

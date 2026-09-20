@@ -3,7 +3,6 @@ package com.mgwprod.users.controller;
 import com.mgwprod.users.model.Session;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.service.AuthService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// Los dos únicos endpoints excluidos de SessionAuthInterceptor (ver WebConfig) — no
+// hace falta tener sesión para crear una o para loguearse.
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -21,17 +22,38 @@ public class AuthController {
         this.authService = authService;
     }
 
+    // Cada chequeo de 400 acá es un `if` manual en vez de @Valid/@NotBlank en la entidad.
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody User user) {
+    public ResponseEntity<User> register(@RequestBody User user) {
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        if (user.getPassword() == null || user.getPassword().length() < 8) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        if (user.getDisplayName() == null || user.getDisplayName().isBlank()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        if (user.getRole() == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        if (authService.emailExists(user.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
+        }
         User created = authService.register(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // No @Valid: reusa la entidad User como carrier de credenciales (mismo patrón
-    // "sin DTOs" que register), pero un login no trae displayName/role, así que
-    // no puede pasar la validación completa de User — solo se leen email/password.
+    // Acá no hace falta ningún chequeo manual de campos: si algo viene vacío o mal,
+    // simplemente no va a coincidir con ningún usuario real dentro de AuthService.login,
+    // que ya junta todos los casos de fallo (campos faltantes incluidos) en el mismo
+    // null -> 401.
     @PostMapping("/login")
     public ResponseEntity<Session> login(@RequestBody User credentials) {
-        return ResponseEntity.ok(authService.login(credentials.getEmail(), credentials.getPassword()));
+        Session session = authService.login(credentials.getEmail(), credentials.getPassword());
+        if (session == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(session);
     }
 }

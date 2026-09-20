@@ -12,25 +12,24 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
 
+// Entidad JPA mapeada directo a la tabla "users" (sin DTOs: el controller devuelve
+// esta clase tal cual como JSON). Representa cualquier cuenta registrada: artistas,
+// sellos (DISCOGRAFICA) y admins usan la misma tabla, distinguidos por `role`.
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
-// No @AllArgsConstructor: nothing in the codebase calls it, and with -parameters
-// compilation Jackson 3 picks it up as an implicit "properties" creator, which then
-// fails on any JSON payload missing a field (e.g. no "isAdmin" key) because it tries
-// to bind null into the primitive boolean constructor param. Keeping only the no-arg
-// constructor forces bean-style (setter) deserialization, which tolerates missing keys.
+// Sin @AllArgsConstructor: nada en el código lo llama, y con la compilación
+// -parameters, Jackson 3 lo toma como constructor implícito para deserializar, lo cual
+// rompe si el JSON no manda alguna clave (ej. sin "isAdmin"), porque intenta pasarle
+// null a un parámetro boolean primitivo. Dejando solo el constructor vacío, Jackson
+// deserializa seteando propiedad por propiedad (con los setters), y tolera que falten claves.
 @NoArgsConstructor
 public class User {
 
@@ -38,8 +37,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "El email es obligatorio")
-    @Email(message = "El email no tiene un formato válido")
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -47,20 +44,19 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    // Not persisted: only carries the raw password from POST /api/auth/register into
-    // AuthService, which hashes it into passwordHash. Write-only so it's accepted from
-    // the request JSON but never echoed back in a response.
+    // No se persiste: solo transporta la contraseña en texto plano desde
+    // POST /api/auth/register hacia AuthService, que la hashea en passwordHash.
+    // Es write-only: se acepta en el JSON de entrada pero nunca se devuelve en una respuesta.
     @Transient
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     private String password;
 
-    @NotBlank(message = "El nombre a mostrar es obligatorio")
     @Column(name = "display_name", nullable = false)
     private String displayName;
 
-    @NotNull(message = "El rol es obligatorio")
+    // Se guarda el nombre del enum ("ARTIST"/"DISCOGRAFICA"/"ADMIN") en vez de un
+    // número ordinal, para que la columna sea legible directamente en la base y no se
+    // rompa si en algún momento se reordenan los valores del enum.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
@@ -70,6 +66,9 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    // Callback de ciclo de vida de JPA: se ejecuta automáticamente justo antes de que
+    // Hibernate haga el INSERT de esta entidad, así todo usuario queda con una fecha
+    // de creación puesta por el servidor sin que quien llama tenga que enviarla.
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();

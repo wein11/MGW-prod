@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+// Endpoints de solo lectura, públicos, para ver los resultados: el ranking general
+// acumulado y el listado de resultados por challenge/productor.
 @RestController
 public class RankingController {
 

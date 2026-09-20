@@ -33,7 +33,7 @@ frameworks, es la próxima entrega).
 ```
 Cliente HTTP (Postman/curl)
   → SessionAuthInterceptor        (solo si viene header Authorization)
-  → Controller (@RestController)  → valida con @Valid, lee el userId del request
+  → Controller (@RestController)  → valida los campos a mano con `if`, lee el userId del request
   → Service (@Service)            → TODA la lógica de negocio y autorización vive acá
   → Repository (Spring Data JPA)  → sin lógica, solo queries derivadas por nombre
   → MySQL                         (esquema creado a mano, no por Hibernate)
@@ -41,12 +41,13 @@ Cliente HTTP (Postman/curl)
 ```
 
 Ejemplo real, trazado en el código: `POST /api/beats` entra a
-`BeatController.createBeat` (`catalog/controller/BeatController.java`), que valida
-`@Valid @RequestBody Beat` y que haya un `userId` autenticado. Llama a
-`BeatService.create` (`catalog/service/BeatService.java`), que resuelve el `User` real por
-FK, confirma que su rol sea `ARTIST`, le avisa a `SubscriptionService.recordProduction`
-(de otro módulo — el límite del plan free aplica acá) y recién ahí guarda el beat con
-`BeatRepository.save`.
+`BeatController.createBeat` (`catalog/controller/BeatController.java`), que valida a mano
+(`if (beat.getTitle() == null || ...)`, etc.) y que haya un `userId` autenticado. Llama a
+`BeatService.create` (`catalog/service/BeatService.java`), que le avisa a
+`SubscriptionService.recordProduction` (de otro módulo — el límite del plan free aplica
+acá) y guarda el beat con `BeatRepository.save`. El rol `ARTIST` y el límite de plan se
+chequean ANTES, en el controller, llamando a `beatService.isArtist(userId)` y
+`beatService.isAtProductionLimit(userId)` — dos métodos booleanos, no una excepción.
 
 **Por qué esta arquitectura y no otra: son las mismas 4 capas que enseñó la cátedra en
 Clase 4** (Controller/Model/Repository/Service) — no inventamos nada nuevo, solo
@@ -64,9 +65,11 @@ com.mgwprod
 ├── catalog/      controller/ model/ repository/ service/
 ├── collab/       controller/ model/ repository/ service/
 ├── challenges/   controller/ model/ repository/ service/
-├── billing/      controller/ model/ repository/ service/ gateway/
-└── common/       dto/ exception/  (compartido entre todos)
+└── billing/      controller/ model/ repository/ service/ gateway/
 ```
+
+(Ya no existe un paquete `common/` — el refactor del 19/09 sacó las excepciones custom y el
+`@RestControllerAdvice` que vivían ahí, ver la sección "Manejo de errores" más abajo.)
 
 Es deliberado, no un desvío: somos 4 integrantes con evaluación individual, y necesitamos
 que cada uno tenga su paquete autocontenido para poder explicarlo sin pisar el código de
@@ -85,26 +88,20 @@ nombre del método antes de escribir `@Query`.
 ### Por qué no hay DTOs
 
 Los controllers reciben y devuelven la **entidad JPA directo**, calcando el patrón de
-Clase 4 (`docs/design/plans/2026-08-29-remove-users-dtos.md`). Consecuencia técnica
-importante — y esta es la parte que vale la pena poder explicar si preguntan:
+Clase 4 (`docs/design/plans/2026-08-29-remove-users-dtos.md`).
 
 `application.properties` tiene `spring.jpa.properties.jakarta.persistence.validation.mode=none`
-seteado a nivel de toda la app. El motivo real no es solo estilo: Hibernate revalida el
-grupo default de Bean Validation en **cada** `save()`, y `User.password` es un campo
-`@Transient` con `@NotBlank` que solo se usa para el registro — nunca se carga desde la
-base (es `WRITE_ONLY`). Si Hibernate validara automáticamente, cualquier `save()` sobre un
-`User` que venga de un `findById` reventaría con un 500 porque `password` viene `null`.
-Por eso la validación se hace **solo** en el controller con `@Valid @RequestBody`, nunca
-confiando en que el `save()` la haga sola.
+seteado a nivel de toda la app — es un resabio de cuando el proyecto sí usaba Bean
+Validation (`@NotBlank`, etc.) directo en las entidades. Ya no se usa Bean Validation en
+ningún lado (ver el refactor del 19/09 más abajo), así que hoy esta propiedad no cambia
+nada en la práctica, pero se dejó en `application.properties` sin sacar.
 
-Consecuencia práctica de esto en cada entidad: los campos que el servidor asigna solos
+Consecuencia práctica en cada entidad: los campos que el servidor asigna solos
 (`Beat.producerId`, `Topline.artistId`, `Challenge.createdBy`, los `authorId` de
-comentarios) **no** llevan `@NotNull` — si lo llevaran, el `@Valid` del controller
-rechazaría el request antes de que el service tenga chance de completarlos. En vez de eso
-usan `@Column(nullable = false)` a nivel de base de datos, y varios además usan
-`@JsonProperty(access = JsonProperty.Access.READ_ONLY)` para que ni siquiera se acepten
-si vienen en el JSON que manda el cliente (evita que alguien se haga pasar por otro
-usuario mandando un `producerId` ajeno).
+comentarios) usan `@JsonProperty(access = JsonProperty.Access.READ_ONLY)` para que ni
+siquiera se acepten si vienen en el JSON que manda el cliente (evita que alguien se haga
+pasar por otro usuario mandando un `producerId` ajeno), y `@Column(nullable = false)` a
+nivel de base de datos garantiza que nunca queden sin valor.
 
 ### Por qué el esquema SQL es manual
 
@@ -114,18 +111,57 @@ nueva, tenés que sumar su `CREATE TABLE` ahí vos mismo — Spring no lo hace s
 un detalle real del schema: la columna de posición en `challenge_results` se llama
 `rank_position` y no `rank`, porque `RANK` es palabra reservada en MySQL.
 
-### Manejo de errores (compartido por los 5 módulos)
+### Manejo de errores y validación (refactor 19/09, compartido por los 5 módulos)
 
-Vive en `common/exception/`:
-- `ApiException` — clase abstracta base, cada excepción de negocio la extiende y lleva su
-  propio `HttpStatus` (ej. `BeatNotFoundException` → 404, `ForbiddenOperationException` →
-  403, `UnauthenticatedException` → 401, `SubscriptionLimitExceededException` → 403).
-- `GlobalExceptionHandler` (`@RestControllerAdvice`) centraliza todo: mapea cada
-  `ApiException` a su status, `MethodArgumentNotValidException` (falla de `@Valid`) a 400,
-  JSON malformado a 400, y cualquier excepción no prevista a 500 (logueada).
-- `ErrorResponse` es el único "DTO" real de todo el proyecto — está justificado porque no
-  es una entidad de dominio, es la forma de una respuesta de error (`status`, `message`,
-  `timestamp`).
+Hasta el 19/09 este proyecto tenía excepciones custom (`BeatNotFoundException`,
+`ForbiddenOperationException`, `UnauthenticatedException`, etc.) y un
+`GlobalExceptionHandler` (`@RestControllerAdvice`) que las traducía a códigos HTTP. Se
+sacó todo eso — ninguna de esas dos cosas (excepciones custom, `@RestControllerAdvice`)
+aparece en el material de cátedra visto hasta ahora, y el equipo tiene nivel bajo/medio de
+Java, así que se cambió a algo mucho más simple de explicar: **ifs y valores de retorno**,
+sin lanzar ni atrapar excepciones propias.
+
+El patrón, igual en los 5 módulos:
+
+- **Validación de campos (400):** un `if` a mano en el controller, antes de llamar al
+  service (ej. `if (beat.getTitle() == null || beat.getTitle().isBlank()) return
+  ResponseEntity.badRequest().body(null);`). Nada de `@Valid`/`@NotBlank`.
+- **No encontrado (404):** el service devuelve `null` (`.orElse(null)`, nunca
+  `.orElseThrow()` para un caso esperado); el controller chequea `== null` y arma el
+  `ResponseEntity` con status 404 él mismo.
+- **Prohibido/rol inválido (403) y conflicto (409):** el service expone un método
+  booleano (`canModify`, `isArtist`, `isOwner`, `isClosed`, `alreadyVoted`, etc.) que el
+  controller consulta *antes* de mutar nada — si da `false`/`true` según corresponda,
+  el controller devuelve 403/409 sin llamar al service para escribir nada.
+- **Única excepción real que sigue existiendo:** `DataIntegrityViolationException` de
+  Spring/JDBC (ej. al borrar un `User` que todavía tiene beats asociados). Ahí sí hay un
+  `try/catch`, porque es una excepción del framework al chocar con una constraint de la
+  base — no una que nosotros diseñamos — y el service la traduce a un simple `boolean`
+  (`return false` en el catch) para que el controller devuelva 409.
+
+Ningún controller ni service de este proyecto declara `throws`, ni lanza una excepción
+propia, ni existe ningún `@ExceptionHandler`/`@RestControllerAdvice` en todo el código.
+
+### Relaciones JPA reales (una por módulo/dueño)
+
+Agregadas en el mismo refactor del 19/09, además de simplificar el manejo de errores.
+Antes, varias entidades guardaban solo un id suelto (`Long beatId`, `Long challengeId`);
+ahora son relaciones de verdad con su anotación de JPA:
+
+| Módulo | Relación | Tipo | Dueño de la FK |
+|---|---|---|---|
+| `users` | `ArtistProfile.user` | `@OneToOne` | `artist_profiles.user_id` |
+| `catalog` | `BeatComment.beat` (+ `Beat.comments`, lado inverso) | `@ManyToOne` / `@OneToMany` | `beat_comments.beat_id` |
+| `collab` | `Topline.beat` | `@ManyToOne` | `toplines.beat_id` |
+| `challenges` | `Submission.challenge` (+ `Challenge.submissions`, lado inverso) | `@ManyToOne` / `@OneToMany` | `submissions.challenge_id` |
+
+Consecuencia práctica: `BeatCommentRepository.findByBeatId` y `SubmissionRepository
+.findByChallengeId` funcionan aunque el campo de la entidad se llame `beat`/`challenge`
+(un objeto), no `beatId`/`challengeId` — Spring Data resuelve el nombre del método como
+"el id de esa relación". Y al pedir un `BeatComment`/`Topline`/`Submission` por API, la
+respuesta JSON incluye el `Beat`/`Challenge` completo anidado (no solo su id) — el lado
+`@OneToMany` (`Beat.comments`, `Challenge.submissions`) lleva `@JsonIgnore` para no armar
+un ciclo infinito al serializar.
 
 ## 2. Autenticación — cómo funciona exactamente
 
@@ -143,8 +179,9 @@ No usamos Spring Security (no se vio en clase todavía). Es casera:
      interceptor**, ni siquiera llega al controller.
    - Con token válido → guarda `userId` (y `userRole`) en el request y deja pasar.
 4. Cada endpoint que escribe datos lee ese `userId` con
-   `@RequestAttribute(required = false)`, y si es `null` tira `UnauthenticatedException`
-   (401) él mismo.
+   `@RequestAttribute(required = false)`, y si es `null` devuelve 401 él mismo con un
+   `if (userId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED)...` —
+   sin excepciones.
 
 **Detalle importante para poder explicar si preguntan:** con este diseño, todos los
 endpoints `GET` son efectivamente públicos — no exigen token, porque sin header el
@@ -274,7 +311,7 @@ los módulos "de abajo" — otros dependen de ellos, ellos no dependen de nadie 
 
 ## 5. Tests
 
-**164 tests, 0 failures** (verificado corriendo `./mvnw test`), organizados por módulo
+**188 tests, 0 failures** (verificado corriendo `./mvnw test` el 20/09), organizados por módulo
 calcando la estructura de `src/main`, con estos tipos:
 
 - **`*ServiceTest`** — unit tests con Mockito, mockean repositorios y services de otros
@@ -304,7 +341,7 @@ Ninguna corrompe datos ni afecta el uso normal/demo.
 
 **Deuda técnica menor, no documentada en ningún otro lado (detectada al mapear el
 código):**
-- El método `requireOwnerOrAdmin` está duplicado casi idéntico en `BeatService`,
+- El método `canModify` (dueño o admin) está duplicado casi idéntico en `BeatService`,
   `ToplineService` y `ChallengeService` — podría extraerse a una clase compartida.
 - El campo se sigue llamando `producerId` en `Beat`/`Submission` aunque el rol `PRODUCER`
   ya no existe (se unificó en `ARTIST` en la migración de roles del 2026-09-04) — es solo
@@ -330,5 +367,27 @@ archivos viejos y pregunta por `PRODUCER`, esa es la explicación.
 
 Ver `README.md` para el setup completo. Resumen: `./mvnw spring-boot:run` (con MySQL
 corriendo y el schema cargado), y para probar el CRUD completo en vivo está la Collection
-de Postman en `docs/api/` — ver `docs/INFORME-TPO.md` para el detalle de cómo la corrimos y
-validamos hoy (48 requests, 0 errores, con Newman y con Postman CLI).
+de Postman en `docs/api/` — ver `docs/INFORME-TPO.md` para el detalle de la primera
+validación (48 requests, 0 errores).
+
+**Re-verificación completa el 20/09** (antes de la entrega), corriendo la app real contra
+MySQL y la Collection entera de nuevo: encontró y arregló **dos bugs reales** que los
+tests con Mockito no podían detectar porque mockean la base de datos:
+
+1. **`SubscriptionService.isAtProductionLimit` (y sus dos wrappers en `BeatService` y
+   `ToplineService`) estaban marcados `@Transactional(readOnly = true)`**, pero por
+   dentro llaman a `getOrCreate`, que puede hacer un `INSERT` si el usuario todavía no
+   tenía suscripción — MySQL rechaza un `INSERT` dentro de una transacción de solo
+   lectura. Esto rompía con **500** el primer beat/topline que publicaba cualquier
+   artista recién registrado (el caso más común de la demo). Se sacó el `readOnly` de
+   los tres métodos.
+2. **La Postman Collection mandaba `"beatId": <número>`** en el body de
+   `POST /api/toplines`, formato que quedó viejo desde que `Topline.beat` pasó a ser una
+   relación `@ManyToOne` (ver la tabla de relaciones más arriba) — el campo correcto es
+   `"beat": { "id": <número> }`. Se corrigió el body en la Collection.
+
+Después de estos dos arreglos: **48/48 requests de la Collection OK, 0 fallos**, contra
+la app real y MySQL (no contra H2/mocks). Vale la pena poder explicar el primer bug si
+preguntan por transacciones — es un buen ejemplo real de por qué `readOnly = true` no es
+un simple "optimización sin riesgo": hay que estar seguro de que el método (y todo lo que
+llama por dentro) de verdad nunca escribe nada.

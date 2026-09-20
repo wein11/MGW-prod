@@ -52,6 +52,9 @@ class ChallengeControllerTest {
         response.setId(1L);
         response.setTitle("Creamos el próximo hit de RKT");
 
+        when(challengeService.canCreateChallenge(1L)).thenReturn(true);
+        when(challengeService.userExists(2L)).thenReturn(true);
+        when(challengeService.isArtist(2L)).thenReturn(true);
         when(challengeService.create(eq(1L), any(Challenge.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/challenges")
@@ -64,10 +67,6 @@ class ChallengeControllerTest {
 
     @Test
     void createChallengeReturns401WhenNotAuthenticated() throws Exception {
-        // Cuerpo válido a propósito: como el controller usa @Valid @RequestBody (mandato
-        // del spec), la validación del body corre antes que el chequeo de userId. Con un
-        // body incompleto el endpoint devolvería 400 por validación y nunca llegaría al
-        // 401 que queremos ejercitar. Con el body completo, validación pasa y salta el 401.
         Challenge request = new Challenge();
         request.setTitle("Creamos el próximo hit de RKT");
         request.setGenre("RKT");
@@ -79,6 +78,24 @@ class ChallengeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void createChallengeReturns403WhenRequesterCannotCreateChallenges() throws Exception {
+        Challenge request = new Challenge();
+        request.setTitle("Creamos el próximo hit de RKT");
+        request.setGenre("RKT");
+        request.setBpm(100);
+        request.setDeadline(Instant.now().plusSeconds(604800));
+        request.setGuestArtistId(2L);
+
+        when(challengeService.canCreateChallenge(1L)).thenReturn(false);
+
+        mockMvc.perform(post("/api/challenges")
+                        .requestAttr("userId", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -108,11 +125,16 @@ class ChallengeControllerTest {
 
     @Test
     void opportunityPickReturns200WhenRequesterIsGuestArtist() throws Exception {
+        Challenge challenge = new Challenge();
+        challenge.setId(100L);
+        challenge.setGuestArtistId(99L);
         Challenge response = new Challenge();
         response.setId(100L);
         response.setOpportunityPickSubmissionId(7L);
 
-        when(challengeService.setOpportunityPick(eq(100L), eq(99L), eq(7L))).thenReturn(response);
+        when(challengeService.getById(100L)).thenReturn(challenge);
+        when(challengeService.isGuestArtist(challenge, 99L)).thenReturn(true);
+        when(challengeService.setOpportunityPick(challenge, 7L)).thenReturn(response);
 
         mockMvc.perform(put("/api/challenges/100/opportunity-pick")
                         .requestAttr("userId", 99L)
@@ -123,10 +145,17 @@ class ChallengeControllerTest {
 
     @Test
     void updateChallengeReturns200ForCreator() throws Exception {
+        Challenge existing = new Challenge();
+        existing.setId(100L);
+        existing.setCreatedBy(1L);
         Challenge response = new Challenge();
         response.setId(100L);
         response.setTitle("Nuevo");
-        when(challengeService.update(eq(100L), eq(1L), any(Challenge.class))).thenReturn(response);
+
+        when(challengeService.getById(100L)).thenReturn(existing);
+        when(challengeService.canModify(existing, 1L)).thenReturn(true);
+        when(challengeService.isClosed(100L)).thenReturn(false);
+        when(challengeService.update(eq(100L), any(Challenge.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/challenges/100")
                         .requestAttr("userId", 1L)
@@ -137,11 +166,35 @@ class ChallengeControllerTest {
     }
 
     @Test
+    void updateChallengeReturns403WhenAlreadyClosed() throws Exception {
+        Challenge existing = new Challenge();
+        existing.setId(100L);
+        existing.setCreatedBy(1L);
+
+        when(challengeService.getById(100L)).thenReturn(existing);
+        when(challengeService.canModify(existing, 1L)).thenReturn(true);
+        when(challengeService.isClosed(100L)).thenReturn(true);
+
+        mockMvc.perform(put("/api/challenges/100")
+                        .requestAttr("userId", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Nuevo\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void deleteChallengeReturns204ForCreator() throws Exception {
+        Challenge existing = new Challenge();
+        existing.setId(100L);
+        existing.setCreatedBy(1L);
+        when(challengeService.getById(100L)).thenReturn(existing);
+        when(challengeService.canModify(existing, 1L)).thenReturn(true);
+        when(challengeService.isClosed(100L)).thenReturn(false);
+
         mockMvc.perform(delete("/api/challenges/100").requestAttr("userId", 1L))
                 .andExpect(status().isNoContent());
 
-        verify(challengeService).delete(100L, 1L);
+        verify(challengeService).delete(100L);
     }
 
     @Test

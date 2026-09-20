@@ -1,7 +1,5 @@
 package com.mgwprod.users.service;
 
-import com.mgwprod.users.exception.EmailAlreadyExistsException;
-import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.ArtistProfile;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.Session;
@@ -17,6 +15,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
+// Maneja los dos endpoints de auth: registro y login. Está separado de UserService
+// (que se encarga de leer/actualizar un usuario ya existente) porque auth es un
+// problema aparte, con sus propias dependencias (PasswordHasher, SessionRepository).
 @Service
 public class AuthService {
 
@@ -37,14 +38,20 @@ public class AuthService {
         this.passwordHasher = passwordHasher;
     }
 
+    // El controller la usa para devolver 409 antes de registrar.
+    @Transactional(readOnly = true)
+    public boolean emailExists(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    // AuthController ya corrió los chequeos de 400 y el chequeo de 409 (emailExists)
+    // antes de llamar acá — para cuando llegamos a este punto, `incoming` es confiable.
     @Transactional
     public User register(User incoming) {
-        if (userRepository.existsByEmail(incoming.getEmail())) {
-            throw new EmailAlreadyExistsException(incoming.getEmail());
-        }
-
         User user = new User();
         user.setEmail(incoming.getEmail());
+        // Nunca se persiste la contraseña en texto plano, solo su hash.
+        // `incoming.getPassword()` es el campo @Transient que la trajo desde el JSON del request.
         user.setPasswordHash(passwordHasher.hash(incoming.getPassword()));
         user.setPassword(incoming.getPassword());
         user.setDisplayName(incoming.getDisplayName());
@@ -52,6 +59,8 @@ public class AuthService {
         user.setCity(incoming.getCity());
         user = userRepository.save(user);
 
+        // Solo los artistas reciben el ArtistProfile extra — una cuenta de sello/admin
+        // no tiene nada que poner ahí (ver el comentario de ArtistProfile).
         if (user.getRole() == Role.ARTIST) {
             ArtistProfile profile = new ArtistProfile();
             profile.setUser(user);
@@ -61,18 +70,22 @@ public class AuthService {
         return user;
     }
 
+    // Devuelve null si el email/contraseña no son válidos — el controller decide el 401.
+    // Todos los caminos de fallo de abajo (campo vacío, email inexistente, contraseña
+    // incorrecta) devuelven el mismo null a propósito: si distinguiéramos "ese email no
+    // existe" de "contraseña incorrecta" se filtraría qué emails están registrados.
     public Session login(String email, String password) {
         if (email == null || email.isBlank() || password == null || password.isBlank()) {
-            throw new InvalidCredentialsException();
+            return null;
         }
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(InvalidCredentialsException::new);
-
-        if (!passwordHasher.matches(password, user.getPasswordHash())) {
-            throw new InvalidCredentialsException();
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null || !passwordHasher.matches(password, user.getPasswordHash())) {
+            return null;
         }
 
+        // Un login exitoso crea una sesión/token nueva en vez de reusar una vieja —
+        // loguearse dos veces deja dos tokens válidos al mismo tiempo (ej. dos dispositivos).
         Session session = new Session();
         session.setUser(user);
         session.setToken(UUID.randomUUID().toString());

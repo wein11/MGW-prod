@@ -37,7 +37,17 @@ class BeatCommentServiceTest {
 
         BeatComment saved = beatCommentService.create(1L, 2L, comment);
 
-        assertThat(saved.getBeatId()).isEqualTo(1L);
+        assertThat(saved.getBeat().getId()).isEqualTo(1L);
         assertThat(saved.getAuthorId()).isEqualTo(2L);
+    }
+
+    @Test
+    void createReturnsNullWhenBeatMissing() {
+        when(beatService.getById(1L)).thenReturn(null);
+
+        BeatComment comment = new BeatComment();
+        comment.setText("Buenísimo");
+
+        assertThat(beatCommentService.create(1L, 2L, comment)).isNull();
     }
 }

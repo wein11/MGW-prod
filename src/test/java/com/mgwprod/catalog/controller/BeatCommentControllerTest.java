@@ -41,7 +41,6 @@ class BeatCommentControllerTest {
 
         BeatComment response = new BeatComment();
         response.setId(1L);
-        response.setBeatId(1L);
         response.setAuthorId(2L);
         response.setText("Buenísimo");
 
@@ -64,6 +63,20 @@ class BeatCommentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void createCommentReturns404WhenBeatMissing() throws Exception {
+        BeatComment request = new BeatComment();
+        request.setText("Buenísimo");
+
+        when(beatCommentService.create(eq(1L), eq(2L), any(BeatComment.class))).thenReturn(null);
+
+        mockMvc.perform(post("/api/beats/1/comments")
+                        .requestAttr("userId", 2L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
     }
 
     @Test

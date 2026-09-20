@@ -1,12 +1,8 @@
 package com.mgwprod.catalog.service;
 
 import com.mgwprod.billing.service.SubscriptionService;
-import com.mgwprod.catalog.exception.BeatNotFoundException;
 import com.mgwprod.catalog.model.Beat;
 import com.mgwprod.catalog.repository.BeatRepository;
-import com.mgwprod.common.exception.InvalidFieldException;
-import com.mgwprod.users.exception.ForbiddenOperationException;
-import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.UserRepository;
@@ -15,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+// Toda la lógica de negocio sobre beats: crear, listar con filtros, actualizar, borrar,
+// y los chequeos de permisos que necesita BeatController antes de cada operación.
 @Service
 public class BeatService {
 
@@ -29,18 +27,34 @@ public class BeatService {
         this.subscriptionService = subscriptionService;
     }
 
+    // El controller llama esto antes de crear, para poder devolver 403 sin
+    // ambigüedad con el 404 de "productor no existe".
+    @Transactional(readOnly = true)
+    public boolean isArtist(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        return user != null && user.getRole() == Role.ARTIST;
+    }
+
+    // El controller la usa para devolver 403 antes de crear.
+    // No puede ser readOnly: por dentro (vía SubscriptionService) puede terminar
+    // creando la suscripción del usuario si todavía no tenía una — una transacción
+    // de solo lectura no deja hacer ese INSERT y la request explota con 500.
+    @Transactional
+    public boolean isAtProductionLimit(Long producerId) {
+        return subscriptionService.isAtProductionLimit(producerId);
+    }
+
+    // Al crear un beat también se le avisa a SubscriptionService que este productor
+    // sumó una producción más (cuenta para el límite del plan free).
     @Transactional
     public Beat create(Long producerId, Beat beat) {
-        User producer = userRepository.findById(producerId)
-                .orElseThrow(() -> new UserNotFoundException(producerId));
-        if (producer.getRole() != Role.ARTIST) {
-            throw new ForbiddenOperationException("Solo un artista puede publicar beats");
-        }
         subscriptionService.recordProduction(producerId);
         beat.setProducerId(producerId);
         return beatRepository.save(beat);
     }
 
+    // Filtra en cascada: si viene producerId se ignoran los demás filtros, si vienen
+    // genre y bpm juntos se combinan, y si no viene nada se devuelven todos.
     @Transactional(readOnly = true)
     public List<Beat> list(String genre, Integer bpm, Long producerId) {
         if (producerId != null) {
@@ -58,60 +72,42 @@ public class BeatService {
         return beatRepository.findAll();
     }
 
+    // Devuelve null si no existe — el controller decide el 404.
     @Transactional(readOnly = true)
     public Beat getById(Long id) {
-        return beatRepository.findById(id)
-                .orElseThrow(() -> new BeatNotFoundException(id));
+        return beatRepository.findById(id).orElse(null);
     }
 
+    // El controller ya validó los campos del request antes de llamar acá — este
+    // método solo aplica el merge sobre el beat existente. Solo se pisa lo que vino
+    // no nulo, así una actualización parcial no borra el resto de los campos.
     @Transactional
-    public Beat update(Long id, Long requestingUserId, Beat request) {
+    public Beat update(Long id, Beat request) {
         Beat beat = getById(id);
-        requireOwnerOrAdmin(beat.getProducerId(), requestingUserId);
-
-        if (request.getTitle() != null) {
-            if (request.getTitle().isBlank()) {
-                throw new InvalidFieldException("El título no puede estar vacío");
-            }
-            beat.setTitle(request.getTitle());
+        if (beat == null) {
+            return null;
         }
-        if (request.getGenre() != null) {
-            if (request.getGenre().isBlank()) {
-                throw new InvalidFieldException("El género no puede estar vacío");
-            }
-            beat.setGenre(request.getGenre());
-        }
-        if (request.getBpm() != null) {
-            if (request.getBpm() < 1) {
-                throw new InvalidFieldException("El BPM debe ser mayor a 0");
-            }
-            beat.setBpm(request.getBpm());
-        }
+        if (request.getTitle() != null) beat.setTitle(request.getTitle());
+        if (request.getGenre() != null) beat.setGenre(request.getGenre());
+        if (request.getBpm() != null) beat.setBpm(request.getBpm());
         if (request.getKey() != null) beat.setKey(request.getKey());
-        if (request.getAudioUrl() != null) {
-            if (request.getAudioUrl().isBlank()) {
-                throw new InvalidFieldException("El link de audio no puede estar vacío");
-            }
-            beat.setAudioUrl(request.getAudioUrl());
-        }
+        if (request.getAudioUrl() != null) beat.setAudioUrl(request.getAudioUrl());
         return beatRepository.save(beat);
     }
 
     @Transactional
-    public void delete(Long id, Long requestingUserId) {
-        Beat beat = getById(id);
-        requireOwnerOrAdmin(beat.getProducerId(), requestingUserId);
+    public void delete(Long id) {
         beatRepository.deleteById(id);
     }
 
-    private void requireOwnerOrAdmin(Long ownerId, Long requestingUserId) {
-        if (ownerId.equals(requestingUserId)) {
-            return;
+    // true si requestingUserId puede modificar/borrar el beat (dueño o admin).
+    // El controller la usa para decidir si devuelve 403 antes de mutar nada.
+    @Transactional(readOnly = true)
+    public boolean canModify(Beat beat, Long requestingUserId) {
+        if (beat.getProducerId().equals(requestingUserId)) {
+            return true;
         }
-        User requester = userRepository.findById(requestingUserId)
-                .orElseThrow(() -> new UserNotFoundException(requestingUserId));
-        if (requester.getRole() != Role.ADMIN) {
-            throw new ForbiddenOperationException("Solo el dueño del beat o un admin pueden hacer esto");
-        }
+        User requester = userRepository.findById(requestingUserId).orElse(null);
+        return requester != null && requester.getRole() == Role.ADMIN;
     }
 }

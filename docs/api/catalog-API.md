@@ -48,7 +48,7 @@ Publishes a new beat. Only users with `role = ARTIST` may call this.
   | 201 | Beat created |
   | 400 | Validation failure (blank title/genre/audioUrl, missing/invalid bpm) or malformed JSON body |
   | 401 | No valid `Authorization: Bearer <token>` was sent (not authenticated) |
-  | 403 | Authenticated, but as `ARTIST` — only producers can publish beats |
+  | 403 | Authenticated caller's role is not `ARTIST` (the only role that publishes beats), or already hit the free-plan production limit (`SubscriptionService`) |
   | 500 | Unexpected server error |
 
 ## GET /api/beats
@@ -101,15 +101,15 @@ Adds a comment to a beat.
   |---|---|---|
   | `text` | string | required, non-blank |
 
-  `beatId` and `authorId` are not part of the request — `beatId` comes from
-  the path, `authorId` is set server-side from the authenticated `userId`.
+  `beat` and `authorId` are not part of the request — the beat comes from the
+  path (`beatId`), `authorId` is set server-side from the authenticated `userId`.
 
 - **Response body** (`BeatComment`):
 
   | Field | Type |
   |---|---|
   | `id` | number |
-  | `beatId` | number |
+  | `beat` | object — the full `Beat` this comment belongs to |
   | `authorId` | number |
   | `text` | string |
   | `createdAt` | ISO-8601 timestamp |
