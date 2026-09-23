@@ -9,12 +9,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+// Datos extra que solo tienen sentido para un User con role ARTIST (géneros musicales,
+// bio, rango de BPM preferido...). Se separó en su propia tabla/entidad en vez de
+// agregar estas columnas directo en User, porque un usuario DISCOGRAFICA/ADMIN nunca
+// las necesitaría.
 @Entity
 @Table(name = "artist_profiles")
 @Getter
@@ -26,30 +28,31 @@ public class ArtistProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // @JsonIgnore: sin esto, al serializar un perfil se serializaría también su User
+    // completo (incluyendo passwordHash) dentro de cada respuesta. El cliente ya tiene
+    // el userId desde la URL (/api/users/{id}/profile), no hace falta repetirlo.
     @JsonIgnore
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Size(min = 1, message = "Los géneros no pueden estar vacíos")
     private String genres;
 
-    @Size(min = 1, message = "La biografía no puede estar vacía")
     @Column(columnDefinition = "TEXT")
     private String bio;
 
-    @Min(value = 1, message = "El BPM mínimo debe ser mayor a 0")
     @Column(name = "bpm_min")
     private Integer bpmMin;
 
-    @Min(value = 1, message = "El BPM máximo debe ser mayor a 0")
     @Column(name = "bpm_max")
     private Integer bpmMax;
 
-    @Size(min = 1, message = "El nivel de experiencia no puede estar vacío")
     @Column(name = "experience_level")
     private String experienceLevel;
 
+    // Solo pasa a true desde UserService.verifyArtist, llamado desde el endpoint
+    // PUT /api/artists/{id}/verify (solo accesible por un admin) — un artista no
+    // puede autoverificarse.
     @Column(nullable = false)
     private boolean verified = false;
 }

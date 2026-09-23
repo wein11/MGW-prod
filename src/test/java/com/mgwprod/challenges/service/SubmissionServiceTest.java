@@ -4,7 +4,6 @@ import com.mgwprod.challenges.model.Challenge;
 import com.mgwprod.challenges.model.Submission;
 import com.mgwprod.challenges.repository.ChallengeRepository;
 import com.mgwprod.challenges.repository.SubmissionRepository;
-import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.UserRepository;
@@ -18,7 +17,6 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -38,12 +36,25 @@ class SubmissionServiceTest {
     private SubmissionService submissionService;
 
     @Test
-    void createSavesSubmissionWhenArtistAndDeadlineAreValid() {
-        User artist = new User();
-        artist.setId(2L);
-        artist.setRole(Role.ARTIST);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(artist));
+    void isArtistIsFalseForOtherRoles() {
+        User discografica = new User();
+        discografica.setId(2L);
+        discografica.setRole(Role.DISCOGRAFICA);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(discografica));
 
+        assertThat(submissionService.isArtist(2L)).isFalse();
+    }
+
+    @Test
+    void isPastDeadlineIsTrueWhenDeadlineHasPassed() {
+        Challenge challenge = new Challenge();
+        challenge.setDeadline(Instant.now().minusSeconds(3600));
+
+        assertThat(submissionService.isPastDeadline(challenge)).isTrue();
+    }
+
+    @Test
+    void createSavesSubmissionLinkedToTheChallenge() {
         Challenge challenge = new Challenge();
         challenge.setId(1L);
         challenge.setDeadline(Instant.now().plusSeconds(3600));
@@ -55,40 +66,16 @@ class SubmissionServiceTest {
 
         Submission saved = submissionService.create(1L, 2L, submission);
 
-        assertThat(saved.getChallengeId()).isEqualTo(1L);
+        assertThat(saved.getChallenge().getId()).isEqualTo(1L);
         assertThat(saved.getProducerId()).isEqualTo(2L);
     }
 
     @Test
-    void createThrowsWhenDeadlineHasPassed() {
-        User artist = new User();
-        artist.setId(2L);
-        artist.setRole(Role.ARTIST);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(artist));
-
-        Challenge challenge = new Challenge();
-        challenge.setId(1L);
-        challenge.setDeadline(Instant.now().minusSeconds(3600));
-        when(challengeRepository.findById(1L)).thenReturn(Optional.of(challenge));
+    void createReturnsNullWhenChallengeMissing() {
+        when(challengeRepository.findById(1L)).thenReturn(Optional.empty());
 
         Submission submission = new Submission();
-        submission.setAudioUrl("https://soundcloud.com/example/submission");
 
-        assertThatThrownBy(() -> submissionService.create(1L, 2L, submission))
-                .isInstanceOf(ForbiddenOperationException.class);
-    }
-
-    @Test
-    void createThrowsWhenUserIsDiscografica() {
-        User discografica = new User();
-        discografica.setId(2L);
-        discografica.setRole(Role.DISCOGRAFICA);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(discografica));
-
-        Submission submission = new Submission();
-        submission.setAudioUrl("https://soundcloud.com/example/submission");
-
-        assertThatThrownBy(() -> submissionService.create(1L, 2L, submission))
-                .isInstanceOf(ForbiddenOperationException.class);
+        assertThat(submissionService.create(1L, 2L, submission)).isNull();
     }
 }

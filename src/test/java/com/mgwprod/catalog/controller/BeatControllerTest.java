@@ -2,7 +2,6 @@ package com.mgwprod.catalog.controller;
 
 import com.mgwprod.catalog.model.Beat;
 import com.mgwprod.catalog.service.BeatService;
-import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.repository.SessionRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,7 @@ class BeatControllerTest {
     private SessionRepository sessionRepository;
 
     @Test
-    void createBeatReturns201WhenAuthenticatedAsProducer() throws Exception {
+    void createBeatReturns201WhenAuthenticatedAsArtist() throws Exception {
         Beat request = new Beat();
         request.setTitle("Trap Beat");
         request.setGenre("Trap");
@@ -51,11 +50,11 @@ class BeatControllerTest {
         response.setProducerId(1L);
         response.setTitle("Trap Beat");
 
+        when(beatService.isArtist(1L)).thenReturn(true);
         when(beatService.create(eq(1L), any(Beat.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/beats")
                         .requestAttr("userId", 1L)
-                        .requestAttr("userRole", "PRODUCER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -77,22 +76,34 @@ class BeatControllerTest {
     }
 
     @Test
-    void createBeatReturns403WhenAuthenticatedAsArtist() throws Exception {
+    void createBeatReturns403WhenNotAnArtist() throws Exception {
         Beat request = new Beat();
         request.setTitle("Trap Beat");
         request.setGenre("Trap");
         request.setBpm(140);
         request.setAudioUrl("https://soundcloud.com/example/trap-beat");
 
-        when(beatService.create(eq(2L), any(Beat.class)))
-                .thenThrow(new ForbiddenOperationException("Solo un productor puede publicar beats"));
+        when(beatService.isArtist(2L)).thenReturn(false);
 
         mockMvc.perform(post("/api/beats")
                         .requestAttr("userId", 2L)
-                        .requestAttr("userRole", "ARTIST")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void createBeatReturns400WhenTitleMissing() throws Exception {
+        Beat request = new Beat();
+        request.setGenre("Trap");
+        request.setBpm(140);
+        request.setAudioUrl("https://soundcloud.com/example/trap-beat");
+
+        mockMvc.perform(post("/api/beats")
+                        .requestAttr("userId", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -124,8 +135,7 @@ class BeatControllerTest {
 
     @Test
     void getBeatByIdReturns404WhenMissing() throws Exception {
-        when(beatService.getById(99L))
-                .thenThrow(new com.mgwprod.catalog.exception.BeatNotFoundException(99L));
+        when(beatService.getById(99L)).thenReturn(null);
 
         mockMvc.perform(get("/api/beats/99"))
                 .andExpect(status().isNotFound());
@@ -133,10 +143,16 @@ class BeatControllerTest {
 
     @Test
     void updateBeatReturns200ForOwner() throws Exception {
+        Beat existing = new Beat();
+        existing.setId(1L);
+        existing.setProducerId(1L);
         Beat response = new Beat();
         response.setId(1L);
         response.setTitle("New Title");
-        when(beatService.update(eq(1L), eq(1L), any(Beat.class))).thenReturn(response);
+
+        when(beatService.getById(1L)).thenReturn(existing);
+        when(beatService.canModify(existing, 1L)).thenReturn(true);
+        when(beatService.update(eq(1L), any(Beat.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/beats/1")
                         .requestAttr("userId", 1L)
@@ -147,11 +163,33 @@ class BeatControllerTest {
     }
 
     @Test
+    void updateBeatReturns403WhenNotOwner() throws Exception {
+        Beat existing = new Beat();
+        existing.setId(1L);
+        existing.setProducerId(1L);
+
+        when(beatService.getById(1L)).thenReturn(existing);
+        when(beatService.canModify(existing, 2L)).thenReturn(false);
+
+        mockMvc.perform(put("/api/beats/1")
+                        .requestAttr("userId", 2L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"New Title\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void deleteBeatReturns204ForOwner() throws Exception {
+        Beat existing = new Beat();
+        existing.setId(1L);
+        existing.setProducerId(1L);
+        when(beatService.getById(1L)).thenReturn(existing);
+        when(beatService.canModify(existing, 1L)).thenReturn(true);
+
         mockMvc.perform(delete("/api/beats/1").requestAttr("userId", 1L))
                 .andExpect(status().isNoContent());
 
-        verify(beatService).delete(1L, 1L);
+        verify(beatService).delete(1L);
     }
 
     @Test

@@ -1,13 +1,9 @@
 package com.mgwprod.challenges.service;
 
-import com.mgwprod.challenges.exception.ChallengeNotFoundException;
 import com.mgwprod.challenges.model.Challenge;
 import com.mgwprod.challenges.model.Submission;
 import com.mgwprod.challenges.repository.ChallengeRepository;
 import com.mgwprod.challenges.repository.ChallengeResultRepository;
-import com.mgwprod.common.exception.InvalidFieldException;
-import com.mgwprod.users.exception.ForbiddenOperationException;
-import com.mgwprod.users.exception.UserNotFoundException;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.UserRepository;
@@ -16,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+// Lógica de negocio de los challenges: quién puede crearlos, CRUD básico, y el
+// "opportunity pick" que elige el artista invitado.
 @Service
 public class ChallengeService {
 
@@ -34,18 +32,27 @@ public class ChallengeService {
         this.challengeResultRepository = challengeResultRepository;
     }
 
+    // El controller la usa para devolver 403 antes de crear. Solo ADMIN o DISCOGRAFICA
+    // pueden lanzar un challenge — un artista participa pero no organiza el concurso.
+    @Transactional(readOnly = true)
+    public boolean canCreateChallenge(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        return user != null && (user.getRole() == Role.ADMIN || user.getRole() == Role.DISCOGRAFICA);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean userExists(Long userId) {
+        return userRepository.findById(userId).isPresent();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isArtist(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        return user != null && user.getRole() == Role.ARTIST;
+    }
+
     @Transactional
     public Challenge create(Long requestingUserId, Challenge challenge) {
-        User requester = userRepository.findById(requestingUserId)
-                .orElseThrow(() -> new UserNotFoundException(requestingUserId));
-        if (requester.getRole() != Role.ADMIN && requester.getRole() != Role.DISCOGRAFICA) {
-            throw new ForbiddenOperationException("Solo un admin o una discográfica pueden crear challenges");
-        }
-        User guestArtist = userRepository.findById(challenge.getGuestArtistId())
-                .orElseThrow(() -> new UserNotFoundException(challenge.getGuestArtistId()));
-        if (guestArtist.getRole() != Role.ARTIST) {
-            throw new ForbiddenOperationException("El artista invitado debe tener rol ARTIST");
-        }
         challenge.setCreatedBy(requestingUserId);
         return challengeRepository.save(challenge);
     }
@@ -57,60 +64,58 @@ public class ChallengeService {
 
     @Transactional(readOnly = true)
     public Challenge getById(Long id) {
-        return challengeRepository.findById(id)
-                .orElseThrow(() -> new ChallengeNotFoundException(id));
+        return challengeRepository.findById(id).orElse(null);
     }
 
+    // El controller la usa para devolver 403 antes de elegir el opportunity pick.
+    @Transactional(readOnly = true)
+    public boolean isGuestArtist(Challenge challenge, Long requestingUserId) {
+        return challenge.getGuestArtistId().equals(requestingUserId);
+    }
+
+    // Devuelve null si la submission no pertenece a este challenge — evita que el
+    // artista invitado elija como "pick" una submission de otro concurso.
     @Transactional
-    public Challenge setOpportunityPick(Long challengeId, Long requestingUserId, Long submissionId) {
-        Challenge challenge = getById(challengeId);
-        if (!challenge.getGuestArtistId().equals(requestingUserId)) {
-            throw new ForbiddenOperationException("Solo el artista invitado de este challenge puede elegir su opportunity pick");
-        }
+    public Challenge setOpportunityPick(Challenge challenge, Long submissionId) {
         Submission submission = submissionService.getById(submissionId);
-        if (!submission.getChallengeId().equals(challengeId)) {
-            throw new ForbiddenOperationException("La submission no pertenece a este challenge");
+        if (submission == null || !submission.getChallenge().getId().equals(challenge.getId())) {
+            return null;
         }
         challenge.setOpportunityPickSubmissionId(submissionId);
         return challengeRepository.save(challenge);
     }
 
+    // El controller las usa para devolver 403 antes de editar/borrar.
+    @Transactional(readOnly = true)
+    public boolean canModify(Challenge challenge, Long requestingUserId) {
+        if (challenge.getCreatedBy().equals(requestingUserId)) {
+            return true;
+        }
+        User requester = userRepository.findById(requestingUserId).orElse(null);
+        return requester != null && requester.getRole() == Role.ADMIN;
+    }
+
+    // No hay un campo "closed" en Challenge: se considera cerrado si ya tiene
+    // resultados calculados (ver ChallengeResultService.close).
+    @Transactional(readOnly = true)
+    public boolean isClosed(Long challengeId) {
+        return challengeResultRepository.existsByChallengeId(challengeId);
+    }
+
     @Transactional
-    public Challenge update(Long id, Long requestingUserId, Challenge request) {
+    public Challenge update(Long id, Challenge request) {
         Challenge challenge = getById(id);
-        requireOwnerOrAdmin(challenge.getCreatedBy(), requestingUserId);
-        if (challengeResultRepository.existsByChallengeId(id)) {
-            throw new ForbiddenOperationException("No se puede editar un challenge ya cerrado");
+        if (challenge == null) {
+            return null;
         }
-        if (request.getTitle() != null) {
-            if (request.getTitle().isBlank()) {
-                throw new InvalidFieldException("El título no puede estar vacío");
-            }
-            challenge.setTitle(request.getTitle());
-        }
+        if (request.getTitle() != null) challenge.setTitle(request.getTitle());
         if (request.getTheme() != null) challenge.setTheme(request.getTheme());
         if (request.getDeadline() != null) challenge.setDeadline(request.getDeadline());
         return challengeRepository.save(challenge);
     }
 
     @Transactional
-    public void delete(Long id, Long requestingUserId) {
-        Challenge challenge = getById(id);
-        requireOwnerOrAdmin(challenge.getCreatedBy(), requestingUserId);
-        if (challengeResultRepository.existsByChallengeId(id)) {
-            throw new ForbiddenOperationException("No se puede borrar un challenge ya cerrado");
-        }
+    public void delete(Long id) {
         challengeRepository.deleteById(id);
-    }
-
-    private void requireOwnerOrAdmin(Long ownerId, Long requestingUserId) {
-        if (ownerId.equals(requestingUserId)) {
-            return;
-        }
-        User requester = userRepository.findById(requestingUserId)
-                .orElseThrow(() -> new UserNotFoundException(requestingUserId));
-        if (requester.getRole() != Role.ADMIN) {
-            throw new ForbiddenOperationException("Solo quien creó el challenge o un admin pueden hacer esto");
-        }
     }
 }

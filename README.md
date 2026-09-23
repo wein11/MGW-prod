@@ -43,7 +43,7 @@ Grupo: Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi.
    ./mvnw test
    ```
 
-   Debería dar **164 tests, 0 failures**.
+   Debería dar **188 tests, 0 failures**.
 
 ## Cómo probar el backend en vivo (Postman)
 
@@ -56,12 +56,15 @@ correr ningún `main()` de prueba. Para eso está `docs/api/mgw-prod.postman_col
 2. Seleccionar el Environment **"mgw-prod local"** arriba a la derecha.
 3. Con el servidor corriendo (`./mvnw spring-boot:run`), correr la Collection completa:
    click derecho sobre **mgw-prod** → **Run collection** → Run.
-4. Debería terminar con **~47 requests, 0 errores** (status 200/201/204 en todos).
+4. Debería terminar con **53 requests, 0 errores**.
 
 La Collection está armada para auto-sembrarse: registra y loguea un ARTIST, una DISCOGRAFICA
 y un ADMIN de prueba al principio, y encadena los IDs/tokens que va generando (beat, topline,
 challenge, submission, etc.) request por request — no hace falta pegar nada a mano. Cubre los
-5 módulos con al menos un GET-lista, GET-por-id, POST, PUT y DELETE cada uno.
+5 módulos con al menos un GET-lista, GET-por-id, POST, PUT y DELETE cada uno, más una carpeta
+final **"Casos de error"** con un ejemplo de cada código que pide la rúbrica: 404 (recurso
+inexistente), 401 (sin token), 400 (campo inválido), 403 (no sos el dueño) y 409 (email
+duplicado) — para no tener que armarlos a mano el día de la defensa.
 
 ## Arquitectura
 
@@ -106,16 +109,23 @@ entidad nueva:
   mysql -u root -padmin mgw_prod < docs/db/schema.sql
   ```
 
-### Sin DTOs
+### Sin DTOs, sin Bean Validation, sin excepciones custom
 
 Los controllers reciben/devuelven la entidad JPA directo (patrón de Clase 4, ver
-`docs/design/plans/2026-08-29-remove-users-dtos.md`). Consecuencia importante: como
-`spring.jpa.properties.jakarta.persistence.validation.mode=none` está seteado a nivel app
-entero, las anotaciones de Bean Validation (`@NotBlank`, `@Min`, etc.) puestas en una entidad
-**no se validan solas al guardar** — hay que validar siempre en el controller con
-`@Valid @RequestBody`, salvo en los métodos de actualización parcial (`PUT` que solo cambian
-los campos enviados), donde se valida campo por campo en el Service para no rechazar los
-campos omitidos (ver `InvalidFieldException`).
+`docs/design/plans/2026-08-29-remove-users-dtos.md`). Tampoco se usa Bean Validation
+(`@Valid`/`@NotBlank`) ni excepciones propias/`@RestControllerAdvice` — ninguna de las dos
+cosas aparece en el material de cátedra visto hasta ahora. En su lugar:
+
+- **400 (campo inválido):** `if` a mano en el controller antes de llamar al service.
+- **404 (no existe):** el service devuelve `null`; el controller lo chequea.
+- **403/409 (prohibido/conflicto):** el service expone un método booleano
+  (`canModify`, `isArtist`, `alreadyVoted`, etc.) que el controller consulta antes de
+  mutar nada.
+- Única excepción real que se sigue atrapando: `DataIntegrityViolationException` de
+  Spring/JDBC (ej. borrar un `User` con contenido asociado), porque es del framework, no
+  nuestra — el service la traduce a un `boolean`.
+
+Ver `docs/GUIA-TECNICA-EQUIPO.md` sección 1 para el detalle completo con ejemplos.
 
 ## Limitaciones conocidas
 
@@ -145,6 +155,8 @@ Ninguna de las dos corrompe datos ni afecta el flujo normal de uso/demo.
 
 - `docs/GUIA-TECNICA-EQUIPO.md` — guía técnica por módulo (arquitectura, lógica de negocio,
   decisiones de diseño) para que cada integrante pueda explicar y defender el proyecto.
+- `docs/GUIA-JAVA-DESDE-CERO.md` — Java/Spring Boot explicado desde cero (qué es cada
+  anotación, cada librería, cada concepto del lenguaje) para quien nunca programó en Java.
 - `docs/INFORME-TPO.md` — informe formal de la entrega, con la validación funcional
   end-to-end vía Postman.
 - `docs/design/specs/2026-09-01-mgw-prod-pivot-design.md` — diseño vigente (post-pivot, dominio actual).

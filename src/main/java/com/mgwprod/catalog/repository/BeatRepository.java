@@ -5,9 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
+// Cada método define su propia consulta a partir del nombre — Spring Data arma el SQL
+// automáticamente, no hace falta escribirlo.
 public interface BeatRepository extends JpaRepository<Beat, Long> {
     List<Beat> findByProducerId(Long producerId);
     List<Beat> findByGenre(String genre);
     List<Beat> findByBpm(Integer bpm);
+    // Combina dos condiciones con AND — usado cuando el listado filtra por género y BPM a la vez.
     List<Beat> findByGenreAndBpm(String genre, Integer bpm);
 }

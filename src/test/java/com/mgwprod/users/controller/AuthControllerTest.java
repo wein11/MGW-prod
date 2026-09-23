@@ -1,7 +1,5 @@
 package com.mgwprod.users.controller;
 
-import com.mgwprod.users.exception.EmailAlreadyExistsException;
-import com.mgwprod.users.exception.InvalidCredentialsException;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.Session;
 import com.mgwprod.users.model.User;
@@ -44,6 +42,7 @@ class AuthControllerTest {
         response.setRole(Role.ARTIST);
         response.setCreatedAt(Instant.now());
 
+        when(authService.emailExists("artista@test.com")).thenReturn(false);
         when(authService.register(any(User.class))).thenReturn(response);
 
         String requestJson = """
@@ -76,8 +75,7 @@ class AuthControllerTest {
 
     @Test
     void registerReturns409WhenEmailAlreadyExists() throws Exception {
-        when(authService.register(any(User.class)))
-                .thenThrow(new EmailAlreadyExistsException("duplicado@test.com"));
+        when(authService.emailExists("duplicado@test.com")).thenReturn(true);
 
         String requestJson = """
                 {"email":"duplicado@test.com","password":"supersecret123","displayName":"DJ Test","role":"ARTIST"}
@@ -116,8 +114,7 @@ class AuthControllerTest {
 
     @Test
     void loginReturns401WithWrongCredentials() throws Exception {
-        when(authService.login(eq("productor@test.com"), eq("wrongpassword")))
-                .thenThrow(new InvalidCredentialsException());
+        when(authService.login(eq("productor@test.com"), eq("wrongpassword"))).thenReturn(null);
 
         String requestJson = """
                 {"email":"productor@test.com","password":"wrongpassword"}

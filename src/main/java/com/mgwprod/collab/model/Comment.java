@@ -8,13 +8,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
 
+// Un comentario dejado sobre un Topline (distinto de BeatComment, que es sobre un Beat).
 @Entity
 @Table(name = "comments")
 @Getter
@@ -26,9 +26,8 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Server-derived (path variable + authenticated session, see CommentService.create)
-    // — same pattern as Topline.artistId: never accepted from client JSON, so no
-    // @NotNull here since @Valid runs before the service sets these.
+    // Lo setea el service a partir del path variable + la sesión autenticada (ver
+    // CommentService.create) — nunca viaja en el JSON del cliente.
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "topline_id", nullable = false)
     private Long toplineId;
@@ -37,7 +36,6 @@ public class Comment {
     @Column(name = "author_id", nullable = false)
     private Long authorId;
 
-    @NotBlank(message = "El comentario no puede estar vacío")
     @Column(nullable = false, length = 1000)
     private String text;
 

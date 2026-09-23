@@ -3,7 +3,7 @@ package com.mgwprod.collab.controller;
 import com.mgwprod.collab.model.Collaboration;
 import com.mgwprod.collab.model.CollaborationStatus;
 import com.mgwprod.collab.service.CollaborationService;
-import com.mgwprod.users.exception.UnauthenticatedException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+// Endpoints REST de las propuestas de colaboración: decidir (aceptar/rechazar),
+// listar por estado, y borrar. No hay POST acá porque una Collaboration siempre nace
+// automáticamente al crear un Topline (ver ToplineService.create).
 @RestController
 @RequestMapping("/api/collaborations")
 public class CollaborationController {
@@ -26,14 +29,23 @@ public class CollaborationController {
         this.collaborationService = collaborationService;
     }
 
+    // El status llega como query param (?status=ACCEPTED) y Spring lo convierte
+    // directo al enum CollaborationStatus.
     @PutMapping("/{id}")
-    public Collaboration decide(@PathVariable Long id,
-                                 @RequestAttribute(name = "userId", required = false) Long userId,
-                                 @RequestParam CollaborationStatus status) {
+    public ResponseEntity<Collaboration> decide(@PathVariable Long id,
+                                                 @RequestAttribute(name = "userId", required = false) Long userId,
+                                                 @RequestParam CollaborationStatus status) {
         if (userId == null) {
-            throw new UnauthenticatedException("Necesitás iniciar sesión para decidir una colaboración");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-        return collaborationService.decide(id, userId, status);
+        Collaboration collaboration = collaborationService.getById(id);
+        if (collaboration == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        if (!collaborationService.canDecide(collaboration, userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+        return ResponseEntity.ok(collaborationService.decide(id, status));
     }
 
     @GetMapping
@@ -45,9 +57,16 @@ public class CollaborationController {
     public ResponseEntity<Void> deleteCollaboration(@PathVariable Long id,
                                                      @RequestAttribute(name = "userId", required = false) Long userId) {
         if (userId == null) {
-            throw new UnauthenticatedException("Necesitás iniciar sesión para borrar una colaboración");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        collaborationService.delete(id, userId);
+        Collaboration collaboration = collaborationService.getById(id);
+        if (collaboration == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        if (!collaborationService.canDelete(collaboration, userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        collaborationService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

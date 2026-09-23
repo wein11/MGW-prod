@@ -5,15 +5,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
 
+// La entrega que un productor manda a un Challenge antes del deadline.
 @Entity
 @Table(name = "submissions")
 @Getter
@@ -25,17 +27,18 @@ public class Submission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // challengeId y producerId los setea el SubmissionService desde el path y el userId
-    // autenticado, no vienen en el body del cliente. Por eso no llevan @NotNull (rompería
-    // el @Valid @RequestBody, que corre antes de que el service los complete); la integridad
-    // se garantiza con @Column(nullable = false) + el service que siempre los asigna.
-    @Column(name = "challenge_id", nullable = false)
-    private Long challengeId;
+    // Relación real hacia Challenge en vez de guardar solo un id suelto: permite
+    // navegar de la submission al challenge completo (ej. para leer su deadline) y que
+    // Spring Data derive queries como findByChallengeId.
+    // Lo setea el service a partir del path — nunca viaja en el JSON del cliente.
+    @ManyToOne
+    @JoinColumn(name = "challenge_id", nullable = false)
+    private Challenge challenge;
 
+    // Lo setea el service a partir del userId autenticado.
     @Column(name = "producer_id", nullable = false)
     private Long producerId;
 
-    @NotBlank(message = "El link de audio es obligatorio")
     @Column(name = "audio_url", nullable = false)
     private String audioUrl;
 

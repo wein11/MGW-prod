@@ -1,5 +1,6 @@
 package com.mgwprod.catalog.repository;
 
+import com.mgwprod.catalog.model.Beat;
 import com.mgwprod.catalog.model.BeatComment;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,15 +21,26 @@ class BeatCommentRepositoryTest {
     @Autowired
     private BeatCommentRepository beatCommentRepository;
 
+    @Autowired
+    private BeatRepository beatRepository;
+
     @Test
     void findByBeatIdReturnsOnlyThatBeatsComments() {
+        Beat beat = new Beat();
+        beat.setProducerId(1L);
+        beat.setTitle("Trap Beat");
+        beat.setGenre("Trap");
+        beat.setBpm(140);
+        beat.setAudioUrl("https://soundcloud.com/example/trap-beat");
+        beat = beatRepository.save(beat);
+
         BeatComment comment = new BeatComment();
-        comment.setBeatId(1L);
+        comment.setBeat(beat);
         comment.setAuthorId(2L);
         comment.setText("Está buenísimo el beat");
         beatCommentRepository.save(comment);
 
-        List<BeatComment> result = beatCommentRepository.findByBeatId(1L);
+        List<BeatComment> result = beatCommentRepository.findByBeatId(beat.getId());
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getText()).isEqualTo("Está buenísimo el beat");

@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
+    // Base de getOrCreate: busca la suscripción de un usuario si ya existe.
     Optional<Subscription> findByUserId(Long userId);
 }

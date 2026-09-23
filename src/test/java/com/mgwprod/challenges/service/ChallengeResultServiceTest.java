@@ -7,7 +7,6 @@ import com.mgwprod.challenges.model.Vote;
 import com.mgwprod.challenges.repository.ChallengeResultRepository;
 import com.mgwprod.challenges.repository.SubmissionRepository;
 import com.mgwprod.challenges.repository.VoteRepository;
-import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.model.ArtistProfile;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
@@ -24,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -39,9 +37,6 @@ class ChallengeResultServiceTest {
 
     @Mock
     private VoteRepository voteRepository;
-
-    @Mock
-    private ChallengeService challengeService;
 
     @Mock
     private UserRepository userRepository;
@@ -60,15 +55,9 @@ class ChallengeResultServiceTest {
 
     @Test
     void closeCreatesTopThreeResultsOrderedByScore() {
-        User admin = new User();
-        admin.setId(1L);
-        admin.setRole(Role.ADMIN);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
-
         Challenge challenge = new Challenge();
         challenge.setId(100L);
         challenge.setGuestArtistId(99L);
-        when(challengeService.getById(100L)).thenReturn(challenge);
 
         Submission low = new Submission();
         low.setId(1L);
@@ -94,7 +83,7 @@ class ChallengeResultServiceTest {
         when(challengeResultRepository.save(any(ChallengeResult.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        List<ChallengeResult> results = challengeResultService.close(100L, 1L);
+        List<ChallengeResult> results = challengeResultService.close(challenge);
 
         assertThat(results).hasSize(3);
         assertThat(results.get(0).getSubmissionId()).isEqualTo(3L);
@@ -108,14 +97,13 @@ class ChallengeResultServiceTest {
     }
 
     @Test
-    void closeThrowsWhenRequesterIsNotAdmin() {
+    void isAdminIsFalseForNonAdmin() {
         User notAdmin = new User();
         notAdmin.setId(1L);
         notAdmin.setRole(Role.ARTIST);
         when(userRepository.findById(1L)).thenReturn(Optional.of(notAdmin));
 
-        assertThatThrownBy(() -> challengeResultService.close(100L, 1L))
-                .isInstanceOf(ForbiddenOperationException.class);
+        assertThat(challengeResultService.isAdmin(1L)).isFalse();
     }
 
     @Test

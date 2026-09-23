@@ -14,13 +14,10 @@ Fields the server derives itself (`Topline.artistId`, `Comment.toplineId`,
 in responses but ignored if sent in a request body, so a client can't spoof
 who authored something.
 
-**Dependency note:** this module depends on `com.mgwprod.catalog` for
-`Beat`/`BeatRepository` (to validate `beatId` on a `Topline` and to resolve
-`Beat.producerId` when deciding a `Collaboration`). As of this writing the
-`catalog` module (Santiago+Mateo) is not yet merged to `main`, so this branch
-ships against a **temporary stub** of `com.mgwprod.catalog` (see
-`src/main/java/com/mgwprod/catalog/`, each file marked `TEMPORARY STUB`) —
-delete that package once the real `catalog` PR merges.
+**Dependency note:** this module depends on `com.mgwprod.catalog` for the real
+`Beat`/`BeatRepository` — `Topline.beat` is a `@ManyToOne` relation to `Beat`
+(not a plain `beatId` number), used to validate the beat exists on create and
+to resolve `Beat.producerId` when deciding a `Collaboration`.
 
 ## POST /api/toplines
 
@@ -28,11 +25,12 @@ Uploads an artist's interpretation of an existing beat. Creates the `Topline`
 and, in the same transaction, an associated `Collaboration` in `PENDING`.
 
 - **Auth:** required — caller must be an authenticated user with role `ARTIST`.
-- **Request body:**
+- **Request body:** only `beat.id` is read from the `beat` object — send just
+  `{ "beat": { "id": 5 }, "audioUrl": "..." }`, no need for the other `Beat` fields.
 
   | Field | Type | Notes |
   |---|---|---|
-  | `beatId` | number | required, must reference an existing beat |
+  | `beat.id` | number | required, must reference an existing beat |
   | `audioUrl` | string | required, non-blank |
 
 - **Response body** (`Topline`):
@@ -41,7 +39,7 @@ and, in the same transaction, an associated `Collaboration` in `PENDING`.
   |---|---|
   | `id` | number |
   | `artistId` | number — the authenticated caller |
-  | `beatId` | number |
+  | `beat` | object — the full `Beat` this topline was recorded over |
   | `audioUrl` | string |
   | `createdAt` | ISO-8601 timestamp |
 
@@ -50,10 +48,10 @@ and, in the same transaction, an associated `Collaboration` in `PENDING`.
   | Code | When |
   |---|---|
   | 201 | Topline (and its pending Collaboration) created |
-  | 400 | Validation failure (blank `audioUrl`, missing `beatId`) or malformed JSON body |
+  | 400 | Validation failure (blank `audioUrl`, missing `beat.id`) or malformed JSON body |
   | 401 | Not authenticated |
-  | 403 | Authenticated caller's role is not `ARTIST` |
-  | 404 | `beatId` does not reference an existing beat |
+  | 403 | Authenticated caller's role is not `ARTIST`, or already hit the free-plan production limit (`SubscriptionService`) |
+  | 404 | `beat.id` does not reference an existing beat |
   | 500 | Unexpected server error |
 
 ## GET /api/toplines

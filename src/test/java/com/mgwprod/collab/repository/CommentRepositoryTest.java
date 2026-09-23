@@ -1,5 +1,7 @@
 package com.mgwprod.collab.repository;
 
+import com.mgwprod.catalog.model.Beat;
+import com.mgwprod.catalog.repository.BeatRepository;
 import com.mgwprod.collab.model.Comment;
 import com.mgwprod.collab.model.Topline;
 import com.mgwprod.users.model.Role;
@@ -27,6 +29,9 @@ class CommentRepositoryTest {
     private ToplineRepository toplineRepository;
 
     @Autowired
+    private BeatRepository beatRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Test
@@ -47,9 +52,17 @@ class CommentRepositoryTest {
         commenter.setCreatedAt(Instant.now());
         User savedCommenter = userRepository.save(commenter);
 
+        Beat beat = new Beat();
+        beat.setProducerId(savedArtist.getId());
+        beat.setTitle("Trap Beat");
+        beat.setGenre("Trap");
+        beat.setBpm(140);
+        beat.setAudioUrl("https://soundcloud.com/example/trap-beat");
+        Beat savedBeat = beatRepository.save(beat);
+
         Topline topline = new Topline();
         topline.setArtistId(savedArtist.getId());
-        topline.setBeatId(2L);
+        topline.setBeat(savedBeat);
         topline.setAudioUrl("https://soundcloud.com/example/topline");
         Topline savedTopline = toplineRepository.save(topline);
 

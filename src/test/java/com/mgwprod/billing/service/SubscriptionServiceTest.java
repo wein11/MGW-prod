@@ -1,12 +1,10 @@
 package com.mgwprod.billing.service;
 
-import com.mgwprod.billing.exception.SubscriptionLimitExceededException;
 import com.mgwprod.billing.gateway.PaymentGateway;
 import com.mgwprod.billing.gateway.PaymentResult;
 import com.mgwprod.billing.model.Subscription;
 import com.mgwprod.billing.model.SubscriptionPlan;
 import com.mgwprod.billing.repository.SubscriptionRepository;
-import com.mgwprod.users.exception.ForbiddenOperationException;
 import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.repository.UserRepository;
@@ -20,7 +18,6 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
@@ -44,10 +41,6 @@ class SubscriptionServiceTest {
 
     @Test
     void getOrCreateCreatesFreeSubscriptionWhenMissing() {
-        User artist = new User();
-        artist.setId(1L);
-        artist.setRole(Role.ARTIST);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(artist));
         when(subscriptionRepository.findByUserId(1L)).thenReturn(Optional.empty());
         when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -58,14 +51,22 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void getOrCreateThrowsForNonArtistRoles() {
+    void userExistsReflectsRepository() {
+        User label = new User();
+        label.setId(2L);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(label));
+
+        assertThat(subscriptionService.userExists(2L)).isTrue();
+    }
+
+    @Test
+    void isArtistIsFalseForNonArtistRoles() {
         User label = new User();
         label.setId(2L);
         label.setRole(Role.DISCOGRAFICA);
         when(userRepository.findById(2L)).thenReturn(Optional.of(label));
 
-        assertThatThrownBy(() -> subscriptionService.getOrCreate(2L))
-                .isInstanceOf(ForbiddenOperationException.class);
+        assertThat(subscriptionService.isArtist(2L)).isFalse();
     }
 
     @Test
@@ -124,15 +125,25 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void recordProductionThrowsWhenFreeLimitReached() {
+    void isAtProductionLimitIsTrueWhenFreeLimitReached() {
         Subscription subscription = new Subscription();
         subscription.setUserId(1L);
         subscription.setPlan(SubscriptionPlan.FREE);
         subscription.setProductionsCount(50);
         when(subscriptionRepository.findByUserId(1L)).thenReturn(Optional.of(subscription));
 
-        assertThatThrownBy(() -> subscriptionService.recordProduction(1L))
-                .isInstanceOf(SubscriptionLimitExceededException.class);
+        assertThat(subscriptionService.isAtProductionLimit(1L)).isTrue();
+    }
+
+    @Test
+    void isAtProductionLimitIsFalseForPremium() {
+        Subscription subscription = new Subscription();
+        subscription.setUserId(1L);
+        subscription.setPlan(SubscriptionPlan.PREMIUM);
+        subscription.setProductionsCount(500);
+        when(subscriptionRepository.findByUserId(1L)).thenReturn(Optional.of(subscription));
+
+        assertThat(subscriptionService.isAtProductionLimit(1L)).isFalse();
     }
 
     @Test

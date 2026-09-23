@@ -97,8 +97,10 @@ Envía una producción a un challenge. `challengeId` (path) y `producerId` (del 
 completa el servidor; el cliente solo manda `audioUrl`.
 
 - **Auth:** required. Solo rol **ARTIST**. El deadline no debe haber pasado.
-- **Request body:** `{ "audioUrl": string }` (required, no vacío).
-- **Response body:** `Submission` (`{ id, challengeId, producerId, audioUrl, submittedAt }`).
+- **Request body:** `{ "audioUrl": string }` (required, no vacío) — el challenge sale
+  del path, no hace falta mandarlo en el body.
+- **Response body:** `Submission` (`{ id, challenge, producerId, audioUrl, submittedAt }`,
+  donde `challenge` es el `Challenge` completo al que pertenece esta submission).
 - **Status codes:**
 
   | Code | When |
@@ -204,13 +206,16 @@ Ranking global: suma de `pointsAwarded` por productor, descendente.
 
 ---
 
-## Nota sobre `@Valid` y campos seteados por el servidor
+## Nota sobre validación y campos seteados por el servidor
 
-`Submission` (`challengeId`/`producerId`) y `Vote` (`submissionId`/`voterId`) llevan esos campos
-con `@Column(nullable = false)` pero **sin** `@NotNull`: los completa el service desde el path y
-el token, no vienen en el body. Ponerles `@NotNull` rompería el `@Valid @RequestBody` del
-controller, que corre antes de que el service los asigne. La integridad la garantizan la columna
-NOT NULL y el service, que siempre los setea.
+Este proyecto no usa Bean Validation (`@Valid`/`@NotNull`) ni excepciones custom: cada
+controller valida los campos del body a mano con `if` antes de llamar al service, y el
+service devuelve `null`/un booleano en vez de tirar una excepción — el controller arma
+el `ResponseEntity` con el código correspondiente. `Submission.challenge` y
+`Submission.producerId`, igual que `Vote.submissionId`/`Vote.voterId`, tienen
+`@Column(nullable = false)` a nivel de base de datos, pero los completa el service
+desde el path y el token — nunca vienen en el body, así que no necesitan (ni podrían
+tener) una validación de "campo requerido" en el controller.
 
 ## PUT /api/challenges/{id}
 
