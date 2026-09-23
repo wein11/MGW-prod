@@ -1,0 +1,704 @@
+{
+  "info": {
+    "name": "mgw-prod - Demo Etapa 1",
+    "description": "Demo en vivo del backend. Correr en orden con el Environment 'mgw-prod local'.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Usuarios",
+      "item": [
+        {
+          "name": "Registrar artista",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set(\"artistEmail\", \"artista\" + Date.now() + \"@mgw.test\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.environment.set(\"artistUserId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{artistEmail}}\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Artista Demo\",\n  \"role\": \"ARTIST\",\n  \"city\": \"Buenos Aires\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login artista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.environment.set(\"artistToken\", pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{artistEmail}}\",\n  \"password\": \"secret123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.environment.set(\"adminToken\", pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@mgw.com\",\n  \"password\": \"admin1234\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Beats (CRUD)",
+      "item": [
+        {
+          "name": "Crear beat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.environment.set(\"beatId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{artistToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/beats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "beats"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Trap Beat\",\n  \"genre\": \"Trap\",\n  \"bpm\": 140,\n  \"key\": \"Am\",\n  \"audioUrl\": \"https://soundcloud.com/demo/trap-beat\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar beats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/beats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "beats"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Editar beat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{artistToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/beats/{{beatId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "beats",
+                "{{beatId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Trap Beat (versión final)\",\n  \"bpm\": 145\n}"
+            }
+          }
+        },
+        {
+          "name": "Borrar beat",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest({",
+                  "    url: pm.environment.get(\"base_url\") + \"/api/beats\",",
+                  "    method: \"POST\",",
+                  "    header: {",
+                  "        \"Content-Type\": \"application/json\",",
+                  "        \"Authorization\": \"Bearer \" + pm.environment.get(\"artistToken\")",
+                  "    },",
+                  "    body: {",
+                  "        mode: \"raw\",",
+                  "        raw: JSON.stringify({ title: \"Beat para borrar\", genre: \"Trap\", bpm: 120, audioUrl: \"https://soundcloud.com/demo/borrar\" })",
+                  "    }",
+                  "}, function (err, res) {",
+                  "    pm.environment.set(\"beatToDeleteId\", res.json().id);",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{artistToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/beats/{{beatToDeleteId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "beats",
+                "{{beatToDeleteId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Toplines y suscripción",
+      "item": [
+        {
+          "name": "Crear topline sobre el beat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.environment.set(\"toplineId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{artistToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/toplines",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "toplines"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"beat\": {\n    \"id\": {{beatId}}\n  },\n  \"audioUrl\": \"https://soundcloud.com/demo/topline\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Pasar a plan premium",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{artistToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscriptions/upgrade",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "subscriptions",
+                "upgrade"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Desafíos",
+      "item": [
+        {
+          "name": "Crear desafío (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.environment.set(\"challengeId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/challenges",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "challenges"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"El próximo hit de RKT\",\n  \"genre\": \"RKT\",\n  \"bpm\": 100,\n  \"key\": \"F#m\",\n  \"theme\": \"libre\",\n  \"deadline\": \"2026-12-31T23:59:00Z\",\n  \"guestArtistId\": {{artistUserId}},\n  \"prizeFirst\": \"Sesión de estudio\",\n  \"prizeSecond\": \"Verificación de cuenta\",\n  \"prizeThird\": \"Badge exclusivo\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Enviar entrega al desafío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.environment.set(\"submissionId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{artistToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/challenges/{{challengeId}}/submissions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "challenges",
+                "{{challengeId}}",
+                "submissions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"audioUrl\": \"https://soundcloud.com/demo/entrega\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Votar la entrega",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/submissions/{{submissionId}}/votes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "submissions",
+                "{{submissionId}}",
+                "votes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score\": 9,\n  \"comment\": \"Muy buena producción\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cerrar desafío y ver podio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/challenges/{{challengeId}}/close",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "challenges",
+                "{{challengeId}}",
+                "close"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Errores",
+      "item": [
+        {
+          "name": "Crear beat sin token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/beats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "beats"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sin login\",\n  \"genre\": \"Trap\",\n  \"bpm\": 140,\n  \"audioUrl\": \"https://soundcloud.com/demo/x\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Beat que no existe -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/beats/999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "beats",
+                "999999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar un admin -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"otro-admin@mgw.test\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Admin trucho\",\n  \"role\": \"ADMIN\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

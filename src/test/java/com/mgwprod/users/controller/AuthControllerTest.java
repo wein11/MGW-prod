@@ -1,0 +1,140 @@
+package com.mgwprod.users.controller;
+
+import com.mgwprod.users.model.Role;
+import com.mgwprod.users.model.Session;
+import com.mgwprod.users.model.User;
+import com.mgwprod.users.repository.SessionRepository;
+import com.mgwprod.users.service.AuthService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
+
+import java.time.Instant;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(AuthController.class)
+class AuthControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private AuthService authService;
+
+    @MockitoBean
+    private SessionRepository sessionRepository;
+
+    @Test
+    void registerReturns201WithUserData() throws Exception {
+        User response = new User();
+        response.setId(1L);
+        response.setEmail("artista@test.com");
+        response.setDisplayName("DJ Test");
+        response.setRole(Role.ARTIST);
+        response.setCreatedAt(Instant.now());
+
+        when(authService.emailExists("artista@test.com")).thenReturn(false);
+        when(authService.register(any(User.class))).thenReturn(response);
+
+        String requestJson = """
+                {"email":"artista@test.com","password":"supersecret123","displayName":"DJ Test","role":"ARTIST"}
+                """;
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("artista@test.com"))
+                .andExpect(jsonPath("$.role").value("ARTIST"))
+                .andExpect(jsonPath("$.isAdmin").doesNotExist())
+                .andExpect(jsonPath("$.admin").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.password").doesNotExist());
+    }
+
+    @Test
+    void registerReturns400WhenEmailIsBlank() throws Exception {
+        String requestJson = """
+                {"email":"","password":"supersecret123","displayName":"DJ Test","role":"ARTIST"}
+                """;
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void registerReturns409WhenEmailAlreadyExists() throws Exception {
+        when(authService.emailExists("duplicado@test.com")).thenReturn(true);
+
+        String requestJson = """
+                {"email":"duplicado@test.com","password":"supersecret123","displayName":"DJ Test","role":"ARTIST"}
+                """;
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void loginReturns200WithToken() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setDisplayName("DJ Test");
+        user.setRole(Role.ARTIST);
+
+        Session session = new Session();
+        session.setToken("some-token-123");
+        session.setUser(user);
+        session.setExpiresAt(Instant.now().plusSeconds(3600));
+
+        when(authService.login(eq("productor@test.com"), eq("supersecret123"))).thenReturn(session);
+
+        String requestJson = """
+                {"email":"productor@test.com","password":"supersecret123"}
+                """;
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("some-token-123"));
+    }
+
+    @Test
+    void loginReturns401WithWrongCredentials() throws Exception {
+        when(authService.login(eq("productor@test.com"), eq("wrongpassword"))).thenReturn(null);
+
+        String requestJson = """
+                {"email":"productor@test.com","password":"wrongpassword"}
+                """;
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void registerReturns403WhenRoleIsAdmin() throws Exception {
+        String requestJson = """
+                {"email":"admin2@test.com","password":"supersecret123","displayName":"Admin","role":"ADMIN"}
+                """;
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isForbidden());
+    }
+}
