@@ -112,7 +112,7 @@ El requisito de la Etapa 1 es demostrar el CRUD completo mediante solicitudes HT
 contra el servidor corriendo — no una prueba interna vía `main()`. Para esto se armó una
 Postman Collection (`docs/api/mgw-prod.postman_collection.json`) que cubre los 5 módulos
 con al menos un GET-lista, GET-por-id, POST, PUT y DELETE cada uno, con auto-seed de datos
-de prueba (registra y loguea un ARTIST, una DISCOGRAFICA y un ADMIN, encadenando IDs y
+de prueba (registra y loguea un ARTIST y una DISCOGRAFICA, loguea el ADMIN precargado, encadenando IDs y
 tokens automáticamente entre requests).
 
 **Corrida del 15/09/2026**, con el servidor levantado en `localhost:8080` contra una base

@@ -48,7 +48,8 @@ Spring Boot que guarda los datos en MySQL y se prueba con Postman. No tiene pant
   - `ARTIST`: productor o artista. Publica beats, graba toplines y participa en desafíos.
   - `DISCOGRAFICA`: un sello. Puede crear desafíos.
   - `ADMIN`: administrador. Verifica artistas, crea y cierra desafíos, y puede editar o borrar
-    cualquier cosa.
+    cualquier cosa. **No se puede registrar por la API**: hay un solo admin y viene cargado en
+    la base (`admin@mgw.com` / `admin1234`).
 - **Publicar beats**: instrumentales con título, género, BPM, tonalidad y link al audio.
 - **Grabar un topline** sobre un beat de otro (la voz o melodía). Esto crea automáticamente una
   **propuesta de colaboración** que el dueño del beat acepta o rechaza.
@@ -329,6 +330,12 @@ mysql -u root -padmin mgw_prod < docs/db/schema.sql
 | `votes` | Votos | `UNIQUE (submission_id, voter_id)`: una persona no puede votar dos veces la misma entrega |
 | `challenge_results` | Podio de cada desafío cerrado | `submission_id` UNIQUE. La columna se llama `rank_position` porque `rank` es palabra reservada en MySQL |
 | `subscriptions` | Plan de cada usuario | `user_id` UNIQUE, `plan`, `productions_count` |
+
+**El admin precargado.** Al final de `schema.sql` hay un `INSERT` que crea el único admin
+(`admin@mgw.com` / `admin1234`). Se hace así porque el registro por la API no permite el rol
+ADMIN (si lo permitiera, cualquiera podría darse permisos de administrador). La columna
+`password_hash` tiene el formato que genera `PasswordHasher`: `salt:hash` en Base64, así el
+login funciona igual que con cualquier usuario registrado.
 
 **Ejemplo de CASCADE en acción:** borrar un beat borra solo sus comentarios, sus toplines, y
 (en cadena) las colaboraciones y comentarios de esos toplines. Por eso en la demo de Postman
@@ -804,7 +811,7 @@ requests. Es nuestra "portería".
 
 | Endpoint | Método Java | Qué hace |
 |---|---|---|
-| `POST /api/auth/register` | `register(@RequestBody User user)` | 400 si falta email, si la contraseña tiene menos de 8 caracteres, si falta nombre o rol. 409 si el email existe. 201 con el usuario creado. |
+| `POST /api/auth/register` | `register(@RequestBody User user)` | 400 si falta email, si la contraseña tiene menos de 8 caracteres, si falta nombre o rol. **403 si el rol es ADMIN** (el admin viene cargado en la base). 409 si el email existe. 201 con el usuario creado. |
 | `POST /api/auth/login` | `login(@RequestBody User credentials)` | Recibe `{email, password}` (reusa la clase `User` como "molde"). 401 si no coincide, 200 con la sesión (incluye el `token`). |
 
 Son los únicos endpoints que no pasan por el interceptor.
@@ -943,7 +950,8 @@ productor A la acepta (`ACCEPTED`) o la rechaza (`REJECTED`).
 
 #### `model/CollaborationStatus.java` (enum)
 
-`PENDING`, `ACCEPTED`, `REJECTED`. Se guarda como texto (`@Enumerated(STRING)`).
+`PENDING`, `ACCEPTED`, `REJECTED`. Se guarda como texto (`@Enumerated(STRING)`). Solo se puede
+pasar de `PENDING` a `ACCEPTED` o `REJECTED`, una sola vez.
 
 #### `model/Collaboration.java` (→ `collaborations`)
 
@@ -988,6 +996,7 @@ Dependencias: `ToplineRepository`, `CollaborationRepository`, `UserRepository`,
 |---|---|
 | `getById(Long)` | `orElse(null)`. |
 | `canDecide(Collaboration, Long)` | Va de la colaboración al topline, del topline al beat, y compara el `producerId` del beat con el que pide. **Solo el dueño del beat decide.** |
+| `isPending(Collaboration)` | true si todavía está `PENDING`. El controller lo usa para no dejar cambiar una decisión ya tomada. |
 | `decide(Long, CollaborationStatus)` | Guarda el estado nuevo y `decidedAt = ahora`. |
 | `listByStatus(status)` | Filtra por estado, o devuelve todas. |
 | `canDelete(Collaboration, Long)` | Pueden borrar las dos partes (el artista del topline o el productor del beat) o un admin. |
@@ -1013,7 +1022,9 @@ Dependencias: `ToplineRepository`, `CollaborationRepository`, `UserRepository`,
 
 - **No tiene POST**: una colaboración nace sola con el topline.
 - `PUT /{id}?status=ACCEPTED` → `decide`: el estado viene como **query param** y Spring lo
-  convierte al enum solo. 401 → 404 → 403 si no es el dueño del beat → 200.
+  convierte al enum solo. 401 → **400 si mandan `PENDING`** (decidir es aceptar o rechazar) →
+  404 → 403 si no es el dueño del beat → **403 si ya estaba decidida** (la decisión queda fija) →
+  200.
 - `GET ?status=PENDING` → `list`: público, filtro opcional.
 - `DELETE /{id}` → `deleteCollaboration`: 401 → 404 → 403 → 204.
 
@@ -1187,6 +1198,9 @@ calcular el ranking y se devuelve como JSON.
 #### `service/VoteService.java`
 
 - `alreadyVoted(submissionId, voterId)`: el controller responde 403 si ya votó.
+- `isOwnSubmission(submissionId, voterId)`: true si el votante es el productor de la entrega
+  (nadie puede votarse a sí mismo → 403). Si la entrega no existe devuelve false y el 404 lo da
+  `create`.
 - `create(...)`: `null` si la entrega no existe (404). Pone `submissionId` y `voterId`.
 
 #### `service/ChallengeScoringService.java` — el cálculo del puntaje
@@ -1264,14 +1278,17 @@ invitado y de los verificados pesa más que la de cualquiera.
 | `PUT /{id}/opportunity-pick?submissionId=X` → `opportunityPick` | 401 → 404 → 403 si no es el invitado → 400 si la entrega no es de este desafío → 200 |
 
 **`ChallengeCloseController`**: `PUT /api/challenges/{id}/close` → 401 → 403 si no es admin →
-404 → 200 con el podio. Está separado porque cerrar dispara todo el cálculo, no es un CRUD.
+404 → **403 si ya estaba cerrado** (`ChallengeService.isClosed`) → 200 con el podio. Sin ese
+último chequeo, un segundo cierre intentaría guardar los mismos resultados otra vez y la base
+los rechazaría (`submission_id` es UNIQUE) → error 500. Está separado porque cerrar dispara todo el cálculo, no es un CRUD.
 
 **`SubmissionController`** — `/api/challenges/{challengeId}/submissions`: `POST` (401 → 400 sin
 audioUrl → 403 si no es artista → 404 si no existe el desafío → 403 si pasó el deadline → 201) y
 `GET` (lista).
 
 **`VoteController`** — `/api/submissions/{submissionId}/votes`: `POST` (401 → 400 si el score no
-está entre 1 y 10 → 403 si ya votó → 404 si la entrega no existe → 201).
+está entre 1 y 10 → 403 si ya votó → **403 si es su propia entrega** → 404 si la entrega no
+existe → 201).
 
 **`RankingController`** (públicos): `GET /api/ranking` y
 `GET /api/challenges/results?producerId=X`.
@@ -1324,14 +1341,14 @@ challenges ──────► users (roles, verificar ganador)
 
 ## 12. Tests
 
-Hay **188 tests** en 43 archivos, en `src/test/java/com/mgwprod/`, con la misma estructura de
+Hay **196 tests** en 43 archivos, en `src/test/java/com/mgwprod/`, con la misma estructura de
 carpetas que el código. Se corren con:
 
 ```bash
 ./mvnw test
 ```
 
-Tiene que terminar con `Tests run: 188, Failures: 0, Errors: 0` y `BUILD SUCCESS`. **No hace
+Tiene que terminar con `Tests run: 196, Failures: 0, Errors: 0` y `BUILD SUCCESS`. **No hace
 falta tener MySQL prendido**: los tests usan H2 en memoria (sección 5).
 
 ### Los 4 tipos de test que hay
@@ -1424,20 +1441,20 @@ class BeatRepositoryTest {
 | Módulo | Archivo | Tests |
 |---|---|---|
 | — | `MgwProdApplicationTests` | 1 |
-| users | `AuthControllerTest` / `UserControllerTest` / `ArtistVerificationControllerTest` | 5 / 10 / 3 |
+| users | `AuthControllerTest` / `UserControllerTest` / `ArtistVerificationControllerTest` | 6 / 10 / 3 |
 | users | `AuthServiceTest` / `UserServiceTest` | 7 / 14 |
 | users | `PasswordHasherTest` / `SessionAuthInterceptorTest` | 3 / 3 |
 | users | `UserJsonTest` / `ProfileJsonTest` | 3 / 2 |
 | catalog | `BeatControllerTest` / `BeatCommentControllerTest` | 11 / 4 |
 | catalog | `BeatServiceTest` / `BeatCommentServiceTest` | 11 / 2 |
 | catalog | `BeatRepositoryTest` / `BeatCommentRepositoryTest` | 2 / 2 |
-| collab | `ToplineControllerTest` / `CollaborationControllerTest` / `CommentControllerTest` | 7 / 6 / 3 |
-| collab | `ToplineServiceTest` / `CollaborationServiceTest` / `CommentServiceTest` | 11 / 7 / 1 |
+| collab | `ToplineControllerTest` / `CollaborationControllerTest` / `CommentControllerTest` | 7 / 8 / 3 |
+| collab | `ToplineServiceTest` / `CollaborationServiceTest` / `CommentServiceTest` | 11 / 8 / 1 |
 | collab | `ToplineRepositoryTest` / `CollaborationRepositoryTest` / `CommentRepositoryTest` | 1 / 1 / 1 |
 | billing | `SubscriptionControllerTest` / `SubscriptionServiceTest` | 5 / 10 |
 | billing | `SubscriptionRepositoryTest` / `SimulatedPaymentGatewayTest` | 2 / 1 |
-| challenges | `ChallengeControllerTest` / `ChallengeCloseControllerTest` / `SubmissionControllerTest` / `VoteControllerTest` / `RankingControllerTest` | 10 / 3 / 4 / 2 / 2 |
-| challenges | `ChallengeServiceTest` / `ChallengeResultServiceTest` / `ChallengeScoringServiceTest` / `SubmissionServiceTest` / `VoteServiceTest` | 12 / 4 / 3 / 4 / 3 |
+| challenges | `ChallengeControllerTest` / `ChallengeCloseControllerTest` / `SubmissionControllerTest` / `VoteControllerTest` / `RankingControllerTest` | 10 / 4 / 4 / 3 / 2 |
+| challenges | `ChallengeServiceTest` / `ChallengeResultServiceTest` / `ChallengeScoringServiceTest` / `SubmissionServiceTest` / `VoteServiceTest` | 12 / 4 / 3 / 4 / 5 |
 | challenges | `ChallengeRepositoryTest` / `ChallengeResultRepositoryTest` / `SubmissionRepositoryTest` / `VoteRepositoryTest` | 1 / 1 / 1 / 2 |
 
 ---
@@ -1530,22 +1547,22 @@ no da 404). `JSON.stringify` convierte el objeto JavaScript en texto JSON.
 |---|---|---|---|---|---|
 | 1 | Usuarios | Registrar artista (`POST /api/auth/register`) | — | 201 | `artistEmail` (pre), `artistUserId` |
 | 2 | Usuarios | Login artista (`POST /api/auth/login`) | — | 200 | `artistToken` |
-| 3 | Usuarios | Registrar admin | — | 201 | `adminEmail` (pre) |
-| 4 | Usuarios | Login admin | — | 200 | `adminToken` |
-| 5 | Beats | Crear beat (`POST /api/beats`) | artista | 201 | `beatId` |
-| 6 | Beats | Listar beats (`GET /api/beats`) | — | 200 | |
-| 7 | Beats | Editar beat (`PUT /api/beats/{{beatId}}`, cambia título y bpm) | artista | 200 | |
-| 8 | Beats | Borrar beat (`DELETE`, con pre-request que lo crea) | artista | 204 | `beatToDeleteId` (pre) |
-| 9 | Toplines | Crear topline (`POST /api/toplines`, `"beat": {"id": {{beatId}}}`) | artista | 201 | `toplineId` |
-| 10 | Suscripción | Pasar a premium (`POST /api/subscriptions/upgrade`) | artista | 200 | |
-| 11 | Desafíos | Crear desafío (`guestArtistId` = el artista) | admin | 201 | `challengeId` |
-| 12 | Desafíos | Enviar entrega | artista | 201 | `submissionId` |
-| 13 | Desafíos | Votar la entrega (score 9) | admin | 201 | |
-| 14 | Desafíos | Cerrar desafío y ver podio | admin | 200 | |
-| 15 | Errores | Crear beat sin token | — | 401 | |
-| 16 | Errores | Beat que no existe (`GET /api/beats/999999`) | — | 404 | |
+| 3 | Usuarios | Login admin (`admin@mgw.com` / `admin1234`, el precargado) | — | 200 | `adminToken` |
+| 4 | Beats | Crear beat (`POST /api/beats`) | artista | 201 | `beatId` |
+| 5 | Beats | Listar beats (`GET /api/beats`) | — | 200 | |
+| 6 | Beats | Editar beat (`PUT /api/beats/{{beatId}}`, cambia título y bpm) | artista | 200 | |
+| 7 | Beats | Borrar beat (`DELETE`, con pre-request que lo crea) | artista | 204 | `beatToDeleteId` (pre) |
+| 8 | Toplines | Crear topline (`POST /api/toplines`, `"beat": {"id": {{beatId}}}`) | artista | 201 | `toplineId` |
+| 9 | Suscripción | Pasar a premium (`POST /api/subscriptions/upgrade`) | artista | 200 | |
+| 10 | Desafíos | Crear desafío (`guestArtistId` = el artista) | admin | 201 | `challengeId` |
+| 11 | Desafíos | Enviar entrega | artista | 201 | `submissionId` |
+| 12 | Desafíos | Votar la entrega (score 9) | admin | 201 | |
+| 13 | Desafíos | Cerrar desafío y ver podio | admin | 200 | |
+| 14 | Errores | Crear beat sin token | — | 401 | |
+| 15 | Errores | Beat que no existe (`GET /api/beats/999999`) | — | 404 | |
+| 16 | Errores | Registrar un admin (`"role": "ADMIN"`) | — | 403 | |
 
-**Qué mostrar en el cierre (request 14):** la respuesta es una lista con un resultado:
+**Qué mostrar en el cierre (request 13):** la respuesta es una lista con un resultado:
 `rank: 1`, `pointsAwarded: 500`, `badge: "Ganador del desafío"`, `prizeText: "Sesión de
 estudio"`. El puntaje fue `0.30 × 9` (el voto del admin cuenta como "comunidad") = 2.7.
 
@@ -1560,7 +1577,8 @@ El guion completo, con quién presenta cada parte y qué decir, está en `docs/G
 ### 13.6 La colección completa (53 requests, solo en main)
 
 Para repasar. Cubre GET-lista, GET-por-id, POST, PUT y DELETE de los 5 módulos, más una carpeta
-de errores con los 5 códigos (400, 401, 403, 404, 409). Carpetas: Users (14), Catalog (8),
+de errores con los 5 códigos (400, 401, 403, 404, 409). El "register (ADMIN)" ahora espera
+**403** y el login de admin usa la cuenta precargada. Carpetas: Users (14), Catalog (8),
 Collab (10), Challenges (13), Billing (3), Casos de error (5).
 
 ### 13.7 Si algo falla en la demo
@@ -1581,9 +1599,9 @@ Collab (10), Challenges (13), Billing (3), Casos de error (5).
 | **200 OK** | Salió bien, devuelvo datos | GET, PUT, login, upgrade, close |
 | **201 Created** | Se creó algo nuevo | Todos los POST que crean (register, beat, topline, desafío, entrega, voto, comentario) |
 | **204 No Content** | Salió bien, no hay nada que devolver | Todos los DELETE |
-| **400 Bad Request** | Mandaste datos inválidos | Campos vacíos, bpm < 1, score fuera de 1-10, contraseña < 8, opportunity pick de otro desafío |
+| **400 Bad Request** | Mandaste datos inválidos | Campos vacíos, bpm < 1, score fuera de 1-10, contraseña < 8, opportunity pick de otro desafío, decidir una colaboración con `PENDING` |
 | **401 Unauthorized** | No estás logueado (o el token es inválido/vencido) | Cualquier endpoint privado sin token; login incorrecto |
-| **403 Forbidden** | Estás logueado pero no tenés permiso | No sos el dueño, rol equivocado, límite del plan, deadline vencido, ya votaste, desafío cerrado |
+| **403 Forbidden** | No tenés permiso para eso | No sos el dueño, rol equivocado, límite del plan, deadline vencido, ya votaste, votar tu propia entrega, desafío cerrado (editar, borrar o cerrar de nuevo), colaboración ya decidida, registrarse como ADMIN |
 | **404 Not Found** | No existe | Cualquier id que no está en la base |
 | **409 Conflict** | Choca con algo existente | Email ya registrado; borrar un usuario con beats |
 | **500** | Error del servidor (bug) | No debería pasar; ver sección 16 |
@@ -1640,6 +1658,13 @@ Se ignora: el service lo pisa con el `userId` de la sesión.
 La consigna ya no pide e-commerce real. Hicimos la interfaz `PaymentGateway` para que conectar
 un pago real (por ejemplo Mercado Pago) sea agregar una clase nueva sin tocar el service.
 
+**¿Cómo se crea un admin?**
+No por la API: `/api/auth/register` responde 403 si piden el rol ADMIN. El único admin viene
+cargado en `schema.sql` con su contraseña ya hasheada (`admin@mgw.com` / `admin1234`).
+
+**¿Qué pasa si cierran un desafío dos veces?**
+La segunda vez responde 403: `isClosed` ve que ya tiene resultados.
+
 **¿Para qué sirve el interceptor?**
 Para no repetir en cada controller el código de "leer el token y buscar la sesión". Se escribe
 una vez y se aplica a todo `/api/**` menos login y registro.
@@ -1661,14 +1686,19 @@ una vez y se aplica a todo `/api/**` menos login y registro.
 3. **Jackson y `@AllArgsConstructor` en `User`.** Con el constructor con todos los campos,
    Jackson 3 fallaba al registrarse si faltaba algún campo. Se dejó solo `@NoArgsConstructor`.
 
+4. **Problemas encontrados en la revisión del código (arreglados, con tests nuevos):**
+
+   | Problema | Qué pasaba | Arreglo |
+   |---|---|---|
+   | Cualquiera podía registrarse como ADMIN | `/api/auth/register` aceptaba cualquier rol | 403 si piden ADMIN; el admin viene precargado en `schema.sql` |
+   | Cerrar un desafío dos veces daba 500 | El segundo cierre guardaba resultados repetidos y la base los rechazaba | `ChallengeCloseController` responde 403 si `isClosed` |
+   | Una colaboración se podía volver a decidir (incluso volver a `PENDING`) | `decide` no miraba el estado actual | 400 si mandan `PENDING`; 403 si ya no está pendiente (`isPending`) |
+   | Se podía votar la propia entrega | Nadie comparaba votante con productor | 403 con `VoteService.isOwnSubmission` |
+
 ### Limitaciones que siguen (saberlas por si preguntan)
 
 | Limitación | Por qué pasa | Cómo se arreglaría |
 |---|---|---|
-| **Cualquiera puede registrarse como ADMIN** | `/api/auth/register` acepta cualquier rol | Que el registro solo permita ARTIST/DISCOGRAFICA y el admin se cree a mano en la base |
-| **Cerrar un desafío dos veces da 500** | `close` no chequea `isClosed`, y el segundo cierre intenta guardar resultados repetidos (`submission_id` es UNIQUE) | En `ChallengeCloseController`, si `isClosed(id)` → 403 antes de cerrar |
-| **Una colaboración se puede volver a decidir** (incluso volver a `PENDING`) | `decide` no mira el estado actual | Solo permitir decidir si está `PENDING` y solo con ACCEPTED/REJECTED |
-| **Se puede votar la propia entrega** | `VoteController` no compara votante con productor | Chequear `submission.getProducerId()` distinto del votante |
 | **No hay logout** | Las sesiones solo vencen a las 24 hs | Un `DELETE /api/auth/logout` que borre la sesión |
 | **Condiciones de carrera en el contador del plan** | Dos publicaciones al mismo tiempo pueden pasar el límite de 50 | Bloqueo en la base (no visto en clase) |
 | **SHA-256 es rápido** | Para contraseñas conviene un algoritmo lento (bcrypt) | Usar bcrypt (viene con Spring Security) |

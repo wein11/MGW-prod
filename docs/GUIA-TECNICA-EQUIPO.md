@@ -311,7 +311,7 @@ los módulos "de abajo" — otros dependen de ellos, ellos no dependen de nadie 
 
 ## 5. Tests
 
-**188 tests, 0 failures** (verificado corriendo `./mvnw test` el 20/09), organizados por módulo
+**196 tests, 0 failures** (verificado corriendo `./mvnw test` el 22/09), organizados por módulo
 calcando la estructura de `src/main`, con estos tipos:
 
 - **`*ServiceTest`** — unit tests con Mockito, mockean repositorios y services de otros
