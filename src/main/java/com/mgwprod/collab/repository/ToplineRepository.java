@@ -9,5 +9,6 @@ public interface ToplineRepository extends JpaRepository<Topline, Long> {
     // Aunque el campo se llame `beat` (objeto Beat), Spring Data resuelve
     // findByBeatId como WHERE beat_id = ? sobre esa relación.
     List<Topline> findByBeatId(Long beatId);
+    // SELECT * FROM toplines WHERE artist_id = ?
     List<Topline> findByArtistId(Long artistId);
 }

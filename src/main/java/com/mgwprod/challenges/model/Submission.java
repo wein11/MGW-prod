@@ -45,6 +45,7 @@ public class Submission {
     @Column(name = "submitted_at", nullable = false, updatable = false)
     private Instant submittedAt;
 
+    // Se ejecuta solo antes del INSERT y guarda la fecha de entrega.
     @PrePersist
     protected void onCreate() {
         this.submittedAt = Instant.now();

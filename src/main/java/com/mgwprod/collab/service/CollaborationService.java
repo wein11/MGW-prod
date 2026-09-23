@@ -30,6 +30,7 @@ public class CollaborationService {
         this.userRepository = userRepository;
     }
 
+    // Busca una colaboración por id; null si no existe.
     @Transactional(readOnly = true)
     public Collaboration getById(Long id) {
         return collaborationRepository.findById(id).orElse(null);
@@ -44,6 +45,7 @@ public class CollaborationService {
         return topline != null && topline.getBeat().getProducerId().equals(requestingUserId);
     }
 
+    // Guarda la decisión del productor (ACCEPTED/REJECTED) y la fecha en que decidió.
     @Transactional
     public Collaboration decide(Long collaborationId, CollaborationStatus decision) {
         Collaboration collaboration = getById(collaborationId);
@@ -55,6 +57,7 @@ public class CollaborationService {
         return collaborationRepository.save(collaboration);
     }
 
+    // Si viene status filtra por ese estado; si no, devuelve todas.
     @Transactional(readOnly = true)
     public List<Collaboration> listByStatus(CollaborationStatus status) {
         if (status != null) {
@@ -82,6 +85,7 @@ public class CollaborationService {
         return requester != null && requester.getRole() == Role.ADMIN;
     }
 
+    // Borra la colaboración. Los permisos ya los chequeó el controller con canDelete.
     @Transactional
     public void delete(Long id) {
         collaborationRepository.deleteById(id);

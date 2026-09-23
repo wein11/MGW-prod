@@ -18,7 +18,7 @@ public class VoteService {
         this.submissionService = submissionService;
     }
 
-    // El controller la usa para devolver 409 antes de crear — un mismo voter no puede
+    // El controller la usa para devolver 403 antes de crear — un mismo voter no puede
     // votar dos veces la misma submission.
     @Transactional(readOnly = true)
     public boolean alreadyVoted(Long submissionId, Long voterId) {

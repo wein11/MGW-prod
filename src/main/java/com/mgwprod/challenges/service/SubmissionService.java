@@ -20,8 +20,8 @@ public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
-    // Se depende de ChallengeRepository (no de ChallengeService) para evitar el ciclo de
-    // beans: desde Task 8 ChallengeService depende de SubmissionService (opportunity-pick).
+    // Se usa ChallengeRepository y no ChallengeService porque ChallengeService ya depende
+    // de SubmissionService: si cada uno dependiera del otro, Spring no podría crearlos.
     private final ChallengeRepository challengeRepository;
 
     public SubmissionService(SubmissionRepository submissionRepository,
@@ -39,6 +39,7 @@ public class SubmissionService {
         return user != null && user.getRole() == Role.ARTIST;
     }
 
+    // Busca el challenge de la entrega; null si no existe.
     @Transactional(readOnly = true)
     public Challenge getChallenge(Long challengeId) {
         return challengeRepository.findById(challengeId).orElse(null);
@@ -63,11 +64,13 @@ public class SubmissionService {
         return submissionRepository.save(submission);
     }
 
+    // Todas las entregas de un challenge.
     @Transactional(readOnly = true)
     public List<Submission> listByChallenge(Long challengeId) {
         return submissionRepository.findByChallengeId(challengeId);
     }
 
+    // Busca una entrega por id; null si no existe.
     @Transactional(readOnly = true)
     public Submission getById(Long id) {
         return submissionRepository.findById(id).orElse(null);

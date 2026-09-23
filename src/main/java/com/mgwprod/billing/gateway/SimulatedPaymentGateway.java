@@ -11,6 +11,7 @@ import java.util.UUID;
 @Component
 public class SimulatedPaymentGateway implements PaymentGateway {
 
+    // Siempre aprueba: no hay dinero real de por medio.
     @Override
     public PaymentResult charge(Long userId, BigDecimal amount) {
         return new PaymentResult(true, "SIMULATED-" + UUID.randomUUID());

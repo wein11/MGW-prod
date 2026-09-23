@@ -78,6 +78,7 @@ public class ToplineService {
         return saved;
     }
 
+    // Filtra por beat, o por artista, o devuelve todos (en ese orden de prioridad).
     @Transactional(readOnly = true)
     public List<Topline> list(Long beatId, Long artistId) {
         if (beatId != null) {
@@ -89,6 +90,7 @@ public class ToplineService {
         return toplineRepository.findAll();
     }
 
+    // Busca un topline por id; null si no existe.
     @Transactional(readOnly = true)
     public Topline getById(Long id) {
         return toplineRepository.findById(id).orElse(null);
@@ -104,6 +106,7 @@ public class ToplineService {
         return requester != null && requester.getRole() == Role.ADMIN;
     }
 
+    // Update parcial: por ahora lo único editable es el audioUrl.
     @Transactional
     public Topline update(Long id, Topline request) {
         Topline topline = getById(id);
@@ -116,6 +119,7 @@ public class ToplineService {
         return toplineRepository.save(topline);
     }
 
+    // Borra el topline. Los permisos ya los chequeó el controller con canModify.
     @Transactional
     public void delete(Long id) {
         toplineRepository.deleteById(id);

@@ -38,6 +38,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    // GET /api/users/{id}/profile -> perfil de artista (géneros, bio, BPM...). Público.
     @GetMapping("/{id}/profile")
     public ResponseEntity<ArtistProfile> getProfile(@PathVariable Long id) {
         User user = userService.getById(id);
@@ -73,6 +74,7 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
+    // PUT /api/users/{id}/artist-profile -> el artista edita su propio perfil.
     @PutMapping("/{id}/artist-profile")
     public ResponseEntity<ArtistProfile> updateArtistProfile(@PathVariable Long id,
                                                               @RequestAttribute(name = "userId", required = false) Long requestingUserId,

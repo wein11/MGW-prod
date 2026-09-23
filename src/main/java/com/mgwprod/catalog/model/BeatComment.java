@@ -45,6 +45,7 @@ public class BeatComment {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    // Se ejecuta solo antes del INSERT y guarda la fecha de creación.
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();

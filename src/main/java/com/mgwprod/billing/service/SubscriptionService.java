@@ -40,6 +40,7 @@ public class SubscriptionService {
         return userRepository.findById(userId).isPresent();
     }
 
+    // true si el usuario existe y tiene rol ARTIST (solo los artistas tienen plan).
     @Transactional(readOnly = true)
     public boolean isArtist(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
@@ -76,6 +77,7 @@ public class SubscriptionService {
         return subscriptionRepository.save(subscription);
     }
 
+    // Pasa el plan a FREE. No devuelve plata: es una simulación.
     @Transactional
     public Subscription downgrade(Long userId) {
         Subscription subscription = getOrCreate(userId);

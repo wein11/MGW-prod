@@ -24,6 +24,7 @@ public class SessionAuthInterceptor implements HandlerInterceptor {
         this.sessionRepository = sessionRepository;
     }
 
+    // Devolver true = el request sigue hacia el controller; false = se corta acá (401).
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String header = request.getHeader("Authorization");

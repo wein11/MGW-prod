@@ -47,6 +47,10 @@ Grupo: Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi.
 
 ## Cómo probar el backend en vivo (Postman)
 
+**Para la defensa se usa la demo corta:** `docs/api/mgw-prod-demo.postman_collection.json`
+(16 requests, un bloque por módulo). El guion de qué decir en cada request está en
+`docs/GUIA-DEMO-POSTMAN.md`. La colección completa de abajo es para repasar.
+
 El requisito de la Etapa 1 es demostrar el CRUD completo con solicitudes HTTP reales, sin
 correr ningún `main()` de prueba. Para eso está `docs/api/mgw-prod.postman_collection.json`
 (Collection v2.1) + `docs/api/mgw-prod.postman_environment.json` (Environment):

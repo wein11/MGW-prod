@@ -55,12 +55,14 @@ public class ToplineController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    // GET /api/toplines?beatId=X o ?artistId=Y -> lista toplines, con filtro opcional.
     @GetMapping
     public List<Topline> listToplines(@RequestParam(required = false) Long beatId,
                                        @RequestParam(required = false) Long artistId) {
         return toplineService.list(beatId, artistId);
     }
 
+    // GET /api/toplines/{id} -> devuelve un topline o 404.
     @GetMapping("/{id}")
     public ResponseEntity<Topline> getTopline(@PathVariable Long id) {
         Topline topline = toplineService.getById(id);
@@ -70,6 +72,7 @@ public class ToplineController {
         return ResponseEntity.ok(topline);
     }
 
+    // PUT /api/toplines/{id} -> edita un topline. Solo el artista que lo subió o un admin.
     @PutMapping("/{id}")
     public ResponseEntity<Topline> updateTopline(@PathVariable Long id,
                                                   @RequestAttribute(name = "userId", required = false) Long userId,
@@ -87,6 +90,7 @@ public class ToplineController {
         return ResponseEntity.ok(toplineService.update(id, topline));
     }
 
+    // DELETE /api/toplines/{id} -> borra un topline. Solo el artista que lo subió o un admin.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTopline(@PathVariable Long id,
                                                @RequestAttribute(name = "userId", required = false) Long userId) {

@@ -95,6 +95,7 @@ public class BeatService {
         return beatRepository.save(beat);
     }
 
+    // Borra el beat por id. Los permisos ya los chequeó el controller con canModify.
     @Transactional
     public void delete(Long id) {
         beatRepository.deleteById(id);

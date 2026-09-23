@@ -22,6 +22,7 @@ public class SubscriptionController {
         this.subscriptionService = subscriptionService;
     }
 
+    // GET /api/subscriptions/me -> devuelve el plan del usuario logueado (si no tenía, se le crea FREE).
     @GetMapping("/me")
     public ResponseEntity<Subscription> me(@RequestAttribute(name = "userId", required = false) Long userId) {
         ResponseEntity<Subscription> error = checkAccess(userId);
@@ -31,6 +32,7 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.getOrCreate(userId));
     }
 
+    // POST /api/subscriptions/upgrade -> cobra (simulado) y pasa el plan a PREMIUM.
     @PostMapping("/upgrade")
     public ResponseEntity<Subscription> upgrade(@RequestAttribute(name = "userId", required = false) Long userId) {
         ResponseEntity<Subscription> error = checkAccess(userId);
@@ -40,6 +42,7 @@ public class SubscriptionController {
         return ResponseEntity.ok(subscriptionService.upgrade(userId));
     }
 
+    // PUT /api/subscriptions/downgrade -> vuelve el plan a FREE.
     @PutMapping("/downgrade")
     public ResponseEntity<Subscription> downgrade(@RequestAttribute(name = "userId", required = false) Long userId) {
         ResponseEntity<Subscription> error = checkAccess(userId);

@@ -49,6 +49,7 @@ public class PasswordHasher {
         return salt;
     }
 
+    // Calcula SHA-256(salt + contraseña). Mismo input siempre da el mismo hash.
     private byte[] digest(String rawPassword, byte[] salt) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

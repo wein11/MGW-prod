@@ -40,28 +40,33 @@ public class ChallengeService {
         return user != null && (user.getRole() == Role.ADMIN || user.getRole() == Role.DISCOGRAFICA);
     }
 
+    // true si existe un usuario con ese id (se usa para validar el guestArtistId).
     @Transactional(readOnly = true)
     public boolean userExists(Long userId) {
         return userRepository.findById(userId).isPresent();
     }
 
+    // true si el usuario existe y es ARTIST (el invitado tiene que ser artista).
     @Transactional(readOnly = true)
     public boolean isArtist(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
         return user != null && user.getRole() == Role.ARTIST;
     }
 
+    // Guarda el challenge nuevo anotando quién lo creó (sale de la sesión, no del JSON).
     @Transactional
     public Challenge create(Long requestingUserId, Challenge challenge) {
         challenge.setCreatedBy(requestingUserId);
         return challengeRepository.save(challenge);
     }
 
+    // Devuelve todos los challenges.
     @Transactional(readOnly = true)
     public List<Challenge> list() {
         return challengeRepository.findAll();
     }
 
+    // Busca un challenge por id; null si no existe.
     @Transactional(readOnly = true)
     public Challenge getById(Long id) {
         return challengeRepository.findById(id).orElse(null);
@@ -102,6 +107,7 @@ public class ChallengeService {
         return challengeResultRepository.existsByChallengeId(challengeId);
     }
 
+    // Update parcial: solo cambia título, tema y deadline si vinieron en el request.
     @Transactional
     public Challenge update(Long id, Challenge request) {
         Challenge challenge = getById(id);
@@ -114,6 +120,7 @@ public class ChallengeService {
         return challengeRepository.save(challenge);
     }
 
+    // Borra el challenge. Los permisos y el 'no está cerrado' ya los chequeó el controller.
     @Transactional
     public void delete(Long id) {
         challengeRepository.deleteById(id);

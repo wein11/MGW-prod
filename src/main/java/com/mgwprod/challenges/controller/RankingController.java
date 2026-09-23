@@ -20,11 +20,13 @@ public class RankingController {
         this.challengeResultService = challengeResultService;
     }
 
+    // GET /api/ranking -> productores ordenados por puntos totales.
     @GetMapping("/api/ranking")
     public List<RankingEntry> ranking() {
         return challengeResultService.ranking();
     }
 
+    // GET /api/challenges/results?producerId=X -> resultados (todos, o solo los de un productor).
     @GetMapping("/api/challenges/results")
     public List<ChallengeResult> results(@RequestParam(required = false) Long producerId) {
         return challengeResultService.listResults(producerId);

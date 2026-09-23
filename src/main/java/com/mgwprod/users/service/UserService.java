@@ -31,11 +31,13 @@ public class UserService {
         return userRepository.findById(userId).orElse(null);
     }
 
+    // true si el usuario tiene rol ARTIST.
     @Transactional(readOnly = true)
     public boolean isArtist(User user) {
         return user.getRole() == Role.ARTIST;
     }
 
+    // true si el usuario tiene rol ADMIN.
     @Transactional(readOnly = true)
     public boolean isAdmin(User user) {
         return user.getRole() == Role.ADMIN;

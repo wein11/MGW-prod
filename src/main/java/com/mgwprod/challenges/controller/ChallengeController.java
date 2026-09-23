@@ -66,11 +66,13 @@ public class ChallengeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    // GET /api/challenges -> lista todos los challenges (público).
     @GetMapping
     public List<Challenge> listChallenges() {
         return challengeService.list();
     }
 
+    // GET /api/challenges/{id} -> devuelve un challenge o 404.
     @GetMapping("/{id}")
     public ResponseEntity<Challenge> getChallenge(@PathVariable Long id) {
         Challenge challenge = challengeService.getById(id);
