@@ -83,6 +83,7 @@ public class Challenge {
     @JsonIgnore
     private List<Submission> submissions;
 
+    // Se ejecuta solo antes del INSERT y guarda la fecha de creación.
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();

@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 // etc.) en todo el paquete com.mgwprod y sus subpaquetes.
 @SpringBootApplication
 public class MgwProdApplication {
+    // Arranca Spring Boot: levanta el servidor en el puerto 8080 y crea todos los beans.
     public static void main(String[] args) {
         SpringApplication.run(MgwProdApplication.class, args);
     }

@@ -25,6 +25,7 @@ public class CommentController {
         this.commentService = commentService;
     }
 
+    // POST /api/toplines/{toplineId}/comments -> comenta un topline (hay que estar logueado).
     @PostMapping
     public ResponseEntity<Comment> createComment(@PathVariable Long toplineId,
                                                   @RequestAttribute(name = "userId", required = false) Long userId,
@@ -42,6 +43,7 @@ public class CommentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    // GET /api/toplines/{toplineId}/comments -> lista los comentarios del topline.
     @GetMapping
     public ResponseEntity<List<Comment>> listComments(@PathVariable Long toplineId) {
         List<Comment> comments = commentService.listByTopline(toplineId);

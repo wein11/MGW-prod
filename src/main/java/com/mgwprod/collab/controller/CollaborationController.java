@@ -48,11 +48,13 @@ public class CollaborationController {
         return ResponseEntity.ok(collaborationService.decide(id, status));
     }
 
+    // GET /api/collaborations?status=PENDING -> lista colaboraciones, opcionalmente filtradas por estado.
     @GetMapping
     public List<Collaboration> list(@RequestParam(required = false) CollaborationStatus status) {
         return collaborationService.listByStatus(status);
     }
 
+    // DELETE /api/collaborations/{id} -> la puede borrar el artista, el productor o un admin.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCollaboration(@PathVariable Long id,
                                                      @RequestAttribute(name = "userId", required = false) Long userId) {

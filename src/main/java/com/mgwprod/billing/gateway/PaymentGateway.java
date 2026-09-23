@@ -6,5 +6,6 @@ import java.math.BigDecimal;
 // esta misma interfaz y se enchufa sin tocar SubscriptionService ni ningún otro
 // consumidor — el service depende de la interfaz, nunca de la implementación concreta.
 public interface PaymentGateway {
+    // Cobra `amount` al usuario y devuelve si se aprobó + una referencia del pago.
     PaymentResult charge(Long userId, BigDecimal amount);
 }

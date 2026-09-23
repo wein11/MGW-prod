@@ -23,6 +23,7 @@ public class ArtistVerificationController {
         this.userService = userService;
     }
 
+    // PUT /api/artists/{id}/verify -> un admin marca a un artista como verificado.
     @PutMapping("/api/artists/{id}/verify")
     public ResponseEntity<ArtistProfile> verify(@PathVariable Long id,
                                                  @RequestAttribute(name = "userId", required = false) Long requestingUserId) {

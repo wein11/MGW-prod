@@ -18,6 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
         this.sessionRepository = sessionRepository;
     }
 
+    // Spring llama a este método al arrancar para registrar nuestros interceptores.
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // Aplica a todo endpoint /api/** EXCEPTO /api/auth/** (register/login), porque

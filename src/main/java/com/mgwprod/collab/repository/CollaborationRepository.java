@@ -10,5 +10,6 @@ import java.util.Optional;
 public interface CollaborationRepository extends JpaRepository<Collaboration, Long> {
     // Como toplineId es unique en la entidad, esta consulta siempre trae 0 o 1 resultado.
     Optional<Collaboration> findByToplineId(Long toplineId);
+    // SELECT * FROM collaborations WHERE status = ?
     List<Collaboration> findByStatus(CollaborationStatus status);
 }

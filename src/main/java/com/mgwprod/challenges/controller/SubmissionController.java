@@ -53,6 +53,7 @@ public class SubmissionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    // GET /api/challenges/{challengeId}/submissions -> lista las entregas del challenge.
     @GetMapping
     public List<Submission> listSubmissions(@PathVariable Long challengeId) {
         return submissionService.listByChallenge(challengeId);

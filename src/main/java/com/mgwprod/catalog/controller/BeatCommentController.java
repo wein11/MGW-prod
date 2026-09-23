@@ -44,6 +44,7 @@ public class BeatCommentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    // GET /api/beats/{beatId}/comments -> lista los comentarios del beat (404 si el beat no existe).
     @GetMapping
     public ResponseEntity<List<BeatComment>> listComments(@PathVariable Long beatId) {
         List<BeatComment> comments = beatCommentService.listByBeat(beatId);

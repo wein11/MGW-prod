@@ -193,6 +193,7 @@ public class ChallengeResultService {
         return null;
     }
 
+    // Marca como verificado el perfil del ganador (si tiene perfil de artista).
     private void verifyWinner(Long producerId) {
         Optional<ArtistProfile> profileOpt = artistProfileRepository.findByUserId(producerId);
         if (profileOpt.isPresent()) {

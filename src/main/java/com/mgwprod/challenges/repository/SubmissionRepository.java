@@ -9,5 +9,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     // Aunque el campo se llame `challenge` (objeto Challenge), Spring Data resuelve
     // findByChallengeId como WHERE challenge_id = ? sobre esa relación.
     List<Submission> findByChallengeId(Long challengeId);
+    // Todas las entregas de un productor (se usa para filtrar sus resultados).
     List<Submission> findByProducerId(Long producerId);
 }

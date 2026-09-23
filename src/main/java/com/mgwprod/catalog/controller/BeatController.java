@@ -68,6 +68,7 @@ public class BeatController {
         return beatService.list(genre, bpm, producerId);
     }
 
+    // GET /api/beats/{id} -> devuelve un beat o 404 si no existe.
     @GetMapping("/{id}")
     public ResponseEntity<Beat> getBeat(@PathVariable Long id) {
         Beat beat = beatService.getById(id);
@@ -77,6 +78,7 @@ public class BeatController {
         return ResponseEntity.ok(beat);
     }
 
+    // PUT /api/beats/{id} -> edita un beat. Solo el dueño o un admin (si no, 403).
     @PutMapping("/{id}")
     public ResponseEntity<Beat> updateBeat(@PathVariable Long id,
                                             @RequestAttribute(name = "userId", required = false) Long userId,
@@ -94,6 +96,7 @@ public class BeatController {
         return ResponseEntity.ok(beatService.update(id, beat));
     }
 
+    // DELETE /api/beats/{id} -> borra un beat. Solo el dueño o un admin. Devuelve 204 sin body.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBeat(@PathVariable Long id,
                                             @RequestAttribute(name = "userId", required = false) Long userId) {

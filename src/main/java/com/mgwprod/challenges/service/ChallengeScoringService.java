@@ -18,6 +18,7 @@ public class ChallengeScoringService {
     private static final double VERIFIED_WEIGHT = 0.30;
     private static final double GUEST_WEIGHT = 0.40;
 
+    // Devuelve el puntaje final: 30% promedio comunidad + 30% promedio verificados + 40% voto del invitado.
     public double computeScore(Long guestArtistId, Set<Long> verifiedProducerIds, List<Vote> votes) {
         List<Integer> communityScores = new ArrayList<>();
         List<Integer> verifiedScores = new ArrayList<>();
