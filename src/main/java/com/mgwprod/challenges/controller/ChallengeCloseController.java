@@ -41,6 +41,11 @@ public class ChallengeCloseController {
         if (challenge == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+        // Un challenge ya cerrado no se puede volver a cerrar: sus resultados ya están
+        // guardados y el segundo cierre intentaría guardarlos repetidos.
+        if (challengeService.isClosed(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
         return ResponseEntity.ok(challengeResultService.close(challenge));
     }
 }

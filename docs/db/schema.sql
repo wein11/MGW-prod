@@ -139,3 +139,8 @@ CREATE TABLE subscriptions (
     created_at DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- Único usuario admin. No se puede registrar un admin por la API, así que viene cargado acá.
+-- Login: admin@mgw.com / admin1234
+INSERT INTO users (email, password_hash, display_name, role, created_at)
+VALUES ('admin@mgw.com', 'o5rW7U+M0v9WF1FY4KcPfQ==:vaXo23w6qzq8KmKME5b2koDyzygiC1FRxcVIGMAiUtg=', 'Admin', 'ADMIN', NOW());

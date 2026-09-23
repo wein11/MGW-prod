@@ -37,6 +37,10 @@ public class VoteController {
         if (voteService.alreadyVoted(submissionId, userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
+        // Nadie puede votar su propia entrega.
+        if (voteService.isOwnSubmission(submissionId, userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
         Vote created = voteService.create(submissionId, userId, vote);
         if (created == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);

@@ -43,7 +43,7 @@ Grupo: Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi.
    ./mvnw test
    ```
 
-   Debería dar **188 tests, 0 failures**.
+   Debería dar **196 tests, 0 failures**.
 
 ## Cómo probar el backend en vivo (Postman)
 
@@ -62,8 +62,8 @@ correr ningún `main()` de prueba. Para eso está `docs/api/mgw-prod.postman_col
    click derecho sobre **mgw-prod** → **Run collection** → Run.
 4. Debería terminar con **53 requests, 0 errores**.
 
-La Collection está armada para auto-sembrarse: registra y loguea un ARTIST, una DISCOGRAFICA
-y un ADMIN de prueba al principio, y encadena los IDs/tokens que va generando (beat, topline,
+La Collection está armada para auto-sembrarse: registra y loguea un ARTIST y una DISCOGRAFICA,
+y loguea el ADMIN precargado en `schema.sql` (`admin@mgw.com` / `admin1234`) al principio, y encadena los IDs/tokens que va generando (beat, topline,
 challenge, submission, etc.) request por request — no hace falta pegar nada a mano. Cubre los
 5 módulos con al menos un GET-lista, GET-por-id, POST, PUT y DELETE cada uno, más una carpeta
 final **"Casos de error"** con un ejemplo de cada código que pide la rúbrica: 404 (recurso

@@ -186,21 +186,15 @@
           }
         },
         {
-          "name": "POST /api/auth/register (ADMIN)",
+          "name": "POST /api/auth/register (ADMIN) -> 403",
           "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "exec": [
-                  "pm.variables.set('adminEmailGenerated', 'admin' + Date.now() + '@mgw.test');"
-                ]
-              }
-            },
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.environment.set('adminEmail', pm.variables.get('adminEmailGenerated'));"
+                  "pm.test(\"Status 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
                 ]
               }
             }
@@ -215,7 +209,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{adminEmailGenerated}}\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Admin Demo\",\n  \"role\": \"ADMIN\",\n  \"city\": \"Buenos Aires\"\n}"
+              "raw": "{\n  \"email\": \"otro-admin@mgw.test\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Admin trucho\",\n  \"role\": \"ADMIN\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
@@ -228,7 +222,7 @@
                 "register"
               ]
             },
-            "description": "La entidad User no restringe el role en el register — cualquiera puede auto-asignarse ADMIN. Es un gap de seguridad conocido del proyecto (fuera del alcance de Etapa 1), aprovechado acá solo para sembrar un admin de prueba sin tocar la BD a mano."
+            "description": "Registrarse como ADMIN está prohibido. El admin ya viene cargado en docs/db/schema.sql (admin@mgw.com / admin1234)."
           }
         },
         {
@@ -254,7 +248,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"secret123\"\n}"
+              "raw": "{\n  \"email\": \"admin@mgw.com\",\n  \"password\": \"admin1234\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",

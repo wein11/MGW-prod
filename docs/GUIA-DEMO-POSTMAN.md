@@ -42,8 +42,10 @@ siguiente (token, id del beat, id del desafío...). Si alguien se saltea uno, el
 |---|---|---|---|
 | 1 | Registrar artista → **201** | Body con email, password, rol. En la respuesta **no** aparece la contraseña: se guarda solo el hash. | `AuthController.register` → `AuthService.register` → `PasswordHasher.hash` |
 | 2 | Login artista → **200** | Devuelve un `token`. Postman lo guarda en `artistToken`. | `AuthService.login` crea una `Session` |
-| 3 | Registrar admin → **201** | Mismo endpoint, otro rol. | |
-| 4 | Login admin → **200** | Guarda `adminToken`. | |
+| 3 | Login admin → **200** | El admin no se registra: viene cargado en `schema.sql` (`admin@mgw.com` / `admin1234`). Guarda `adminToken`. | |
+
+Pregunta probable: *¿de dónde sale el admin?* → viene cargado en `docs/db/schema.sql` con la
+contraseña ya hasheada; registrarse como ADMIN da 403 (lo mostramos al final, request 16).
 
 Pregunta probable: *¿cómo sabe el backend quién hace cada request?* → `SessionAuthInterceptor`
 lee el header `Authorization`, busca el token en la tabla `sessions` y deja el `userId` en el
@@ -53,10 +55,10 @@ request; el controller lo recibe con `@RequestAttribute`.
 
 | # | Request | Qué mostrar / decir | Código que corre |
 |---|---|---|---|
-| 5 | Crear beat → **201** | POST con token de artista. El `producerId` no va en el body: lo saca el backend de la sesión. | `BeatController.createBeat` → `BeatService.create` |
-| 6 | Listar beats → **200** | GET público, sin token. Acepta filtros `?genre=Trap&bpm=140`. | `BeatService.list` |
-| 7 | Editar beat → **200** | PUT parcial: solo cambia `title` y `bpm`, el resto queda igual. | `BeatService.update` |
-| 8 | Borrar beat → **204** | Mostrar el Pre-request Script: primero crea un beat y después lo borra. 204 = OK sin body. | `BeatService.canModify` + `delete` |
+| 4 | Crear beat → **201** | POST con token de artista. El `producerId` no va en el body: lo saca el backend de la sesión. | `BeatController.createBeat` → `BeatService.create` |
+| 5 | Listar beats → **200** | GET público, sin token. Acepta filtros `?genre=Trap&bpm=140`. | `BeatService.list` |
+| 6 | Editar beat → **200** | PUT parcial: solo cambia `title` y `bpm`, el resto queda igual. | `BeatService.update` |
+| 7 | Borrar beat → **204** | Mostrar el Pre-request Script: primero crea un beat y después lo borra. 204 = OK sin body. | `BeatService.canModify` + `delete` |
 
 Pregunta probable: *¿qué pasa si otro usuario quiere editar tu beat?* → `canModify` devuelve
 false y el controller responde **403**.
@@ -65,8 +67,8 @@ false y el controller responde **403**.
 
 | # | Request | Qué mostrar / decir | Código que corre |
 |---|---|---|---|
-| 9 | Crear topline sobre el beat → **201** | El body lleva `"beat": {"id": ...}` porque `Topline` tiene una relación `@ManyToOne` con `Beat`. Al crearlo se crea sola una `Collaboration` en PENDING. | `ToplineService.create` |
-| 10 | Pasar a plan premium → **200** | El pago es simulado (`SimulatedPaymentGateway`, siempre aprueba). La respuesta muestra `plan: PREMIUM`. | `SubscriptionService.upgrade` |
+| 8 | Crear topline sobre el beat → **201** | El body lleva `"beat": {"id": ...}` porque `Topline` tiene una relación `@ManyToOne` con `Beat`. Al crearlo se crea sola una `Collaboration` en PENDING. | `ToplineService.create` |
+| 9 | Pasar a plan premium → **200** | El pago es simulado (`SimulatedPaymentGateway`, siempre aprueba). La respuesta muestra `plan: PREMIUM`. | `SubscriptionService.upgrade` |
 
 Pregunta probable: *¿para qué sirve el plan?* → el plan FREE tiene un límite de 50
 producciones (beats + toplines); PREMIUM no tiene límite.
@@ -75,10 +77,10 @@ producciones (beats + toplines); PREMIUM no tiene límite.
 
 | # | Request | Qué mostrar / decir | Código que corre |
 |---|---|---|---|
-| 11 | Crear desafío (admin) → **201** | Solo ADMIN o DISCOGRAFICA pueden crear. `guestArtistId` es el artista invitado que hace de jurado. | `ChallengeService.canCreateChallenge` + `create` |
-| 12 | Enviar entrega → **201** | El artista sube su audio antes del deadline. | `SubmissionService.create` |
-| 13 | Votar la entrega → **201** | Puntaje de 1 a 10. Un mismo usuario no puede votar dos veces. | `VoteService.alreadyVoted` + `create` |
-| 14 | Cerrar desafío y ver podio → **200** | Calcula el puntaje de cada entrega y devuelve el top 3 con puntos y premio. | `ChallengeResultService.close` + `ChallengeScoringService.computeScore` |
+| 10 | Crear desafío (admin) → **201** | Solo ADMIN o DISCOGRAFICA pueden crear. `guestArtistId` es el artista invitado que hace de jurado. | `ChallengeService.canCreateChallenge` + `create` |
+| 11 | Enviar entrega → **201** | El artista sube su audio antes del deadline. | `SubmissionService.create` |
+| 12 | Votar la entrega → **201** | Puntaje de 1 a 10. Un mismo usuario no puede votar dos veces. | `VoteService.alreadyVoted` + `create` |
+| 13 | Cerrar desafío y ver podio → **200** | Calcula el puntaje de cada entrega y devuelve el top 3 con puntos y premio. | `ChallengeResultService.close` + `ChallengeScoringService.computeScore` |
 
 Pregunta probable: *¿cómo se calcula el puntaje?* → 30% promedio de la comunidad + 30%
 promedio de productores verificados + 40% voto del artista invitado. El podio se ordena con un
@@ -88,8 +90,9 @@ ordenamiento por selección (dos `for`).
 
 | # | Request | Qué decir |
 |---|---|---|
-| 15 | Crear beat sin token → **401** | No hay header `Authorization`, entonces `userId` llega null y el controller corta con 401. |
-| 16 | Beat que no existe → **404** | `BeatService.getById` devuelve null y el controller responde 404. |
+| 14 | Crear beat sin token → **401** | No hay header `Authorization`, entonces `userId` llega null y el controller corta con 401. |
+| 15 | Beat que no existe → **404** | `BeatService.getById` devuelve null y el controller responde 404. |
+| 16 | Registrar un admin → **403** | `AuthController.register` no deja crear admins por la API: si cualquiera pudiera, cualquiera tendría permisos de administrador. |
 
 Si piden otro error en vivo, se puede armar a mano:
 - **400**: Crear beat con `"title": ""`.

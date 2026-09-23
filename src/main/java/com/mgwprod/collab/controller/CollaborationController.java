@@ -38,11 +38,19 @@ public class CollaborationController {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
+        // Decidir es aceptar o rechazar: mandar PENDING no es una decisión válida.
+        if (status == CollaborationStatus.PENDING) {
+            return ResponseEntity.badRequest().body(null);
+        }
         Collaboration collaboration = collaborationService.getById(id);
         if (collaboration == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         if (!collaborationService.canDecide(collaboration, userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+        // Una vez aceptada o rechazada, la decisión queda fija.
+        if (!collaborationService.isPending(collaboration)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
         return ResponseEntity.ok(collaborationService.decide(id, status));

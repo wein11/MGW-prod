@@ -64,4 +64,17 @@ class VoteControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void createVoteReturns403WhenVotingOwnSubmission() throws Exception {
+        Vote request = new Vote();
+        request.setScore(10);
+        when(voteService.isOwnSubmission(1L, 2L)).thenReturn(true);
+
+        mockMvc.perform(post("/api/submissions/1/votes")
+                        .requestAttr("userId", 2L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+    }
 }

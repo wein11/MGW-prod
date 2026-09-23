@@ -57,4 +57,22 @@ class VoteServiceTest {
 
         assertThat(voteService.create(1L, 2L, vote)).isNull();
     }
+
+    @Test
+    void isOwnSubmissionIsTrueOnlyForTheSubmissionProducer() {
+        Submission submission = new Submission();
+        submission.setId(1L);
+        submission.setProducerId(7L);
+        when(submissionService.getById(1L)).thenReturn(submission);
+
+        assertThat(voteService.isOwnSubmission(1L, 7L)).isTrue();
+        assertThat(voteService.isOwnSubmission(1L, 8L)).isFalse();
+    }
+
+    @Test
+    void isOwnSubmissionIsFalseWhenSubmissionDoesNotExist() {
+        when(submissionService.getById(1L)).thenReturn(null);
+
+        assertThat(voteService.isOwnSubmission(1L, 7L)).isFalse();
+    }
 }

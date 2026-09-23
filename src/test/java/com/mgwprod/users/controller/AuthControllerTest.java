@@ -125,4 +125,16 @@ class AuthControllerTest {
                         .content(requestJson))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void registerReturns403WhenRoleIsAdmin() throws Exception {
+        String requestJson = """
+                {"email":"admin2@test.com","password":"supersecret123","displayName":"Admin","role":"ADMIN"}
+                """;
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isForbidden());
+    }
 }

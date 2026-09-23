@@ -100,55 +100,6 @@
           }
         },
         {
-          "name": "Registrar admin",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.environment.set(\"adminEmail\", \"admin\" + Date.now() + \"@mgw.test\");"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 201\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/auth/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "register"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Admin Demo\",\n  \"role\": \"ADMIN\"\n}"
-            }
-          }
-        },
-        {
           "name": "Login admin",
           "event": [
             {
@@ -185,7 +136,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"secret123\"\n}"
+              "raw": "{\n  \"email\": \"admin@mgw.com\",\n  \"password\": \"admin1234\"\n}"
             }
           }
         }
@@ -704,6 +655,46 @@
                 "beats",
                 "999999"
               ]
+            }
+          }
+        },
+        {
+          "name": "Registrar un admin -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"otro-admin@mgw.test\",\n  \"password\": \"secret123\",\n  \"displayName\": \"Admin trucho\",\n  \"role\": \"ADMIN\"\n}"
             }
           }
         }
