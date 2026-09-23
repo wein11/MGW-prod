@@ -45,6 +45,12 @@ public class CollaborationService {
         return topline != null && topline.getBeat().getProducerId().equals(requestingUserId);
     }
 
+    // true si todavía nadie la aceptó ni la rechazó. El controller la usa para no dejar
+    // cambiar una decisión ya tomada (403).
+    public boolean isPending(Collaboration collaboration) {
+        return collaboration.getStatus() == CollaborationStatus.PENDING;
+    }
+
     // Guarda la decisión del productor (ACCEPTED/REJECTED) y la fecha en que decidió.
     @Transactional
     public Collaboration decide(Long collaborationId, CollaborationStatus decision) {

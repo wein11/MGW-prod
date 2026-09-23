@@ -1,5 +1,6 @@
 package com.mgwprod.users.controller;
 
+import com.mgwprod.users.model.Role;
 import com.mgwprod.users.model.Session;
 import com.mgwprod.users.model.User;
 import com.mgwprod.users.service.AuthService;
@@ -36,6 +37,11 @@ public class AuthController {
         }
         if (user.getRole() == null) {
             return ResponseEntity.badRequest().body(null);
+        }
+        // Nadie puede crearse una cuenta de admin desde afuera: el admin ya viene cargado
+        // en la base (ver el INSERT al final de docs/db/schema.sql).
+        if (user.getRole() == Role.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
         if (authService.emailExists(user.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);

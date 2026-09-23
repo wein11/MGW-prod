@@ -25,6 +25,14 @@ public class VoteService {
         return voteRepository.existsBySubmissionIdAndVoterId(submissionId, voterId);
     }
 
+    // true si el que vota es el productor que mandó la entrega. Si la entrega no existe
+    // devuelve false, y el 404 lo termina dando create.
+    @Transactional(readOnly = true)
+    public boolean isOwnSubmission(Long submissionId, Long voterId) {
+        Submission submission = submissionService.getById(submissionId);
+        return submission != null && submission.getProducerId().equals(voterId);
+    }
+
     // Devuelve null si la submission no existe.
     @Transactional
     public Vote create(Long submissionId, Long voterId, Vote vote) {

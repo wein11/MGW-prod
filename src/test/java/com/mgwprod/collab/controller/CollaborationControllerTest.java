@@ -40,6 +40,7 @@ class CollaborationControllerTest {
 
         when(collaborationService.getById(1L)).thenReturn(collaboration);
         when(collaborationService.canDecide(collaboration, 5L)).thenReturn(true);
+        when(collaborationService.isPending(collaboration)).thenReturn(true);
         when(collaborationService.decide(eq(1L), eq(CollaborationStatus.ACCEPTED)))
                 .thenReturn(response);
 
@@ -97,5 +98,28 @@ class CollaborationControllerTest {
     void deleteReturns401WhenNotAuthenticated() throws Exception {
         mockMvc.perform(delete("/api/collaborations/1"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void decideReturns400WhenStatusIsPending() throws Exception {
+        mockMvc.perform(put("/api/collaborations/1")
+                        .requestAttr("userId", 5L)
+                        .param("status", "PENDING"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void decideReturns403WhenCollaborationWasAlreadyDecided() throws Exception {
+        Collaboration collaboration = new Collaboration();
+        collaboration.setId(1L);
+        collaboration.setStatus(CollaborationStatus.ACCEPTED);
+        when(collaborationService.getById(1L)).thenReturn(collaboration);
+        when(collaborationService.canDecide(collaboration, 5L)).thenReturn(true);
+        when(collaborationService.isPending(collaboration)).thenReturn(false);
+
+        mockMvc.perform(put("/api/collaborations/1")
+                        .requestAttr("userId", 5L)
+                        .param("status", "REJECTED"))
+                .andExpect(status().isForbidden());
     }
 }

@@ -61,4 +61,16 @@ class ChallengeCloseControllerTest {
         mockMvc.perform(put("/api/challenges/100/close"))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void closeReturns403WhenChallengeIsAlreadyClosed() throws Exception {
+        Challenge challenge = new Challenge();
+        challenge.setId(100L);
+        when(challengeResultService.isAdmin(1L)).thenReturn(true);
+        when(challengeService.getById(100L)).thenReturn(challenge);
+        when(challengeService.isClosed(100L)).thenReturn(true);
+
+        mockMvc.perform(put("/api/challenges/100/close").requestAttr("userId", 1L))
+                .andExpect(status().isForbidden());
+    }
 }

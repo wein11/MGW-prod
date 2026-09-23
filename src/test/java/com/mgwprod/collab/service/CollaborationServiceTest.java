@@ -145,4 +145,15 @@ class CollaborationServiceTest {
 
         verify(collaborationRepository).deleteById(1L);
     }
+
+    @Test
+    void isPendingIsTrueOnlyForPendingCollaborations() {
+        Collaboration pending = new Collaboration();
+        pending.setStatus(CollaborationStatus.PENDING);
+        Collaboration accepted = new Collaboration();
+        accepted.setStatus(CollaborationStatus.ACCEPTED);
+
+        assertThat(collaborationService.isPending(pending)).isTrue();
+        assertThat(collaborationService.isPending(accepted)).isFalse();
+    }
 }
