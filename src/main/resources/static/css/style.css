@@ -449,6 +449,74 @@ body {
 .row .fact { padding: var(--s4) var(--s12); min-width: 88px; }
 
 /* ===========================================================================
+   Etiquetas de estado — ABIERTO / CERRADO / GANADOR / FAVORITA
+   =========================================================================== */
+
+.tag {
+  display: inline-block;
+  font-family: var(--font-pixel);
+  font-size: var(--t-micro);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border: 2px solid var(--ink);
+  padding: 3px var(--s8);
+  white-space: nowrap;
+}
+
+.tag--on { background: var(--ember); color: #FFF6F2; }
+.tag--flat { background: var(--amber); }
+
+/* ===========================================================================
+   Podio — el puesto como numero grande, igual que los porcentajes del jurado
+   =========================================================================== */
+
+.rank {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--t-title);
+  line-height: 1;
+  min-width: 2ch;
+  color: var(--ember);
+}
+
+/* ===========================================================================
+   Voto en linea — vive dentro de la fila de cada entrega
+   =========================================================================== */
+
+.vote { display: flex; align-items: center; gap: var(--s8); flex-wrap: wrap; }
+
+.vote select, .vote input {
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  padding: var(--s4) var(--s8);
+}
+
+.vote input { flex: 1; min-width: 150px; }
+.vote select:focus, .vote input:focus { outline: 2px solid var(--ember); outline-offset: 2px; }
+
+/* Nota al pie de una fila: "ya votaste", "es tu entrega", etc. */
+.row-note {
+  font-family: var(--font-mono);
+  font-size: var(--t-cap);
+  color: var(--ink-soft);
+}
+
+/* Link externo al audio. */
+.listen {
+  font-family: var(--font-pixel);
+  font-size: var(--t-micro);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ember);
+  text-decoration: none;
+  border-bottom: 2px solid var(--ember);
+}
+
+/* ===========================================================================
    Formularios
    =========================================================================== */
 

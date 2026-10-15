@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desafio — mgw prod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="cabinet">
+
+  <div class="marquee">
+    <span class="live" aria-hidden="true"></span>
+    <span id="marquee-text">Cargando&hellip;</span>
+  </div>
+
+  <header class="header">
+    <a class="wordmark" href="challenges.html"><b>MGW</b>PROD</a>
+    <nav class="nav">
+      <a href="challenges.html">Desafios</a>
+      <a href="ranking.html">Ranking</a>
+      <span class="session" data-session-label></span>
+      <a href="login.html" data-login-link hidden>Entrar</a>
+      <button type="button" data-logout hidden>Salir</button>
+      <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+    </nav>
+  </header>
+
+  <!-- Brief del desafio -->
+  <section class="panel" id="brief-panel" hidden>
+    <div class="split">
+      <div class="checker">
+        <div class="checker-floor" aria-hidden="true"></div>
+        <div class="stage" id="stage" aria-hidden="true"></div>
+      </div>
+      <div class="split-body">
+        <span class="eyebrow" id="state-label"></span>
+        <h1 class="title" id="title"></h1>
+        <p class="specs" id="specs"></p>
+        <div id="facts"></div>
+
+        <!-- Cerrar: solo ADMIN, y solo si sigue abierto -->
+        <div id="close-box" hidden>
+          <div class="message" id="close-message" hidden></div>
+          <button class="btn btn--primary" type="button" id="close-btn">Cerrar desafio</button>
+        </div>
+      </div>
+    </div>
+    <div class="band" id="band" aria-hidden="true"></div>
+  </section>
+
+  <!-- Podio: aparece cuando el desafio ya cerro -->
+  <section class="panel panel--alt" id="podium-panel" hidden>
+    <div class="section-head"><h2 class="section-title">Podio</h2></div>
+    <div class="rows" id="podium"></div>
+  </section>
+
+  <!-- Entregar: solo ARTIST, y solo antes del cierre -->
+  <section class="panel" id="submit-panel" hidden>
+    <div class="section-head"><h2 class="section-title">Entregar tu beat</h2></div>
+    <form class="form" id="submit-form">
+      <div class="message" id="submit-message" hidden></div>
+      <div class="field">
+        <label for="audioUrl">Link al audio</label>
+        <input type="url" id="audioUrl" placeholder="https://soundcloud.com/..." required>
+      </div>
+      <div><button class="btn btn--primary" type="submit" id="submit-btn">Entregar</button></div>
+    </form>
+  </section>
+
+  <!-- Entregas recibidas -->
+  <section class="panel">
+    <div class="section-head">
+      <h2 class="section-title">Entregas</h2>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="message" id="list-message" hidden></div>
+    <div class="rows" id="submissions"></div>
+  </section>
+
+  <section class="panel panel--tight">
+    <div class="footer">
+      <span>&copy; mgw prod 2026 &mdash; TPO Aplicaciones Interactivas</span>
+      <span><a href="challenges.html">Desafios</a><a href="ranking.html">Ranking</a></span>
+    </div>
+  </section>
+
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  const challengeId = new URLSearchParams(window.location.search).get('id');
+
+  // Estado de la pagina: se carga una vez y lo leen todas las funciones.
+  let challenge = null;
+  let submissions = [];
+  let results = [];
+
+  /* ---------------------------------------------------------------
+     Nombres de usuario: el backend no tiene un endpoint que los traiga
+     en lote, asi que hay una consulta por id. La cache evita repetir
+     el mismo id cuando un productor entrego en varios desafios.
+     --------------------------------------------------------------- */
+  const nombres = new Map();
+
+  async function nombreDe(userId) {
+    if (nombres.has(userId)) {
+      return nombres.get(userId);
+    }
+    try {
+      const user = await apiFetch('/api/users/' + userId, { auth: false });
+      nombres.set(userId, user.displayName);
+      return user.displayName;
+    } catch (error) {
+      return 'Usuario ' + userId;
+    }
+  }
+
+  function isPastDeadline(c) {
+    return new Date(c.deadline) < new Date();
+  }
+
+  function daysUntil(isoString) {
+    const MS_POR_DIA = 1000 * 60 * 60 * 24;
+    const diferencia = new Date(isoString) - new Date();
+    return diferencia <= 0 ? 0 : Math.ceil(diferencia / MS_POR_DIA);
+  }
+
+  // Un desafio esta cerrado cuando ya tiene resultados: el backend usa el
+  // mismo criterio, no hay una columna de estado.
+  function isClosed() {
+    return results.length > 0;
+  }
+
+  function buildFact(label, value) {
+    const box = document.createElement('div');
+    box.className = 'fact';
+    const l = document.createElement('span');
+    l.className = 'fact-label';
+    l.textContent = label;
+    const v = document.createElement('span');
+    v.className = 'fact-value';
+    v.textContent = value;
+    box.appendChild(l);
+    box.appendChild(v);
+    return box;
+  }
+
+  /* --- Brief --- */
+
+  function renderBrief() {
+    const cerrado = isClosed();
+    const vencido = isPastDeadline(challenge);
+
+    document.getElementById('state-label').textContent =
+      cerrado ? 'Desafio cerrado' : (vencido ? 'Plazo vencido' : 'Desafio abierto');
+
+    document.getElementById('title').textContent = challenge.title;
+
+    const specs = [challenge.genre, challenge.bpm + ' BPM'];
+    if (challenge.key) specs.push(challenge.key);
+    if (challenge.theme) specs.push(challenge.theme);
+    document.getElementById('specs').textContent = specs.join('  /  ');
+
+    const facts = document.createElement('div');
+    facts.className = 'facts';
+    if (cerrado) {
+      facts.appendChild(buildFact('Estado', 'Cerrado'));
+    } else if (vencido) {
+      facts.appendChild(buildFact('Estado', 'Plazo vencido'));
+    } else {
+      const dias = daysUntil(challenge.deadline);
+      facts.appendChild(buildFact('Cierra en', dias === 1 ? '1 dia' : dias + ' dias'));
+    }
+    facts.appendChild(buildFact('Entregas', submissions.length));
+    if (challenge.prizeFirst) facts.appendChild(buildFact('1er premio', challenge.prizeFirst));
+    if (challenge.prizeSecond) facts.appendChild(buildFact('2do premio', challenge.prizeSecond));
+    if (challenge.prizeThird) facts.appendChild(buildFact('3er premio', challenge.prizeThird));
+
+    const slot = document.getElementById('facts');
+    slot.innerHTML = '';
+    slot.appendChild(facts);
+
+    // Cerrar el desafio es solo para ADMIN, y una sola vez.
+    if (getRole() === 'ADMIN' && !cerrado) {
+      document.getElementById('close-box').hidden = false;
+    }
+
+    document.getElementById('brief-panel').hidden = false;
+    fillBand(document.getElementById('stage'), 28, 3);
+    fillBand(document.getElementById('band'), 150, 0);
+
+    document.getElementById('marquee-text').textContent = cerrado
+      ? 'Cerrado  ·  ' + submissions.length + ' entregas  ·  podio publicado'
+      : ['En vivo', daysUntil(challenge.deadline) + ' dias para el cierre',
+         submissions.length + ' entregas'].join('  ·  ');
+  }
+
+  /* --- Podio --- */
+
+  async function renderPodium() {
+    if (!isClosed()) return;
+
+    const contenedor = document.getElementById('podium');
+    contenedor.innerHTML = '';
+
+    // Los resultados vienen en orden de puesto desde el backend.
+    for (const resultado of results) {
+      const entrega = submissions.find((s) => s.id === resultado.submissionId);
+
+      const row = document.createElement('article');
+      row.className = 'row';
+
+      const puesto = document.createElement('span');
+      puesto.className = 'rank';
+      puesto.textContent = resultado.rank;
+
+      const head = document.createElement('div');
+      head.className = 'row-head';
+      const h = document.createElement('h3');
+      h.textContent = entrega ? await nombreDe(entrega.producerId) : 'Entrega ' + resultado.submissionId;
+      head.appendChild(h);
+      if (resultado.prizeText) {
+        const premio = document.createElement('p');
+        premio.className = 'specs';
+        premio.textContent = resultado.prizeText;
+        head.appendChild(premio);
+      }
+
+      const facts = document.createElement('div');
+      facts.className = 'facts';
+      facts.appendChild(buildFact('Puntos', resultado.pointsAwarded));
+
+      row.appendChild(puesto);
+      row.appendChild(head);
+      row.appendChild(facts);
+
+      if (resultado.badge) {
+        const badge = document.createElement('span');
+        badge.className = 'tag tag--on';
+        badge.textContent = resultado.badge;
+        row.appendChild(badge);
+      }
+
+      if (entrega) {
+        const link = document.createElement('a');
+        link.className = 'listen';
+        link.href = entrega.audioUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'Escuchar';
+        row.appendChild(link);
+      }
+
+      contenedor.appendChild(row);
+    }
+
+    document.getElementById('podium-panel').hidden = false;
+  }
+
+  /* --- Entregas --- */
+
+  // El backend no expone un GET de votos, asi que no hay forma de saber de
+  // antemano si ya votaste. Se muestra el formulario y, si vuelve 403, se
+  // reemplaza por el aviso. El dueno de la entrega es el unico caso que si
+  // podemos detectar antes, comparando producerId con el usuario logueado.
+  function buildVote(entrega, row) {
+    const propia = getUserId() === entrega.producerId;
+
+    if (!isLoggedIn()) {
+      const nota = document.createElement('span');
+      nota.className = 'row-note';
+      nota.textContent = 'Inicia sesion para votar';
+      return nota;
+    }
+    if (propia) {
+      const nota = document.createElement('span');
+      nota.className = 'row-note';
+      nota.textContent = 'Es tu entrega';
+      return nota;
+    }
+    if (isClosed() || isPastDeadline(challenge)) {
+      const nota = document.createElement('span');
+      nota.className = 'row-note';
+      nota.textContent = isClosed() ? 'Votacion terminada' : 'Plazo vencido';
+      return nota;
+    }
+
+    const form = document.createElement('form');
+    form.className = 'vote';
+
+    const score = document.createElement('select');
+    score.setAttribute('aria-label', 'Puntaje');
+    for (let i = 1; i <= 10; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = i;
+      score.appendChild(option);
+    }
+    score.value = 7;
+
+    const comment = document.createElement('input');
+    comment.type = 'text';
+    comment.placeholder = 'Comentario (opcional)';
+    comment.maxLength = 1000;
+
+    const boton = document.createElement('button');
+    boton.className = 'btn';
+    boton.type = 'submit';
+    boton.textContent = 'Votar';
+
+    form.appendChild(score);
+    form.appendChild(comment);
+    form.appendChild(boton);
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      setLoading(boton, true, 'Votar');
+      try {
+        await apiFetch('/api/submissions/' + entrega.id + '/votes', {
+          method: 'POST',
+          body: { score: Number(score.value), comment: comment.value || null }
+        });
+        const ok = document.createElement('span');
+        ok.className = 'row-note';
+        ok.textContent = 'Votaste ' + score.value + '/10';
+        form.replaceWith(ok);
+      } catch (error) {
+        setLoading(boton, false, 'Votar');
+        const nota = document.createElement('span');
+        nota.className = 'row-note';
+        // El 403 aca casi siempre es "ya votaste": el caso de la entrega
+        // propia ya quedo descartado arriba.
+        nota.textContent = error.message === 'No tenes permiso para hacer esto.'
+          ? 'Ya votaste esta entrega'
+          : error.message;
+        row.appendChild(nota);
+      }
+    });
+
+    return form;
+  }
+
+  // Solo el artista invitado puede elegir su favorita.
+  function buildPick(entrega) {
+    const esFavorita = challenge.opportunityPickSubmissionId === entrega.id;
+
+    if (esFavorita) {
+      const tag = document.createElement('span');
+      tag.className = 'tag tag--flat';
+      tag.textContent = 'Favorita del invitado';
+      return tag;
+    }
+    if (getUserId() !== challenge.guestArtistId) {
+      return null;
+    }
+
+    const boton = document.createElement('button');
+    boton.className = 'btn';
+    boton.type = 'button';
+    boton.textContent = 'Elegir favorita';
+    boton.addEventListener('click', async () => {
+      setLoading(boton, true, 'Elegir favorita');
+      try {
+        challenge = await apiFetch(
+          '/api/challenges/' + challengeId + '/opportunity-pick?submissionId=' + entrega.id,
+          { method: 'PUT' });
+        renderSubmissions();
+      } catch (error) {
+        setLoading(boton, false, 'Elegir favorita');
+        showError(document.getElementById('list-message'), error.message);
+      }
+    });
+    return boton;
+  }
+
+  async function renderSubmissions() {
+    const contenedor = document.getElementById('submissions');
+    contenedor.innerHTML = '';
+    document.getElementById('count').textContent =
+      submissions.length + (submissions.length === 1 ? ' entrega' : ' entregas');
+
+    if (submissions.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'Todavia no hay entregas';
+      contenedor.appendChild(empty);
+      return;
+    }
+
+    for (const entrega of submissions) {
+      const row = document.createElement('article');
+      row.className = 'row';
+
+      const head = document.createElement('div');
+      head.className = 'row-head';
+      const h = document.createElement('h3');
+      h.textContent = await nombreDe(entrega.producerId);
+      const meta = document.createElement('p');
+      meta.className = 'specs';
+      meta.textContent = 'Entregado el ' + formatDate(entrega.submittedAt);
+      head.appendChild(h);
+      head.appendChild(meta);
+
+      const link = document.createElement('a');
+      link.className = 'listen';
+      link.href = entrega.audioUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'Escuchar';
+
+      row.appendChild(head);
+      row.appendChild(link);
+
+      const pick = buildPick(entrega);
+      if (pick) row.appendChild(pick);
+
+      row.appendChild(buildVote(entrega, row));
+      contenedor.appendChild(row);
+    }
+  }
+
+  /* --- Entregar --- */
+
+  function renderSubmitPanel() {
+    const puede = getRole() === 'ARTIST' && !isPastDeadline(challenge) && !isClosed();
+    document.getElementById('submit-panel').hidden = !puede;
+  }
+
+  document.getElementById('submit-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const message = document.getElementById('submit-message');
+    const boton = document.getElementById('submit-btn');
+    hideMessage(message);
+    setLoading(boton, true, 'Entregar');
+
+    try {
+      // El cliente manda solo el audio: el challenge sale de la URL y el
+      // productor del token.
+      await apiFetch('/api/challenges/' + challengeId + '/submissions', {
+        method: 'POST',
+        body: { audioUrl: document.getElementById('audioUrl').value }
+      });
+      showSuccess(message, 'Entrega enviada.');
+      document.getElementById('submit-form').reset();
+      await recargarEntregas();
+    } catch (error) {
+      showError(message, error.message);
+    } finally {
+      setLoading(boton, false, 'Entregar');
+    }
+  });
+
+  /* --- Cerrar --- */
+
+  document.getElementById('close-btn').addEventListener('click', async () => {
+    const message = document.getElementById('close-message');
+    const boton = document.getElementById('close-btn');
+    hideMessage(message);
+    setLoading(boton, true, 'Cerrar desafio');
+
+    try {
+      results = await apiFetch('/api/challenges/' + challengeId + '/close', { method: 'PUT' });
+      document.getElementById('close-box').hidden = true;
+      renderBrief();
+      await renderPodium();
+      await renderSubmissions();
+      renderSubmitPanel();
+    } catch (error) {
+      setLoading(boton, false, 'Cerrar desafio');
+      showError(message, error.message);
+    }
+  });
+
+  /* --- Carga --- */
+
+  async function recargarEntregas() {
+    submissions = await apiFetch('/api/challenges/' + challengeId + '/submissions', { auth: false });
+    renderBrief();
+    await renderSubmissions();
+    renderSubmitPanel();
+  }
+
+  async function load() {
+    if (!challengeId) {
+      showError(document.getElementById('list-message'), 'Falta el id del desafio en la direccion.');
+      return;
+    }
+
+    try {
+      challenge = await apiFetch('/api/challenges/' + challengeId, { auth: false });
+    } catch (error) {
+      showError(document.getElementById('list-message'), error.message);
+      return;
+    }
+
+    submissions = await apiFetch('/api/challenges/' + challengeId + '/submissions', { auth: false });
+
+    // No hay endpoint de resultados por desafio: se traen todos y se filtra.
+    try {
+      const todos = await apiFetch('/api/challenges/results', { auth: false });
+      results = todos.filter((r) => r.challengeId === Number(challengeId));
+    } catch (error) {
+      results = [];
+    }
+
+    renderBrief();
+    await renderPodium();
+    await renderSubmissions();
+    renderSubmitPanel();
+  }
+
+  renderSession();
+  load();
+</script>
+
+</body>
+</html>
