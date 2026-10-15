@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear cuenta — mgw prod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="cabinet">
+
+  <div class="marquee">
+    <span class="live" aria-hidden="true"></span>
+    <span>Desafios de produccion &middot; Jurado ponderado &middot; Ranking</span>
+  </div>
+
+  <header class="header">
+    <a class="wordmark" href="challenges.html"><b>MGW</b>PROD</a>
+    <nav class="nav">
+      <a href="challenges.html">Desafios</a>
+      <a href="ranking.html">Ranking</a>
+      <a href="login.html">Entrar</a>
+      <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+    </nav>
+  </header>
+
+  <section class="panel">
+    <div class="split">
+      <div class="checker">
+        <div class="checker-floor" aria-hidden="true"></div>
+        <div class="stage" id="stage" aria-hidden="true"></div>
+      </div>
+
+      <div class="split-body">
+        <span class="eyebrow">Alta</span>
+        <h1 class="title">Crear cuenta</h1>
+
+        <form class="form" id="register-form">
+          <div class="message" id="message" hidden></div>
+
+          <div class="field">
+            <label for="displayName">Nombre artistico</label>
+            <input type="text" id="displayName" required maxlength="80" autocomplete="nickname">
+          </div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" required autocomplete="email">
+          </div>
+
+          <div class="field">
+            <label for="password">Contrasena</label>
+            <input type="password" id="password" required minlength="8" autocomplete="new-password">
+            <p class="hint">Minimo 8 caracteres.</p>
+          </div>
+
+          <div class="field">
+            <label for="role">Tipo de cuenta</label>
+            <select id="role" required>
+              <option value="ARTIST">Artista / productor</option>
+              <option value="DISCOGRAFICA">Discografica</option>
+            </select>
+            <p class="hint" id="role-hint"></p>
+          </div>
+
+          <div class="field">
+            <label for="city">Ciudad (opcional)</label>
+            <input type="text" id="city" maxlength="80" autocomplete="address-level2">
+          </div>
+
+          <button class="btn btn--primary btn--block" type="submit" id="submit">Crear cuenta</button>
+
+          <p class="hint">Ya tenes cuenta? <a href="login.html">Inicia sesion</a></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel panel--tight panel--alt">
+    <div class="scoring">
+      <span class="scoring-label">Jurado</span>
+      <span class="scoring-item"><b>30%</b><span>Comunidad</span></span>
+      <span class="scoring-item"><b>30%</b><span>Verificados</span></span>
+      <span class="scoring-item"><b>40%</b><span>Invitado</span></span>
+      <p class="scoring-note">Ganar un desafio verifica tu perfil, y un perfil verificado pesa mas al votar.</p>
+    </div>
+  </section>
+
+  <section class="panel panel--tight">
+    <div class="footer">
+      <span>&copy; mgw prod 2026 &mdash; TPO Aplicaciones Interactivas</span>
+      <span><a href="challenges.html">Desafios</a><a href="ranking.html">Ranking</a></span>
+    </div>
+  </section>
+
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  const form = document.getElementById('register-form');
+  const message = document.getElementById('message');
+  const submit = document.getElementById('submit');
+  const role = document.getElementById('role');
+  const roleHint = document.getElementById('role-hint');
+
+  // Lo que puede hacer cada rol, para que la eleccion no sea a ciegas.
+  const AYUDA_ROL = {
+    ARTIST: 'Podes entregar en los desafios, subir beats y toplines.',
+    DISCOGRAFICA: 'Podes crear desafios y elegir al artista invitado.'
+  };
+
+  function renderRoleHint() {
+    roleHint.textContent = AYUDA_ROL[role.value];
+  }
+
+  role.addEventListener('change', renderRoleHint);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    hideMessage(message);
+    setLoading(submit, true, 'Crear cuenta');
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      // El rol ADMIN no se puede elegir: no esta en el select y ademas el
+      // backend lo rechaza con 403. El admin viene cargado en schema.sql.
+      await apiFetch('/api/auth/register', {
+        method: 'POST',
+        auth: false,
+        body: {
+          email: email,
+          password: password,
+          displayName: document.getElementById('displayName').value,
+          role: role.value,
+          city: document.getElementById('city').value || null
+        }
+      });
+
+      // El registro devuelve el User, no una sesion: hace falta loguear
+      // aparte para no dejar al usuario recien creado en la puerta.
+      const session = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        auth: false,
+        body: { email: email, password: password }
+      });
+      saveSession(session);
+      window.location.href = 'challenges.html';
+
+    } catch (error) {
+      setLoading(submit, false, 'Crear cuenta');
+      // El 409 aca solo puede ser el email repetido.
+      showError(message, error.message === 'La operacion choca con datos que ya existen.'
+        ? 'Ya hay una cuenta con ese email.'
+        : error.message);
+    }
+  });
+
+  renderRoleHint();
+  fillBand(document.getElementById('stage'), 28, 3);
+</script>
+
+</body>
+</html>
