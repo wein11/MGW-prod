@@ -221,9 +221,21 @@
 
       const head = document.createElement('div');
       head.className = 'row-head';
+
+      // Nombre y etiqueta en la misma linea, del lado izquierdo.
+      const linea = document.createElement('div');
+      linea.className = 'row-title';
       const h = document.createElement('h3');
       h.textContent = entrega ? await nombreDe(entrega.producerId) : 'Entrega ' + resultado.submissionId;
-      head.appendChild(h);
+      linea.appendChild(h);
+      if (resultado.badge) {
+        const badge = document.createElement('span');
+        badge.className = 'tag tag--on';
+        badge.textContent = resultado.badge;
+        linea.appendChild(badge);
+      }
+      head.appendChild(linea);
+
       if (resultado.prizeText) {
         const premio = document.createElement('p');
         premio.className = 'specs';
@@ -238,13 +250,6 @@
       row.appendChild(puesto);
       row.appendChild(head);
       row.appendChild(facts);
-
-      if (resultado.badge) {
-        const badge = document.createElement('span');
-        badge.className = 'tag tag--on';
-        badge.textContent = resultado.badge;
-        row.appendChild(badge);
-      }
 
       if (entrega) {
         const link = document.createElement('a');

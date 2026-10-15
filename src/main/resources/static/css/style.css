@@ -445,6 +445,12 @@ body {
   margin: 0 0 2px;
 }
 
+/* Nombre con etiqueta al lado. La etiqueta va aca, en el bloque izquierdo,
+   y no suelta en la fila: si no, en la fila que la tiene empuja las casillas
+   y los puntos dejan de alinearse de una fila a otra. */
+.row-title { display: flex; align-items: center; gap: var(--s8); flex-wrap: wrap; }
+.row-title h3 { margin: 0; }
+
 .row .facts { border-width: 1px; }
 .row .fact { padding: var(--s4) var(--s12); min-width: 88px; }
 
