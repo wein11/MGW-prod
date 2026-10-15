@@ -445,11 +445,24 @@ body {
   margin: 0 0 2px;
 }
 
-/* Nombre con etiqueta al lado. La etiqueta va aca, en el bloque izquierdo,
-   y no suelta en la fila: si no, en la fila que la tiene empuja las casillas
-   y los puntos dejan de alinearse de una fila a otra. */
-.row-title { display: flex; align-items: center; gap: var(--s8); flex-wrap: wrap; }
-.row-title h3 { margin: 0; }
+/* La fila del podio va en grilla y no en flex: con flex, la fila que tiene
+   etiqueta de ganador corre todo lo que sigue y los puntos dejan de alinearse.
+   Las columnas son fijas — puesto | nombre | etiqueta | puntos | escuchar —
+   y las filas sin etiqueta dejan esa celda vacia, pero la columna existe. */
+.row--podium {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: var(--s20);
+}
+
+/* Celda vacia donde no hay etiqueta: sostiene la columna. */
+.row--podium .tag-slot { justify-self: end; }
+
+@media (max-width: 820px) {
+  .row--podium { grid-template-columns: auto 1fr; }
+  .row--podium .tag-slot:empty { display: none; }
+}
 
 .row .facts { border-width: 1px; }
 .row .fact { padding: var(--s4) var(--s12); min-width: 88px; }
