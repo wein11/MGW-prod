@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesion — mgw prod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="cabinet">
+
+  <div class="marquee">
+    <span class="live" aria-hidden="true"></span>
+    <span>Desafios de produccion &middot; Jurado ponderado &middot; Ranking</span>
+  </div>
+
+  <header class="header">
+    <a class="wordmark" href="challenges.html"><b>MGW</b>PROD</a>
+    <nav class="nav">
+      <a href="challenges.html">Desafios</a>
+      <a href="ranking.html">Ranking</a>
+      <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+    </nav>
+  </header>
+
+  <section class="panel">
+    <div class="split">
+      <div class="checker">
+        <div class="checker-floor" aria-hidden="true"></div>
+        <div class="stage" id="stage" aria-hidden="true"></div>
+      </div>
+
+      <div class="split-body">
+        <span class="eyebrow">Acceso</span>
+        <h1 class="title">Iniciar sesion</h1>
+
+        <form class="form" id="login-form">
+          <div class="message" id="message" hidden></div>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" required autocomplete="email">
+          </div>
+
+          <div class="field">
+            <label for="password">Contrasena</label>
+            <input type="password" id="password" required autocomplete="current-password">
+          </div>
+
+          <button class="btn btn--primary btn--block" type="submit" id="submit">Entrar</button>
+
+          <p class="hint">No tenes cuenta? <a href="register.html">Registrate</a></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel panel--tight">
+    <div class="footer">
+      <span>&copy; mgw prod 2026 &mdash; TPO Aplicaciones Interactivas</span>
+      <span><a href="challenges.html">Desafios</a><a href="ranking.html">Ranking</a></span>
+    </div>
+  </section>
+
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  const form = document.getElementById('login-form');
+  const message = document.getElementById('message');
+  const submit = document.getElementById('submit');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    hideMessage(message);
+    setLoading(submit, true, 'Entrar');
+
+    try {
+      const session = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        auth: false,
+        body: {
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        }
+      });
+      saveSession(session);
+      window.location.href = 'challenges.html';
+    } catch (error) {
+      showError(message, error.message);
+    } finally {
+      setLoading(submit, false, 'Entrar');
+    }
+  });
+
+  fillBand(document.getElementById('stage'), 28, 3);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desafios — mgw prod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="cabinet">
+
+  <div class="marquee">
+    <span class="live" aria-hidden="true"></span>
+    <span id="marquee-text">Cargando&hellip;</span>
+  </div>
+
+  <header class="header">
+    <a class="wordmark" href="challenges.html"><b>MGW</b>PROD</a>
+    <nav class="nav">
+      <a href="challenges.html" aria-current="page">Desafios</a>
+      <a href="ranking.html">Ranking</a>
+      <span class="session" data-session-label></span>
+      <a href="login.html" data-login-link hidden>Entrar</a>
+      <button type="button" data-logout hidden>Salir</button>
+      <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+    </nav>
+  </header>
+
+  <!-- Destacado: el desafio abierto que cierra mas pronto.
+       Lo llena el script; si no hay ninguno abierto queda oculto. -->
+  <section class="panel" id="featured-panel" hidden>
+    <div class="split">
+      <div class="checker">
+        <div class="checker-floor" aria-hidden="true"></div>
+        <div class="stage" id="stage" aria-hidden="true"></div>
+      </div>
+      <div class="split-body">
+        <span class="eyebrow">Proximo en cerrar</span>
+        <h1 class="title" id="f-title"></h1>
+        <p class="specs" id="f-specs"></p>
+        <div id="f-facts"></div>
+        <a class="btn btn--primary" id="f-cta" href="#">Ver desafio</a>
+      </div>
+    </div>
+    <div class="band" id="f-band" aria-hidden="true"></div>
+  </section>
+
+  <!-- La mecanica del jurado como franja, para no competir con los desafios. -->
+  <section class="panel panel--tight panel--alt">
+    <div class="scoring">
+      <span class="scoring-label">Jurado</span>
+      <span class="scoring-item"><b>30%</b><span>Comunidad</span></span>
+      <span class="scoring-item"><b>30%</b><span>Verificados</span></span>
+      <span class="scoring-item"><b>40%</b><span>Invitado</span></span>
+      <p class="scoring-note">Al cerrar se reparten 500, 300 y 150 puntos. Ganar un desafio verifica tu perfil.</p>
+    </div>
+  </section>
+
+  <!-- Crear desafio: solo ADMIN y DISCOGRAFICA. Lo muestra el script. -->
+  <section class="panel" id="create-panel" hidden>
+    <div class="section-head"><h2 class="section-title">Crear desafio</h2></div>
+    <form class="form" id="create-form" style="max-width:none">
+      <div class="message" id="create-message" hidden></div>
+      <div class="field-row">
+        <div class="field"><label for="title">Titulo</label><input type="text" id="title" required></div>
+        <div class="field"><label for="genre">Genero</label><input type="text" id="genre" required></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="bpm">BPM</label><input type="number" id="bpm" min="1" required></div>
+        <div class="field"><label for="key">Tonalidad</label><input type="text" id="key"></div>
+        <div class="field"><label for="deadline">Cierre</label><input type="date" id="deadline" required></div>
+        <div class="field"><label for="guestArtistId">Artista invitado (id)</label><input type="number" id="guestArtistId" min="1" required></div>
+      </div>
+      <div class="field"><label for="theme">Tema</label><input type="text" id="theme"></div>
+      <div class="field-row">
+        <div class="field"><label for="prizeFirst">1er premio</label><input type="text" id="prizeFirst"></div>
+        <div class="field"><label for="prizeSecond">2do premio</label><input type="text" id="prizeSecond"></div>
+        <div class="field"><label for="prizeThird">3er premio</label><input type="text" id="prizeThird"></div>
+      </div>
+      <div><button class="btn btn--primary" type="submit" id="create-submit">Crear desafio</button></div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <h2 class="section-title">Desafios</h2>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="rows" id="rows"></div>
+  </section>
+
+  <section class="panel panel--tight">
+    <div class="footer">
+      <span>&copy; mgw prod 2026 &mdash; TPO Aplicaciones Interactivas</span>
+      <span><a href="challenges.html">Desafios</a><a href="ranking.html">Ranking</a></span>
+    </div>
+  </section>
+
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  const rows = document.getElementById('rows');
+  const count = document.getElementById('count');
+
+  function isPastDeadline(challenge) {
+    return new Date(challenge.deadline) < new Date();
+  }
+
+  // Dias que faltan para el cierre. Devuelve 0 si ya vencio.
+  function daysUntil(isoString) {
+    const MS_POR_DIA = 1000 * 60 * 60 * 24;
+    const diferencia = new Date(isoString) - new Date();
+    return diferencia <= 0 ? 0 : Math.ceil(diferencia / MS_POR_DIA);
+  }
+
+  function buildFact(label, value) {
+    const box = document.createElement('div');
+    box.className = 'fact';
+    const l = document.createElement('span');
+    l.className = 'fact-label';
+    l.textContent = label;
+    const v = document.createElement('span');
+    v.className = 'fact-value';
+    v.textContent = value;
+    box.appendChild(l);
+    box.appendChild(v);
+    return box;
+  }
+
+  // Las mismas casillas para el destacado y para cada fila.
+  function buildFacts(challenge) {
+    const facts = document.createElement('div');
+    facts.className = 'facts';
+
+    if (isPastDeadline(challenge)) {
+      facts.appendChild(buildFact('Estado', 'Cerrado'));
+    } else {
+      const dias = daysUntil(challenge.deadline);
+      facts.appendChild(buildFact('Cierra en', dias === 1 ? '1 dia' : dias + ' dias'));
+    }
+
+    // Queda con un guion hasta que llegue el conteo.
+    const entregas = buildFact('Entregas', '—');
+    entregas.dataset.submissionsFor = challenge.id;
+    facts.appendChild(entregas);
+
+    if (challenge.prizeFirst) {
+      facts.appendChild(buildFact('Premio', challenge.prizeFirst));
+    }
+    return facts;
+  }
+
+  function buildSpecs(challenge, conTema) {
+    const parts = [challenge.genre, challenge.bpm + ' BPM'];
+    if (challenge.key) parts.push(challenge.key);
+    if (conTema && challenge.theme) parts.push(challenge.theme);
+    return parts.join('  /  ');
+  }
+
+  function buildRow(challenge) {
+    const row = document.createElement('article');
+    row.className = 'row';
+
+    const head = document.createElement('div');
+    head.className = 'row-head';
+    const title = document.createElement('h3');
+    title.textContent = challenge.title;
+    const specs = document.createElement('p');
+    specs.className = 'specs';
+    specs.textContent = buildSpecs(challenge, false);
+    head.appendChild(title);
+    head.appendChild(specs);
+
+    const link = document.createElement('a');
+    link.className = 'btn';
+    link.href = 'challenge-detail.html?id=' + challenge.id;
+    link.textContent = 'Ver desafio';
+
+    row.appendChild(head);
+    row.appendChild(buildFacts(challenge));
+    row.appendChild(link);
+    return row;
+  }
+
+  // De los abiertos, el de deadline mas cercano.
+  function pickFeatured(challenges) {
+    let destacado = null;
+    challenges.forEach((challenge) => {
+      if (isPastDeadline(challenge)) return;
+      if (destacado === null || new Date(challenge.deadline) < new Date(destacado.deadline)) {
+        destacado = challenge;
+      }
+    });
+    return destacado;
+  }
+
+  // El conteo de entregas necesita una consulta por desafio, asi que se pide
+  // despues de pintar: la pagina no espera por esto.
+  async function fillSubmissionCounts(challenges) {
+    await Promise.all(challenges.map(async (challenge) => {
+      try {
+        const entregas = await apiFetch('/api/challenges/' + challenge.id + '/submissions', { auth: false });
+        document.querySelectorAll('[data-submissions-for="' + challenge.id + '"] .fact-value')
+          .forEach((el) => { el.textContent = entregas.length; });
+      } catch (error) {
+        // Si falla, la casilla queda con el guion. No rompe la tarjeta.
+      }
+    }));
+  }
+
+  function renderMarquee(challenges, featured) {
+    const abiertos = challenges.filter((c) => !isPastDeadline(c)).length;
+    document.getElementById('marquee-text').textContent = featured
+      ? ['En vivo', daysUntil(featured.deadline) + ' dias para ' + featured.title,
+         abiertos + ' desafios abiertos'].join('  ·  ')
+      : 'Sin desafios abiertos';
+  }
+
+  function renderFeatured(featured) {
+    document.getElementById('f-title').textContent = featured.title;
+    document.getElementById('f-specs').textContent = buildSpecs(featured, true);
+
+    const slot = document.getElementById('f-facts');
+    slot.innerHTML = '';
+    slot.appendChild(buildFacts(featured));
+
+    document.getElementById('f-cta').href = 'challenge-detail.html?id=' + featured.id;
+    document.getElementById('featured-panel').hidden = false;
+
+    fillBand(document.getElementById('stage'), 28, 3);
+    fillBand(document.getElementById('f-band'), 150, 0);
+  }
+
+  async function loadChallenges() {
+    try {
+      const challenges = await apiFetch('/api/challenges', { auth: false });
+      const featured = pickFeatured(challenges);
+
+      renderMarquee(challenges, featured);
+      if (featured !== null) {
+        renderFeatured(featured);
+      }
+
+      // El destacado no se repite abajo.
+      const resto = challenges.filter((c) => featured === null || c.id !== featured.id);
+      count.textContent = challenges.length + ' en total';
+
+      rows.innerHTML = '';
+      if (resto.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = challenges.length === 0
+          ? 'Todavia no hay desafios publicados'
+          : 'No hay otros desafios por ahora';
+        rows.appendChild(empty);
+      } else {
+        resto.forEach((challenge) => rows.appendChild(buildRow(challenge)));
+      }
+
+      fillSubmissionCounts(challenges);
+    } catch (error) {
+      rows.innerHTML = '';
+      const problema = document.createElement('div');
+      problema.className = 'empty';
+      problema.textContent = error.message;
+      rows.appendChild(problema);
+    }
+  }
+
+  /* --- Crear desafio --- */
+
+  const createForm = document.getElementById('create-form');
+  const createMessage = document.getElementById('create-message');
+  const createSubmit = document.getElementById('create-submit');
+
+  function canCreate() {
+    const role = getRole();
+    return role === 'ADMIN' || role === 'DISCOGRAFICA';
+  }
+
+  createForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    hideMessage(createMessage);
+    setLoading(createSubmit, true, 'Crear desafio');
+
+    try {
+      // El input date da "2026-12-01": el backend espera un Instant ISO completo.
+      const deadline = new Date(document.getElementById('deadline').value).toISOString();
+
+      await apiFetch('/api/challenges', {
+        method: 'POST',
+        body: {
+          title: document.getElementById('title').value,
+          genre: document.getElementById('genre').value,
+          bpm: Number(document.getElementById('bpm').value),
+          key: document.getElementById('key').value || null,
+          theme: document.getElementById('theme').value || null,
+          deadline: deadline,
+          guestArtistId: Number(document.getElementById('guestArtistId').value),
+          prizeFirst: document.getElementById('prizeFirst').value || null,
+          prizeSecond: document.getElementById('prizeSecond').value || null,
+          prizeThird: document.getElementById('prizeThird').value || null
+        }
+      });
+
+      showSuccess(createMessage, 'Desafio creado.');
+      createForm.reset();
+      loadChallenges();
+    } catch (error) {
+      showError(createMessage, error.message);
+    } finally {
+      setLoading(createSubmit, false, 'Crear desafio');
+    }
+  });
+
+  renderSession();
+  if (canCreate()) {
+    document.getElementById('create-panel').hidden = false;
+  }
+  loadChallenges();
+</script>
+
+</body>
+</html>
