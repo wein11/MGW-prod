@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking — mgw prod</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="cabinet">
+
+  <div class="marquee">
+    <span class="live" aria-hidden="true"></span>
+    <span id="marquee-text">Cargando&hellip;</span>
+  </div>
+
+  <header class="header">
+    <a class="wordmark" href="challenges.html"><b>MGW</b>PROD</a>
+    <nav class="nav">
+      <a href="challenges.html">Desafios</a>
+      <a href="ranking.html" aria-current="page">Ranking</a>
+      <span class="session" data-session-label></span>
+      <a href="login.html" data-login-link hidden>Entrar</a>
+      <button type="button" data-logout hidden>Salir</button>
+      <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+    </nav>
+  </header>
+
+  <section class="panel">
+    <div class="split">
+      <div class="checker">
+        <div class="checker-floor" aria-hidden="true"></div>
+        <div class="stage" id="stage" aria-hidden="true"></div>
+      </div>
+      <div class="split-body">
+        <span class="eyebrow">Tabla general</span>
+        <h1 class="title">Ranking</h1>
+        <p class="specs">Los puntos se reparten al cerrar cada desafio y no vencen.</p>
+        <div id="totals"></div>
+      </div>
+    </div>
+    <div class="band" id="band" aria-hidden="true"></div>
+  </section>
+
+  <section class="panel panel--tight panel--alt">
+    <div class="scoring">
+      <span class="scoring-label">Por puesto</span>
+      <span class="scoring-item"><b>500</b><span>1er puesto</span></span>
+      <span class="scoring-item"><b>300</b><span>2do puesto</span></span>
+      <span class="scoring-item"><b>150</b><span>3er puesto</span></span>
+      <p class="scoring-note">Solo los tres primeros de cada desafio suman. Ganar ademas verifica tu perfil.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <h2 class="section-title">Productores</h2>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="message" id="message" hidden></div>
+    <div class="rows" id="rows"></div>
+  </section>
+
+  <section class="panel panel--tight">
+    <div class="footer">
+      <span>&copy; mgw prod 2026 &mdash; TPO Aplicaciones Interactivas</span>
+      <span><a href="challenges.html">Desafios</a><a href="ranking.html">Ranking</a></span>
+    </div>
+  </section>
+
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  function buildFact(label, value) {
+    const box = document.createElement('div');
+    box.className = 'fact';
+    const l = document.createElement('span');
+    l.className = 'fact-label';
+    l.textContent = label;
+    const v = document.createElement('span');
+    v.className = 'fact-value';
+    v.textContent = value;
+    box.appendChild(l);
+    box.appendChild(v);
+    return box;
+  }
+
+  // Una consulta por productor. El backend no tiene un endpoint que traiga
+  // varios nombres juntos, asi que no hay alternativa; el ranking es corto.
+  async function nombreDe(userId) {
+    try {
+      const user = await apiFetch('/api/users/' + userId, { auth: false });
+      return user.displayName;
+    } catch (error) {
+      return 'Usuario ' + userId;
+    }
+  }
+
+  function buildRow(entrada, posicion) {
+    const row = document.createElement('article');
+    row.className = 'row row--rank';
+
+    const puesto = document.createElement('span');
+    // El rojo marca el podio, no el orden: del cuarto para abajo va apagado.
+    puesto.className = posicion <= 3 ? 'rank' : 'rank rank--plain';
+    puesto.textContent = posicion;
+
+    const head = document.createElement('div');
+    head.className = 'row-head';
+    const h = document.createElement('h3');
+    h.textContent = 'Cargando…';
+    h.dataset.nameFor = entrada.producerId;
+    head.appendChild(h);
+
+    const facts = document.createElement('div');
+    facts.className = 'facts';
+    // Podios y victorias llegan despues; la casilla arranca con un guion.
+    const podios = buildFact('Podios', '—');
+    podios.dataset.podiumsFor = entrada.producerId;
+    const victorias = buildFact('Victorias', '—');
+    victorias.dataset.winsFor = entrada.producerId;
+    facts.appendChild(podios);
+    facts.appendChild(victorias);
+    facts.appendChild(buildFact('Puntos', entrada.totalPoints));
+
+    row.appendChild(puesto);
+    row.appendChild(head);
+    row.appendChild(facts);
+    return row;
+  }
+
+  // Nombres, podios y victorias se piden despues de pintar la tabla: son
+  // dos consultas por productor y no tiene sentido que bloqueen el render.
+  async function fillDetails(entradas) {
+    await Promise.all(entradas.map(async (entrada) => {
+      const id = entrada.producerId;
+
+      const nombre = await nombreDe(id);
+      const titulo = document.querySelector('[data-name-for="' + id + '"]');
+      if (titulo) titulo.textContent = nombre;
+
+      try {
+        // El backend resuelve el mapeo entrega -> productor, asi que alcanza
+        // con filtrar por producerId.
+        const resultados = await apiFetch('/api/challenges/results?producerId=' + id, { auth: false });
+        const victorias = resultados.filter((r) => r.rank === 1).length;
+
+        const cajaPodios = document.querySelector('[data-podiums-for="' + id + '"] .fact-value');
+        if (cajaPodios) cajaPodios.textContent = resultados.length;
+
+        const cajaVictorias = document.querySelector('[data-wins-for="' + id + '"] .fact-value');
+        if (cajaVictorias) cajaVictorias.textContent = victorias;
+      } catch (error) {
+        // Si falla, las casillas quedan con el guion.
+      }
+    }));
+  }
+
+  async function load() {
+    const rows = document.getElementById('rows');
+    const count = document.getElementById('count');
+
+    fillBand(document.getElementById('stage'), 28, 3);
+    fillBand(document.getElementById('band'), 150, 0);
+
+    try {
+      // Ya viene ordenado de mayor a menor desde el backend.
+      const entradas = await apiFetch('/api/ranking', { auth: false });
+
+      const puntosRepartidos = entradas.reduce((total, e) => total + e.totalPoints, 0);
+      const totales = document.createElement('div');
+      totales.className = 'facts';
+      totales.appendChild(buildFact('Productores', entradas.length));
+      totales.appendChild(buildFact('Puntos repartidos', puntosRepartidos));
+      if (entradas.length > 0) {
+        totales.appendChild(buildFact('Puntero', entradas[0].totalPoints + ' pts'));
+      }
+      document.getElementById('totals').appendChild(totales);
+
+      document.getElementById('marquee-text').textContent = entradas.length === 0
+        ? 'Todavia no hay puntos repartidos'
+        : [entradas.length + ' productores en tabla',
+           puntosRepartidos + ' puntos repartidos'].join('  ·  ');
+
+      count.textContent = entradas.length + (entradas.length === 1 ? ' productor' : ' productores');
+
+      rows.innerHTML = '';
+      if (entradas.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'Todavia no se cerro ningun desafio';
+        rows.appendChild(empty);
+        return;
+      }
+
+      entradas.forEach((entrada, i) => rows.appendChild(buildRow(entrada, i + 1)));
+      fillDetails(entradas);
+    } catch (error) {
+      showError(document.getElementById('message'), error.message);
+    }
+  }
+
+  renderSession();
+  load();
+</script>
+
+</body>
+</html>

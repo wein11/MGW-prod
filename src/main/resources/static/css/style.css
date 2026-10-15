@@ -535,6 +535,23 @@ body {
   border-bottom: 2px solid var(--ember);
 }
 
+/* Fila del ranking: puesto | nombre | casillas. Misma logica de grilla que el
+   podio — las columnas mandan, asi los puntos quedan alineados entre filas. */
+.row--rank {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s20);
+}
+
+/* Del cuarto puesto para abajo el numero deja de ser rojo: el color marca
+   el podio, no el orden. */
+.rank--plain { color: var(--ink-soft); }
+
+@media (max-width: 820px) {
+  .row--rank { grid-template-columns: auto 1fr; }
+}
+
 /* ===========================================================================
    Formularios
    =========================================================================== */
