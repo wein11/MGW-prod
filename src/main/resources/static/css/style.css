@@ -18,6 +18,7 @@
      El rojo brasa es la UNICA familia de accion: sello, botones y el extremo
      del ecualizador. Donde aparece ese rojo, se hace clic. */
   --paper:      #F2E7DF;   /* lienzo */
+  --paper-2:    #E8D9CE;   /* superficie de sector, un tono mas abajo */
   --ink:        #16110F;   /* tinta */
   --ink-soft:   #6B5A52;   /* texto secundario */
   --line:       #D8C6BB;   /* filete entre renglones */
@@ -174,6 +175,13 @@ body {
 
 .panel--tight { padding-top: var(--s32); padding-bottom: var(--s32); }
 
+/* Sector propio. Sin este cambio de superficie, la franja del jurado y la
+   lista de desafios comparten lienzo y el ojo las lee como un solo bloque:
+   los porcentajes del jurado se mezclan con los datos de cada desafio.
+   Se separa con superficie y no con un borde, que es lo que conserva el aire.
+   El panel ya ocupa todo el ancho, asi que el fondo sale a sangre solo. */
+.panel--sector { background: var(--paper-2); }
+
 /* ===========================================================================
    Tipografia de bloque — el titular es un elemento grafico, no un encabezado
    =========================================================================== */
@@ -198,8 +206,15 @@ body {
   margin: var(--s12) 0 var(--s16);
 }
 
-/* Titulo de bloque secundario (el del formulario de acceso, por ejemplo). */
-.title--sm { font-size: clamp(30px, 4vw, 44px); max-width: none; }
+/* El titular gigante es para las paginas de contenido. En el acceso compite
+   con el formulario, que es lo unico que importa ahi. */
+.auth .title {
+  font-size: var(--t-title);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  max-width: none;
+  margin: var(--s4) 0 0;
+}
 
 .specs {
   font-family: var(--font-mono);
@@ -244,7 +259,11 @@ body {
   margin: var(--s40) 0 var(--s32);
 }
 
-.figure { display: flex; flex-direction: column; gap: 2px; }
+/* El contenido se apoya abajo. Las figuras ya tienen todas la misma altura
+   (el stretch de .figures), pero un valor de texto mide 20px y un numero 44:
+   apoyados arriba, el rotulo del texto quedaba mas alto que los otros.
+   Alineados abajo, todos los rotulos caen en la misma linea. */
+.figure { display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
 
 .figure b {
   font-family: var(--font-sans);
@@ -536,21 +555,22 @@ body {
   color: var(--ink-soft);
 }
 
-/* Campos sin caja: una linea abajo alcanza y pesa menos. */
+/* Los campos si llevan caja, aunque el resto del sistema no. No es adorno:
+   el recuadro es lo que dice "aca se escribe". Sacarselo deja un campo que
+   no parece un campo. */
 .field input, .field select {
   font-family: var(--font-mono);
   font-size: var(--t-body);
   color: var(--ink);
   background: transparent;
-  border: none;
-  border-bottom: 2px solid var(--ink);
+  border: 2px solid var(--ink);
   border-radius: 0;
-  padding: var(--s8) 0;
+  padding: var(--s8) var(--s12);
 }
 
 .field input:focus, .field select:focus {
-  outline: none;
-  border-bottom-color: var(--ember);
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
 }
 
 .field input::placeholder { color: var(--ink-soft); }
