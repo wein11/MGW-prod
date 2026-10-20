@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=2">
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
 
@@ -31,30 +31,23 @@
   </header>
 
   <!-- Brief del desafio -->
-  <section class="panel" id="brief-panel" hidden>
-    <div class="split">
-      <div class="checker">
-        <div class="checker-floor" aria-hidden="true"></div>
-        <div class="stage" id="stage" aria-hidden="true"></div>
-      </div>
-      <div class="split-body">
-        <span class="eyebrow" id="state-label"></span>
-        <h1 class="title" id="title"></h1>
-        <p class="specs" id="specs"></p>
-        <div id="facts"></div>
+  <section class="panel panel--band" id="brief-panel" hidden>
+    <span class="eyebrow" id="state-label"></span>
+    <h1 class="title" id="title"></h1>
+    <p class="specs" id="specs"></p>
+    <div class="figures" id="figures"></div>
 
-        <!-- Cerrar: solo ADMIN, y solo si sigue abierto -->
-        <div id="close-box" hidden>
-          <div class="message" id="close-message" hidden></div>
-          <button class="btn btn--primary" type="button" id="close-btn">Cerrar desafio</button>
-        </div>
-      </div>
+    <!-- Cerrar: solo ADMIN, y solo si sigue abierto -->
+    <div id="close-box" hidden>
+      <div class="message" id="close-message" hidden></div>
+      <button class="btn btn--primary" type="button" id="close-btn">Cerrar desafio</button>
     </div>
+
     <div class="band" id="band" aria-hidden="true"></div>
   </section>
 
   <!-- Podio: aparece cuando el desafio ya cerro -->
-  <section class="panel panel--alt" id="podium-panel" hidden>
+  <section class="panel" id="podium-panel" hidden>
     <div class="section-head"><h2 class="section-title">Podio</h2></div>
     <div class="rows" id="podium"></div>
   </section>
@@ -103,7 +96,7 @@
   /* ---------------------------------------------------------------
      Nombres de usuario: el backend no tiene un endpoint que los traiga
      en lote, asi que hay una consulta por id. La cache evita repetir
-     el mismo id cuando un productor entrego en varios desafios.
+     el mismo id cuando un productor entrego varias veces.
      --------------------------------------------------------------- */
   const nombres = new Map();
 
@@ -136,18 +129,17 @@
     return results.length > 0;
   }
 
-  function buildFact(label, value) {
-    const box = document.createElement('div');
-    box.className = 'fact';
-    const l = document.createElement('span');
-    l.className = 'fact-label';
-    l.textContent = label;
-    const v = document.createElement('span');
-    v.className = 'fact-value';
-    v.textContent = value;
-    box.appendChild(l);
-    box.appendChild(v);
-    return box;
+  // Numero grande con su rotulo debajo. Sin caja.
+  function buildFigure(valor, rotulo, esTexto) {
+    const figura = document.createElement('div');
+    figura.className = esTexto ? 'figure figure--text' : 'figure';
+    const b = document.createElement('b');
+    b.textContent = valor;
+    const span = document.createElement('span');
+    span.textContent = rotulo;
+    figura.appendChild(b);
+    figura.appendChild(span);
+    return figura;
   }
 
   /* --- Brief --- */
@@ -166,24 +158,20 @@
     if (challenge.theme) specs.push(challenge.theme);
     document.getElementById('specs').textContent = specs.join('  /  ');
 
-    const facts = document.createElement('div');
-    facts.className = 'facts';
-    if (cerrado) {
-      facts.appendChild(buildFact('Estado', 'Cerrado'));
-    } else if (vencido) {
-      facts.appendChild(buildFact('Estado', 'Plazo vencido'));
-    } else {
-      const dias = daysUntil(challenge.deadline);
-      facts.appendChild(buildFact('Cierra en', dias === 1 ? '1 dia' : dias + ' dias'));
-    }
-    facts.appendChild(buildFact('Entregas', submissions.length));
-    if (challenge.prizeFirst) facts.appendChild(buildFact('1er premio', challenge.prizeFirst));
-    if (challenge.prizeSecond) facts.appendChild(buildFact('2do premio', challenge.prizeSecond));
-    if (challenge.prizeThird) facts.appendChild(buildFact('3er premio', challenge.prizeThird));
+    const figuras = document.getElementById('figures');
+    figuras.innerHTML = '';
 
-    const slot = document.getElementById('facts');
-    slot.innerHTML = '';
-    slot.appendChild(facts);
+    if (cerrado) {
+      figuras.appendChild(buildFigure('Cerrado', 'Estado', true));
+    } else if (vencido) {
+      figuras.appendChild(buildFigure('Plazo vencido', 'Estado', true));
+    } else {
+      figuras.appendChild(buildFigure(daysUntil(challenge.deadline), 'Dias para el cierre'));
+    }
+    figuras.appendChild(buildFigure(submissions.length, 'Entregas'));
+    if (challenge.prizeFirst) figuras.appendChild(buildFigure(challenge.prizeFirst, '1er premio', true));
+    if (challenge.prizeSecond) figuras.appendChild(buildFigure(challenge.prizeSecond, '2do premio', true));
+    if (challenge.prizeThird) figuras.appendChild(buildFigure(challenge.prizeThird, '3er premio', true));
 
     // Cerrar el desafio es solo para ADMIN, y una sola vez.
     if (getRole() === 'ADMIN' && !cerrado) {
@@ -191,8 +179,7 @@
     }
 
     document.getElementById('brief-panel').hidden = false;
-    fillBand(document.getElementById('stage'), 28, 3);
-    fillBand(document.getElementById('band'), 150, 0);
+    fillBand(document.getElementById('band'), 180, 0);
 
     document.getElementById('marquee-text').textContent = cerrado
       ? 'Cerrado  ·  ' + submissions.length + ' entregas  ·  podio publicado'
@@ -232,10 +219,6 @@
         head.appendChild(premio);
       }
 
-      const facts = document.createElement('div');
-      facts.className = 'facts';
-      facts.appendChild(buildFact('Puntos', resultado.pointsAwarded));
-
       // Siempre se agrega la celda: sin etiqueta queda vacia, pero mantiene
       // la columna y los puntos siguen alineados entre filas.
       const slot = document.createElement('span');
@@ -247,10 +230,14 @@
         slot.appendChild(badge);
       }
 
+      const puntos = document.createElement('div');
+      puntos.className = 'row-figures';
+      puntos.innerHTML = '<span><b>' + resultado.pointsAwarded + '</b> pts</span>';
+
       row.appendChild(puesto);
       row.appendChild(head);
       row.appendChild(slot);
-      row.appendChild(facts);
+      row.appendChild(puntos);
 
       if (entrega) {
         const link = document.createElement('a');
@@ -258,7 +245,7 @@
         link.href = entrega.audioUrl;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        link.textContent = 'Escuchar';
+        link.textContent = 'Escuchar →';
         row.appendChild(link);
       }
 
@@ -277,24 +264,17 @@
   function buildVote(entrega, row) {
     const propia = getUserId() === entrega.producerId;
 
-    if (!isLoggedIn()) {
-      const nota = document.createElement('span');
-      nota.className = 'row-note';
-      nota.textContent = 'Inicia sesion para votar';
-      return nota;
+    function nota(texto) {
+      const span = document.createElement('span');
+      span.className = 'row-note';
+      span.textContent = texto;
+      return span;
     }
-    if (propia) {
-      const nota = document.createElement('span');
-      nota.className = 'row-note';
-      nota.textContent = 'Es tu entrega';
-      return nota;
-    }
-    if (isClosed() || isPastDeadline(challenge)) {
-      const nota = document.createElement('span');
-      nota.className = 'row-note';
-      nota.textContent = isClosed() ? 'Votacion terminada' : 'Plazo vencido';
-      return nota;
-    }
+
+    if (!isLoggedIn()) return nota('Inicia sesion para votar');
+    if (propia) return nota('Es tu entrega');
+    if (isClosed()) return nota('Votacion terminada');
+    if (isPastDeadline(challenge)) return nota('Plazo vencido');
 
     const form = document.createElement('form');
     form.className = 'vote';
@@ -331,20 +311,14 @@
           method: 'POST',
           body: { score: Number(score.value), comment: comment.value || null }
         });
-        const ok = document.createElement('span');
-        ok.className = 'row-note';
-        ok.textContent = 'Votaste ' + score.value + '/10';
-        form.replaceWith(ok);
+        form.replaceWith(nota('Votaste ' + score.value + '/10'));
       } catch (error) {
         setLoading(boton, false, 'Votar');
-        const nota = document.createElement('span');
-        nota.className = 'row-note';
         // El 403 aca casi siempre es "ya votaste": el caso de la entrega
         // propia ya quedo descartado arriba.
-        nota.textContent = error.message === 'No tenes permiso para hacer esto.'
+        form.replaceWith(nota(error.message === 'No tenes permiso para hacer esto.'
           ? 'Ya votaste esta entrega'
-          : error.message;
-        row.appendChild(nota);
+          : error.message));
       }
     });
 
@@ -417,7 +391,7 @@
       link.href = entrega.audioUrl;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      link.textContent = 'Escuchar';
+      link.textContent = 'Escuchar →';
 
       row.appendChild(head);
       row.appendChild(link);

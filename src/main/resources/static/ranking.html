@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=2">
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
 
@@ -30,23 +30,15 @@
     </nav>
   </header>
 
-  <section class="panel">
-    <div class="split">
-      <div class="checker">
-        <div class="checker-floor" aria-hidden="true"></div>
-        <div class="stage" id="stage" aria-hidden="true"></div>
-      </div>
-      <div class="split-body">
-        <span class="eyebrow">Tabla general</span>
-        <h1 class="title">Ranking</h1>
-        <p class="specs">Los puntos se reparten al cerrar cada desafio y no vencen.</p>
-        <div id="totals"></div>
-      </div>
-    </div>
+  <section class="panel panel--band">
+    <span class="eyebrow">Tabla general</span>
+    <h1 class="title">Ranking</h1>
+    <p class="specs">Los puntos se reparten al cerrar cada desafio y no vencen.</p>
+    <div class="figures" id="totals"></div>
     <div class="band" id="band" aria-hidden="true"></div>
   </section>
 
-  <section class="panel panel--tight panel--alt">
+  <section class="panel panel--tight">
     <div class="scoring">
       <span class="scoring-label">Por puesto</span>
       <span class="scoring-item"><b>500</b><span>1er puesto</span></span>
@@ -76,116 +68,121 @@
 
 <script src="js/api.js"></script>
 <script>
-  function buildFact(label, value) {
-    const box = document.createElement('div');
-    box.className = 'fact';
-    const l = document.createElement('span');
-    l.className = 'fact-label';
-    l.textContent = label;
-    const v = document.createElement('span');
-    v.className = 'fact-value';
-    v.textContent = value;
-    box.appendChild(l);
-    box.appendChild(v);
-    return box;
-  }
+  const rows = document.getElementById('rows');
+  const count = document.getElementById('count');
+  const message = document.getElementById('message');
 
-  // Una consulta por productor. El backend no tiene un endpoint que traiga
-  // varios nombres juntos, asi que no hay alternativa; el ranking es corto.
+  /* ---------------------------------------------------------------
+     Nombres de usuario: el backend no tiene un endpoint que los traiga
+     en lote, asi que hay una consulta por id. La cache evita repetir
+     el mismo id si aparece dos veces.
+     --------------------------------------------------------------- */
+  const nombres = new Map();
+
   async function nombreDe(userId) {
+    if (nombres.has(userId)) {
+      return nombres.get(userId);
+    }
     try {
       const user = await apiFetch('/api/users/' + userId, { auth: false });
+      nombres.set(userId, user.displayName);
       return user.displayName;
     } catch (error) {
       return 'Usuario ' + userId;
     }
   }
 
-  function buildRow(entrada, posicion) {
-    const row = document.createElement('article');
-    row.className = 'row row--rank';
+  // Numero grande con su rotulo debajo. Sin caja.
+  function buildFigure(valor, rotulo, esTexto) {
+    const figura = document.createElement('div');
+    figura.className = esTexto ? 'figure figure--text' : 'figure';
+    const b = document.createElement('b');
+    b.textContent = valor;
+    const span = document.createElement('span');
+    span.textContent = rotulo;
+    figura.appendChild(b);
+    figura.appendChild(span);
+    return figura;
+  }
 
+  async function buildRow(entrada, posicion) {
+    const row = document.createElement('article');
+    row.className = 'row';
+
+    // Del cuarto puesto en adelante el numero deja de ser protagonista.
     const puesto = document.createElement('span');
-    // El rojo marca el podio, no el orden: del cuarto para abajo va apagado.
     puesto.className = posicion <= 3 ? 'rank' : 'rank rank--plain';
     puesto.textContent = posicion;
 
     const head = document.createElement('div');
     head.className = 'row-head';
     const h = document.createElement('h3');
-    h.textContent = 'Cargando…';
-    h.dataset.nameFor = entrada.producerId;
+    h.textContent = await nombreDe(entrada.producerId);
     head.appendChild(h);
 
-    const facts = document.createElement('div');
-    facts.className = 'facts';
-    // Podios y victorias llegan despues; la casilla arranca con un guion.
-    const podios = buildFact('Podios', '—');
-    podios.dataset.podiumsFor = entrada.producerId;
-    const victorias = buildFact('Victorias', '—');
-    victorias.dataset.winsFor = entrada.producerId;
-    facts.appendChild(podios);
-    facts.appendChild(victorias);
-    facts.appendChild(buildFact('Puntos', entrada.totalPoints));
+    const figuras = document.createElement('div');
+    figuras.className = 'row-figures';
+    const podios = document.createElement('span');
+    podios.dataset.podiosFor = entrada.producerId;
+    podios.innerHTML = '<b>—</b> podios';
+    const victorias = document.createElement('span');
+    victorias.dataset.victoriasFor = entrada.producerId;
+    victorias.innerHTML = '<b>—</b> victorias';
+    figuras.appendChild(podios);
+    figuras.appendChild(victorias);
+
+    const puntos = document.createElement('span');
+    puntos.className = 'row-figures';
+    puntos.innerHTML = '<span><b>' + entrada.totalPoints + '</b> pts</span>';
 
     row.appendChild(puesto);
     row.appendChild(head);
-    row.appendChild(facts);
+    row.appendChild(figuras);
+    row.appendChild(puntos);
     return row;
   }
 
-  // Nombres, podios y victorias se piden despues de pintar la tabla: son
-  // dos consultas por productor y no tiene sentido que bloqueen el render.
-  async function fillDetails(entradas) {
-    await Promise.all(entradas.map(async (entrada) => {
-      const id = entrada.producerId;
+  /* ---------------------------------------------------------------
+     Podios y victorias: el ranking solo trae productor y puntos. Los
+     resultados se piden aparte, filtrados por productor — el endpoint
+     acepta ese query param. Se completa despues de pintar la tabla
+     para no hacerla esperar.
+     --------------------------------------------------------------- */
+  async function fillDetalle() {
+    const ids = [...document.querySelectorAll('[data-podios-for]')]
+      .map((el) => Number(el.dataset.podiosFor));
 
-      const nombre = await nombreDe(id);
-      const titulo = document.querySelector('[data-name-for="' + id + '"]');
-      if (titulo) titulo.textContent = nombre;
-
+    await Promise.all(ids.map(async (id) => {
       try {
-        // El backend resuelve el mapeo entrega -> productor, asi que alcanza
-        // con filtrar por producerId.
-        const resultados = await apiFetch('/api/challenges/results?producerId=' + id, { auth: false });
-        const victorias = resultados.filter((r) => r.rank === 1).length;
-
-        const cajaPodios = document.querySelector('[data-podiums-for="' + id + '"] .fact-value');
-        if (cajaPodios) cajaPodios.textContent = resultados.length;
-
-        const cajaVictorias = document.querySelector('[data-wins-for="' + id + '"] .fact-value');
-        if (cajaVictorias) cajaVictorias.textContent = victorias;
+        const propios = await apiFetch('/api/challenges/results?producerId=' + id, { auth: false });
+        const podios = document.querySelector('[data-podios-for="' + id + '"] b');
+        const victorias = document.querySelector('[data-victorias-for="' + id + '"] b');
+        if (podios) podios.textContent = propios.length;
+        if (victorias) victorias.textContent = propios.filter((r) => r.rank === 1).length;
       } catch (error) {
-        // Si falla, las casillas quedan con el guion.
+        // Si falla queda el guion. No rompe el renglon.
       }
     }));
   }
 
   async function load() {
-    const rows = document.getElementById('rows');
-    const count = document.getElementById('count');
-
-    fillBand(document.getElementById('stage'), 28, 3);
-    fillBand(document.getElementById('band'), 150, 0);
-
     try {
-      // Ya viene ordenado de mayor a menor desde el backend.
       const entradas = await apiFetch('/api/ranking', { auth: false });
 
-      const puntosRepartidos = entradas.reduce((total, e) => total + e.totalPoints, 0);
-      const totales = document.createElement('div');
-      totales.className = 'facts';
-      totales.appendChild(buildFact('Productores', entradas.length));
-      totales.appendChild(buildFact('Puntos repartidos', puntosRepartidos));
+      const puntosRepartidos = entradas.reduce((suma, e) => suma + e.totalPoints, 0);
+      const totales = document.getElementById('totals');
+      totales.innerHTML = '';
+      totales.appendChild(buildFigure(entradas.length, 'Productores'));
+      totales.appendChild(buildFigure(puntosRepartidos, 'Puntos repartidos'));
       if (entradas.length > 0) {
-        totales.appendChild(buildFact('Puntero', entradas[0].totalPoints + ' pts'));
+        totales.appendChild(buildFigure(entradas[0].totalPoints, 'Puntos del puntero'));
       }
-      document.getElementById('totals').appendChild(totales);
 
       document.getElementById('marquee-text').textContent = entradas.length === 0
         ? 'Todavia no hay puntos repartidos'
-        : [entradas.length + ' productores en tabla',
-           puntosRepartidos + ' puntos repartidos'].join('  ·  ');
+        : [entradas.length + ' productores', puntosRepartidos + ' puntos repartidos'].join('  ·  ');
+
+      fillBand(document.getElementById('band'), 180, 0);
 
       count.textContent = entradas.length + (entradas.length === 1 ? ' productor' : ' productores');
 
@@ -193,15 +190,19 @@
       if (entradas.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'empty';
-        empty.textContent = 'Todavia no se cerro ningun desafio';
+        empty.textContent = 'Todavia no cerro ningun desafio';
         rows.appendChild(empty);
         return;
       }
 
-      entradas.forEach((entrada, i) => rows.appendChild(buildRow(entrada, i + 1)));
-      fillDetails(entradas);
+      // El backend ya devuelve el ranking ordenado de mayor a menor.
+      for (let i = 0; i < entradas.length; i++) {
+        rows.appendChild(await buildRow(entradas[i], i + 1));
+      }
+
+      fillDetalle();
     } catch (error) {
-      showError(document.getElementById('message'), error.message);
+      showError(message, error.message);
     }
   }
 

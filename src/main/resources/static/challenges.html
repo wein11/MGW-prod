@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=2">
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
 
@@ -32,25 +32,17 @@
 
   <!-- Destacado: el desafio abierto que cierra mas pronto.
        Lo llena el script; si no hay ninguno abierto queda oculto. -->
-  <section class="panel" id="featured-panel" hidden>
-    <div class="split">
-      <div class="checker">
-        <div class="checker-floor" aria-hidden="true"></div>
-        <div class="stage" id="stage" aria-hidden="true"></div>
-      </div>
-      <div class="split-body">
-        <span class="eyebrow">Proximo en cerrar</span>
-        <h1 class="title" id="f-title"></h1>
-        <p class="specs" id="f-specs"></p>
-        <div id="f-facts"></div>
-        <a class="btn btn--primary" id="f-cta" href="#">Ver desafio</a>
-      </div>
-    </div>
+  <section class="panel panel--band" id="featured-panel" hidden>
+    <span class="eyebrow">Proximo en cerrar</span>
+    <h1 class="title" id="f-title"></h1>
+    <p class="specs" id="f-specs"></p>
+    <div class="figures" id="f-figures"></div>
+    <a class="btn btn--primary" id="f-cta" href="#">Ver desafio</a>
     <div class="band" id="f-band" aria-hidden="true"></div>
   </section>
 
   <!-- La mecanica del jurado como franja, para no competir con los desafios. -->
-  <section class="panel panel--tight panel--alt">
+  <section class="panel panel--tight">
     <div class="scoring">
       <span class="scoring-label">Jurado</span>
       <span class="scoring-item"><b>30%</b><span>Comunidad</span></span>
@@ -63,7 +55,7 @@
   <!-- Crear desafio: solo ADMIN y DISCOGRAFICA. Lo muestra el script. -->
   <section class="panel" id="create-panel" hidden>
     <div class="section-head"><h2 class="section-title">Crear desafio</h2></div>
-    <form class="form" id="create-form" style="max-width:none">
+    <form class="form form--wide" id="create-form">
       <div class="message" id="create-message" hidden></div>
       <div class="field-row">
         <div class="field"><label for="title">Titulo</label><input type="text" id="title" required></div>
@@ -118,48 +110,44 @@
     return diferencia <= 0 ? 0 : Math.ceil(diferencia / MS_POR_DIA);
   }
 
-  function buildFact(label, value) {
-    const box = document.createElement('div');
-    box.className = 'fact';
-    const l = document.createElement('span');
-    l.className = 'fact-label';
-    l.textContent = label;
-    const v = document.createElement('span');
-    v.className = 'fact-value';
-    v.textContent = value;
-    box.appendChild(l);
-    box.appendChild(v);
-    return box;
-  }
-
-  // Las mismas casillas para el destacado y para cada fila.
-  function buildFacts(challenge) {
-    const facts = document.createElement('div');
-    facts.className = 'facts';
-
-    if (isPastDeadline(challenge)) {
-      facts.appendChild(buildFact('Estado', 'Cerrado'));
-    } else {
-      const dias = daysUntil(challenge.deadline);
-      facts.appendChild(buildFact('Cierra en', dias === 1 ? '1 dia' : dias + ' dias'));
-    }
-
-    // Queda con un guion hasta que llegue el conteo.
-    const entregas = buildFact('Entregas', '—');
-    entregas.dataset.submissionsFor = challenge.id;
-    facts.appendChild(entregas);
-
-    if (challenge.prizeFirst) {
-      facts.appendChild(buildFact('Premio', challenge.prizeFirst));
-    }
-    return facts;
-  }
-
   function buildSpecs(challenge, conTema) {
     const parts = [challenge.genre, challenge.bpm + ' BPM'];
     if (challenge.key) parts.push(challenge.key);
     if (conTema && challenge.theme) parts.push(challenge.theme);
     return parts.join('  /  ');
+  }
+
+  // Numero grande con su rotulo debajo. Sin caja.
+  function buildFigure(valor, rotulo, esTexto) {
+    const figura = document.createElement('div');
+    figura.className = esTexto ? 'figure figure--text' : 'figure';
+    const b = document.createElement('b');
+    b.textContent = valor;
+    const span = document.createElement('span');
+    span.textContent = rotulo;
+    figura.appendChild(b);
+    figura.appendChild(span);
+    return figura;
+  }
+
+  function renderFigures(challenge) {
+    const contenedor = document.getElementById('f-figures');
+    contenedor.innerHTML = '';
+
+    if (isPastDeadline(challenge)) {
+      contenedor.appendChild(buildFigure('Cerrado', 'Estado', true));
+    } else {
+      contenedor.appendChild(buildFigure(daysUntil(challenge.deadline), 'Dias para el cierre'));
+    }
+
+    // Queda con un guion hasta que llegue el conteo.
+    const entregas = buildFigure('—', 'Entregas');
+    entregas.dataset.submissionsFor = challenge.id;
+    contenedor.appendChild(entregas);
+
+    if (challenge.prizeFirst) {
+      contenedor.appendChild(buildFigure(challenge.prizeFirst, '1er premio', true));
+    }
   }
 
   function buildRow(challenge) {
@@ -176,13 +164,32 @@
     head.appendChild(title);
     head.appendChild(specs);
 
+    // Los datos del renglon van inline, sin cajas.
+    const figuras = document.createElement('div');
+    figuras.className = 'row-figures';
+
+    const cierre = document.createElement('span');
+    if (isPastDeadline(challenge)) {
+      cierre.textContent = 'Cerrado';
+    } else {
+      const dias = daysUntil(challenge.deadline);
+      cierre.innerHTML = '<b>' + dias + '</b> ' + (dias === 1 ? 'dia' : 'dias');
+    }
+
+    const entregas = document.createElement('span');
+    entregas.dataset.submissionsFor = challenge.id;
+    entregas.innerHTML = '<b>—</b> entregas';
+
+    figuras.appendChild(cierre);
+    figuras.appendChild(entregas);
+
     const link = document.createElement('a');
-    link.className = 'btn';
+    link.className = 'row-link';
     link.href = 'challenge-detail.html?id=' + challenge.id;
-    link.textContent = 'Ver desafio';
+    link.textContent = 'Ver desafio →';
 
     row.appendChild(head);
-    row.appendChild(buildFacts(challenge));
+    row.appendChild(figuras);
     row.appendChild(link);
     return row;
   }
@@ -205,10 +212,12 @@
     await Promise.all(challenges.map(async (challenge) => {
       try {
         const entregas = await apiFetch('/api/challenges/' + challenge.id + '/submissions', { auth: false });
-        document.querySelectorAll('[data-submissions-for="' + challenge.id + '"] .fact-value')
-          .forEach((el) => { el.textContent = entregas.length; });
+        document.querySelectorAll('[data-submissions-for="' + challenge.id + '"]').forEach((el) => {
+          const destino = el.querySelector('b');
+          if (destino) destino.textContent = entregas.length;
+        });
       } catch (error) {
-        // Si falla, la casilla queda con el guion. No rompe la tarjeta.
+        // Si falla, queda el guion. No rompe el renglon.
       }
     }));
   }
@@ -221,29 +230,20 @@
       : 'Sin desafios abiertos';
   }
 
-  function renderFeatured(featured) {
-    document.getElementById('f-title').textContent = featured.title;
-    document.getElementById('f-specs').textContent = buildSpecs(featured, true);
-
-    const slot = document.getElementById('f-facts');
-    slot.innerHTML = '';
-    slot.appendChild(buildFacts(featured));
-
-    document.getElementById('f-cta').href = 'challenge-detail.html?id=' + featured.id;
-    document.getElementById('featured-panel').hidden = false;
-
-    fillBand(document.getElementById('stage'), 28, 3);
-    fillBand(document.getElementById('f-band'), 150, 0);
-  }
-
   async function loadChallenges() {
     try {
       const challenges = await apiFetch('/api/challenges', { auth: false });
       const featured = pickFeatured(challenges);
 
       renderMarquee(challenges, featured);
+
       if (featured !== null) {
-        renderFeatured(featured);
+        document.getElementById('f-title').textContent = featured.title;
+        document.getElementById('f-specs').textContent = buildSpecs(featured, true);
+        renderFigures(featured);
+        document.getElementById('f-cta').href = 'challenge-detail.html?id=' + featured.id;
+        document.getElementById('featured-panel').hidden = false;
+        fillBand(document.getElementById('f-band'), 180, 0);
       }
 
       // El destacado no se repite abajo.
