@@ -609,7 +609,7 @@ body {
 
 .choice-body {
   height: 100%;
-  display: flex; flex-direction: column; gap: 3px;
+  display: flex; flex-direction: column; gap: var(--s4);
   border: 2px solid var(--ink);
   background: var(--paper);
   padding: var(--s12);
@@ -627,14 +627,23 @@ body {
   outline-offset: 2px;
 }
 
+/* El rol manda y la descripcion acompana. En bitmap a 10px el titulo quedaba
+   mas chico que su propia descripcion y los dos se leian igual; en sans bold
+   a 16px se separan de una. */
 .choice-title {
-  font-family: var(--font-pixel);
-  font-size: var(--t-micro);
-  letter-spacing: .06em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: var(--t-body);
+  line-height: 1.15;
+  letter-spacing: -.01em;
   text-transform: uppercase;
 }
 
-.choice-desc { font-size: var(--t-cap); line-height: 1.4; color: var(--ink-soft); }
+.choice-desc {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
 .choice-card input:checked + .choice-body .choice-desc { color: inherit; opacity: .85; }
 
 @media (max-width: 520px) {
