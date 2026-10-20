@@ -661,9 +661,14 @@ body {
   position: relative;
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   /* El margen de abajo deja libre la banda para que no tape el formulario. */
-  padding: var(--s40) var(--s24) calc(var(--s40) + 46px);
+  padding: var(--s24) var(--s24) calc(var(--s40) + 46px);
 }
+
+/* El wordmark arriba a la izquierda, como en cualquier web. Va en el flujo y
+   no posicionado: asi nunca puede pisar al formulario en una pantalla baja. */
+.auth-logo { align-self: flex-start; }
 
 /* margin:auto y no align-items:center: si el formulario es mas alto que la
    pantalla, centrarlo con flex le corta la parte de arriba al scrollear. */
@@ -678,16 +683,19 @@ body {
 
 .auth-box .form { max-width: none; }
 
-/* El wordmark hace de vuelta a la app: es el unico link fuera del formulario. */
-.auth-box .wordmark { align-self: flex-start; }
-
+/* Fija a la pantalla y no al documento: anclada al final del documento, en el
+   alta quedaba fuera de vista hasta scrollear. Asi se ve siempre. */
 .auth-band {
-  position: absolute;
+  position: fixed;
   left: 0; right: 0; bottom: 0;
   height: 46px;
   display: flex;
   align-items: flex-end;
   gap: 2px;
+  /* Fondo propio: al ser fija, el formulario pasa por detras al scrollear y
+     sin fondo las barras quedaban encima del texto. */
+  background: var(--paper);
+  pointer-events: none;
 }
 
 .auth-band span { flex: 1; min-width: 1px; border-radius: 9999px; }
