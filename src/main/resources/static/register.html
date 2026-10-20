@@ -12,32 +12,27 @@
 <body>
 
 <div class="cabinet">
+  <div class="auth">
 
-  <div class="marquee">
-    <span class="live" aria-hidden="true"></span>
-    <span>Desafios de produccion &middot; Jurado ponderado &middot; Ranking</span>
-  </div>
-
-  <header class="header">
-    <a class="wordmark" href="challenges.html"><b>MGW</b>PROD</a>
-    <nav class="nav">
-      <a href="challenges.html">Desafios</a>
-      <a href="ranking.html">Ranking</a>
-      <a href="login.html">Entrar</a>
-      <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
-    </nav>
-  </header>
-
-  <section class="panel">
-    <div class="split">
-      <div class="checker">
-        <div class="checker-floor" aria-hidden="true"></div>
-        <div class="stage" id="stage" aria-hidden="true"></div>
+    <!-- Mitad de marca -->
+    <section class="auth-art">
+      <div class="checker-floor" aria-hidden="true"></div>
+      <div class="stage" id="stage" aria-hidden="true"></div>
+      <div class="auth-copy">
+        <h2>Sumate a la competencia</h2>
+        <p>Entrega tu beat, sumá puntos y ganá verificación. Ganar un desafío verifica tu perfil.</p>
       </div>
+    </section>
 
-      <div class="split-body">
-        <span class="eyebrow">Alta</span>
-        <h1 class="title">Crear cuenta</h1>
+    <!-- Mitad del formulario -->
+    <section class="auth-side">
+      <div class="auth-box">
+        <a class="wordmark" href="challenges.html"><b>MGW</b>PROD</a>
+
+        <div>
+          <span class="eyebrow">Alta</span>
+          <h1 class="title">Crear cuenta</h1>
+        </div>
 
         <form class="form" id="register-form">
           <div class="message" id="message" hidden></div>
@@ -77,16 +72,9 @@
           <p class="hint">Ya tenes cuenta? <a href="login.html">Inicia sesion</a></p>
         </form>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="panel panel--tight">
-    <div class="footer">
-      <span>&copy; mgw prod 2026 &mdash; TPO Aplicaciones Interactivas</span>
-      <span><a href="challenges.html">Desafios</a><a href="ranking.html">Ranking</a></span>
-    </div>
-  </section>
-
+  </div>
 </div>
 
 <script src="js/api.js"></script>
@@ -152,7 +140,7 @@
   });
 
   renderRoleHint();
-  fillBand(document.getElementById('stage'), 28, 3);
+  fillBand(document.getElementById('stage'), 34, 3);
 </script>
 
 </body>
