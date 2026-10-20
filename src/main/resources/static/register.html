@@ -54,12 +54,23 @@
           </div>
 
           <div class="field">
-            <label for="role">Tipo de cuenta</label>
-            <select id="role" required>
-              <option value="ARTIST">Artista / productor</option>
-              <option value="DISCOGRAFICA">Discografica</option>
-            </select>
-            <p class="hint" id="role-hint"></p>
+            <label>Tipo de cuenta</label>
+            <div class="choice">
+              <label class="choice-card">
+                <input type="radio" name="role" value="ARTIST" checked>
+                <span class="choice-body">
+                  <span class="choice-title">Artista</span>
+                  <span class="choice-desc">Entregas en los desafios, subis beats y toplines.</span>
+                </span>
+              </label>
+              <label class="choice-card">
+                <input type="radio" name="role" value="DISCOGRAFICA">
+                <span class="choice-body">
+                  <span class="choice-title">Discografica</span>
+                  <span class="choice-desc">Creas desafios y elegis al artista invitado.</span>
+                </span>
+              </label>
+            </div>
           </div>
 
           <div class="field">
@@ -82,20 +93,11 @@
   const form = document.getElementById('register-form');
   const message = document.getElementById('message');
   const submit = document.getElementById('submit');
-  const role = document.getElementById('role');
-  const roleHint = document.getElementById('role-hint');
-
-  // Lo que puede hacer cada rol, para que la eleccion no sea a ciegas.
-  const AYUDA_ROL = {
-    ARTIST: 'Podes entregar en los desafios, subir beats y toplines.',
-    DISCOGRAFICA: 'Podes crear desafios y elegir al artista invitado.'
-  };
-
-  function renderRoleHint() {
-    roleHint.textContent = AYUDA_ROL[role.value];
+  // El rol sale del radio marcado. Lo que hace cada uno ya se lee en su
+  // tarjeta, asi que no hace falta una linea de ayuda aparte.
+  function rolElegido() {
+    return document.querySelector('input[name="role"]:checked').value;
   }
-
-  role.addEventListener('change', renderRoleHint);
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -115,7 +117,7 @@
           email: email,
           password: password,
           displayName: document.getElementById('displayName').value,
-          role: role.value,
+          role: rolElegido(),
           city: document.getElementById('city').value || null
         }
       });
@@ -139,7 +141,6 @@
     }
   });
 
-  renderRoleHint();
   fillBand(document.getElementById('stage'), 34, 3);
 </script>
 
