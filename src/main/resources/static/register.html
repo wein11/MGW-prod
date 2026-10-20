@@ -14,27 +14,15 @@
 <div class="cabinet">
   <div class="auth">
 
-    <!-- Mitad de marca -->
-    <section class="auth-art">
-      <div class="checker-floor" aria-hidden="true"></div>
-      <div class="stage" id="stage" aria-hidden="true"></div>
-      <div class="auth-copy">
-        <h2>Sumate a la competencia</h2>
-        <p>Entrega tu beat, sumá puntos y ganá verificación. Ganar un desafío verifica tu perfil.</p>
-      </div>
-    </section>
+    <div class="auth-box">
+      <a class="wordmark" href="challenges.html"><b>MGW</b>PROD</a>
 
-    <!-- Mitad del formulario -->
-    <section class="auth-side">
-      <div class="auth-box">
-        <a class="wordmark" href="challenges.html"><b>MGW</b>PROD</a>
-
-        <div>
-          <span class="eyebrow">Alta</span>
-          <h1 class="title">Crear cuenta</h1>
+      <div>
+        <span class="eyebrow">Alta</span>
+        <h1 class="title">Crear cuenta</h1>
         </div>
 
-        <form class="form" id="register-form">
+      <form class="form" id="register-form">
           <div class="message" id="message" hidden></div>
 
           <div class="field">
@@ -81,9 +69,10 @@
           <button class="btn btn--primary btn--block" type="submit" id="submit">Crear cuenta</button>
 
           <p class="hint">Ya tenes cuenta? <a href="login.html">Inicia sesion</a></p>
-        </form>
-      </div>
-    </section>
+      </form>
+    </div>
+
+    <div class="auth-band" id="band" aria-hidden="true"></div>
 
   </div>
 </div>
@@ -141,7 +130,7 @@
     }
   });
 
-  fillBand(document.getElementById('stage'), 34, 3);
+  fillBand(document.getElementById('band'), 150, 0);
 </script>
 
 </body>

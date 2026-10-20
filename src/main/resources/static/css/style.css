@@ -651,65 +651,24 @@ body {
 }
 
 /* ===========================================================================
-   Pantallas de acceso — split a pantalla completa
-   Sin barra de estado ni header: en login y alta no hay nada que navegar, y
-   el cromo de mas es justo lo que hace ver vieja una pantalla de acceso.
-   La mitad izquierda es la pieza de marca; la derecha, solo el formulario.
+   Pantallas de acceso — formulario centrado sobre lienzo limpio
+   Sin barra de estado ni header: en login y alta no hay nada que navegar.
+   Y sin partir la pantalla en dos: hay una sola cosa en pantalla, el
+   formulario, y el color entra por una banda de ecualizador al pie.
    =========================================================================== */
 
 .auth {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-/* Mitad de marca: el checkerboard y el ecualizador a escala grande, que es
-   donde recien se leen como un escenario y no como una miniatura. */
-.auth-art {
   position: relative;
-  overflow: hidden;
-  background: var(--paper-2);
-  border-right: 2px solid var(--ink);
+  min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  padding: var(--s40);
+  /* El margen de abajo deja libre la banda para que no tape el formulario. */
+  padding: var(--s40) var(--s24) calc(var(--s40) + 46px);
 }
 
-/* El texto arriba y el grafico abajo: apoyado al pie chocaba contra el piso. */
-.auth-art .checker-floor { height: 30%; }
-
-.auth-art .stage {
-  left: 12%; right: 12%;
-  bottom: 26%;
-  height: 40%;
-}
-
-.auth-copy { position: relative; max-width: 24ch; }
-
-.auth-copy h2 {
-  font-family: var(--font-sans);
-  font-size: var(--t-title);
-  font-weight: 700;
-  line-height: 1.1;
-  text-transform: uppercase;
-  margin: 0 0 var(--s12);
-}
-
-.auth-copy p {
-  margin: 0;
-  font-size: var(--t-cap);
-  color: var(--ink-soft);
-}
-
-/* Mitad del formulario: centrado, sin nada mas alrededor. */
-.auth-side {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--s40) var(--s24);
-}
-
+/* margin:auto y no align-items:center: si el formulario es mas alto que la
+   pantalla, centrarlo con flex le corta la parte de arriba al scrollear. */
 .auth-box {
+  margin: auto;
   width: 100%;
   max-width: 380px;
   display: flex;
@@ -719,19 +678,23 @@ body {
 
 .auth-box .form { max-width: none; }
 
-/* El wordmark hace de vuelta a la app: es el unico link de la pantalla. */
+/* El wordmark hace de vuelta a la app: es el unico link fuera del formulario. */
 .auth-box .wordmark { align-self: flex-start; }
 
-@media (max-width: 860px) {
-  .auth { grid-template-columns: 1fr; }
-  /* En vertical la pieza de marca pasa a ser una franja arriba. */
-  .auth-art {
-    min-height: 200px;
-    border-right: none;
-    border-bottom: 2px solid var(--ink);
-    padding: var(--s24);
-  }
-  .auth-copy h2 { font-size: var(--t-sub); }
+.auth-band {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 46px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.auth-band span { flex: 1; min-width: 1px; border-radius: 9999px; }
+
+@media (max-width: 520px) {
+  .auth { padding-left: var(--s20); padding-right: var(--s20); }
+  .auth-band { height: 32px; }
 }
 
 /* ===========================================================================
