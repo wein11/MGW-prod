@@ -3,7 +3,7 @@
 Plataforma de música para productores y artistas: publicar beats, grabar toplines sobre
 beats de otros, colaborar y participar en desafíos con jurado.
 
-TPO de Aplicaciones Interactivas (UADE) — Etapa 1 (backend).
+TPO de Aplicaciones Interactivas (UADE) — Etapa 1 (backend) y Etapa 2 (frontend).
 Grupo: Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi.
 
 ## Requisitos
@@ -32,6 +32,26 @@ Grupo: Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi.
    ```bash
    ./mvnw test
    ```
+
+## Frontend (Etapa 2)
+
+Con el servidor levantado, abrir `http://localhost:8080` en el navegador. El frontend está
+hecho en HTML5, CSS3 y JavaScript y lo sirve el mismo Spring Boot desde
+`src/main/resources/static` (un solo puerto, sin configuración extra).
+
+| Página | Qué hace |
+|---|---|
+| `index.html` | Landing con barra de navegación y últimos beats |
+| `beats.html` | Listado de beats con filtros y alta (usuarios ARTIST) |
+| `beat.html` | Detalle, modificación y borrado (dueño del beat o ADMIN) |
+| `premium.html` | Compra simulada del plan Premium en 3 pasos (usuarios ARTIST) |
+| `about.html` | Descripción de la compañía e integrantes |
+| `login.html` / `register.html` | Inicio de sesión y alta de cuenta |
+| `challenges.html` / `challenge.html` | Desafíos: crear, entregar, votar y cerrar |
+| `ranking.html` | Ranking de productores por puntos |
+
+`js/api.js` concentra la comunicación con la API (fetch + token de sesión) y
+`css/styles.css` tiene los estilos de todo el sitio.
 
 ## Probar con Postman
 
