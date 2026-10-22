@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 @Service
 public class SubscriptionService {
 
-    private static final BigDecimal PREMIUM_PRICE_USD = new BigDecimal("15.00");
+    private static final BigDecimal PREMIUM_PRICE_ARS = new BigDecimal("15000.00");
     private static final int FREE_PLAN_LIMIT = 50;
 
     private final SubscriptionRepository subscriptionRepository;
@@ -61,7 +61,7 @@ public class SubscriptionService {
         if (subscription.getPlan() == SubscriptionPlan.PREMIUM) {
             return subscription;
         }
-        PaymentResult result = paymentGateway.charge(userId, PREMIUM_PRICE_USD);
+        PaymentResult result = paymentGateway.charge(userId, PREMIUM_PRICE_ARS);
         if (result.approved()) {
             subscription.setPlan(SubscriptionPlan.PREMIUM);
         }
