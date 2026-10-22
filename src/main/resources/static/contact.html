@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Formulario de contacto de MGW Prod: consultas, sugerencias y reclamos.">
+  <title>MGW Prod - Contacto</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html">Beats</a>
+    <a href="challenges.html">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+    <a href="contact.html" class="active">Contacto</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <section class="card small-form">
+    <h1>Contacto</h1>
+    <p class="muted">
+      ¿Tenes una consulta, una sugerencia o un reclamo? Escribinos y te respondemos por mail.
+      Los campos con * son obligatorios.
+    </p>
+
+    <!-- Este formulario no pasa por nuestro backend: lo recibe FormSubmit
+         (servicio externo) y lo reenvia por mail al equipo. Por eso usa
+         action + method="POST" del HTML y no necesita JavaScript.
+         La validacion la hace el navegador con required, type="email" y minlength. -->
+    <form action="https://formsubmit.co/sweinbinder@uade.edu.ar" method="POST">
+      <!-- Campos ocultos que lee FormSubmit: asunto del mail y formato de tabla. -->
+      <input type="hidden" name="_subject" value="Nuevo mensaje desde MGW Prod">
+      <input type="hidden" name="_template" value="table">
+
+      <label for="name">Nombre *</label>
+      <input type="text" id="name" name="Nombre" placeholder="Tu nombre o nombre artistico" required>
+
+      <label for="email">Email *</label>
+      <input type="email" id="email" name="email" placeholder="nombre@mail.com" autocomplete="email" required>
+
+      <label for="reason">Motivo *</label>
+      <select id="reason" name="Motivo" required>
+        <option value="Consulta">Consulta</option>
+        <option value="Sugerencia">Sugerencia</option>
+        <option value="Reclamo">Reclamo</option>
+      </select>
+
+      <label for="message">Mensaje * (minimo 10 caracteres)</label>
+      <textarea id="message" name="Mensaje" rows="5" minlength="10" placeholder="Contanos en que te podemos ayudar" required></textarea>
+
+      <button type="submit" class="btn">Enviar mensaje</button>
+    </form>
+  </section>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <span>
+    <a href="about.html">Quienes somos</a> -
+    <a href="contact.html">Contacto</a>
+  </span>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  renderNav();
+</script>
+</body>
+</html>
