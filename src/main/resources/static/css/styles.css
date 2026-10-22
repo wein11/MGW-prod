@@ -7,14 +7,17 @@
    Variables CSS: se definen una vez aca y se usan con var(--nombre).
    Si queremos cambiar el color principal, se cambia en un solo lugar. */
 :root {
-  --dark: #17141f;
-  --light: #f6f4fa;
+  /* Paleta del grupo (la misma que eligio Paolo en su diseño). */
+  --dark: #16110f;
+  --light: #f2e7df;
   --white: #ffffff;
-  --primary: #6d3df5;
-  --primary-dark: #5229c9;
-  --text: #2b2833;
-  --muted: #6f6a7a;
-  --border: #ddd8e8;
+  --primary: #d8381a;
+  --primary-dark: #af2a11;
+  --accent: #f0a020;
+  --surface: #e8d9ce;
+  --text: #16110f;
+  --muted: #6b5a52;
+  --border: #d8c6bb;
   --ok: #1d7a46;
   --error: #b42318;
 }
@@ -81,7 +84,7 @@ nav a {
 
 nav a:hover,
 nav a.active {
-  color: #b9a3ff;
+  color: var(--accent);
   text-decoration: underline;
 }
 
@@ -174,7 +177,7 @@ header .btn-outline {
   display: inline-block;
   padding: 2px 10px;
   border-radius: 20px;
-  background-color: #ece6ff;
+  background-color: var(--surface);
   color: var(--primary-dark);
   font-size: 13px;
 }

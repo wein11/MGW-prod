@@ -46,6 +46,7 @@ hecho en HTML5, CSS3 y JavaScript y lo sirve el mismo Spring Boot desde
 | `beat.html` | Detalle, modificación y borrado (dueño del beat o ADMIN) |
 | `premium.html` | Compra simulada del plan Premium en 3 pasos (usuarios ARTIST) |
 | `about.html` | Descripción de la compañía e integrantes |
+| `contact.html` | Formulario de contacto (lo envía FormSubmit por mail, sin pasar por el backend) |
 | `login.html` / `register.html` | Inicio de sesión y alta de cuenta |
 | `challenges.html` / `challenge.html` | Desafíos: crear, entregar, votar y cerrar |
 | `ranking.html` | Ranking de productores por puntos |
