@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Colaboraciones</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html">Beats</a>
+    <a href="collaborations.html" class="active">Colaboraciones</a>
+    <a href="challenges.html">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+    <a href="contact.html">Contacto</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <h1>Colaboraciones</h1>
+  <p class="muted">
+    Cuando un artista sube un topline sobre un beat, se crea una propuesta de colaboracion.
+    Aca ves las que te llegaron y los toplines que subiste vos.
+  </p>
+
+  <div id="page-message" hidden></div>
+
+  <!-- Propuestas que llegaron a los beats del usuario. -->
+  <section id="incoming-section" class="card" hidden>
+    <h2>Propuestas sobre mis beats</h2>
+    <form id="filter-form" class="small-form" style="max-width: 260px; margin: 0 0 15px 0;">
+      <label for="filter-status">Estado</label>
+      <select id="filter-status">
+        <option value="">Todas</option>
+        <option value="PENDING">Pendientes</option>
+        <option value="ACCEPTED">Aceptadas</option>
+        <option value="REJECTED">Rechazadas</option>
+      </select>
+    </form>
+    <div id="incoming-list"><p class="loading">Cargando propuestas...</p></div>
+  </section>
+
+  <!-- Toplines que subio el usuario. -->
+  <section id="mine-section" class="card" hidden>
+    <h2>Mis toplines</h2>
+    <div id="mine-list"><p class="loading">Cargando toplines...</p></div>
+  </section>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <span>
+    <a href="about.html">Quienes somos</a> -
+    <a href="contact.html">Contacto</a>
+  </span>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/collab.js"></script>
+<script>
+  const pageMessage = document.getElementById('page-message');
+  const incomingList = document.getElementById('incoming-list');
+  const mineList = document.getElementById('mine-list');
+  const filterStatus = document.getElementById('filter-status');
+
+  const user = getUser();
+
+  // Datos ya pedidos al backend. Se guardan para que cambiar el filtro de estado
+  // no tenga que volver a pedir todo: solo se vuelve a dibujar.
+  let collaborations = {};  // { toplineId: colaboracion }
+  let incomingGroups = [];  // [{ beat, toplines }] de los beats del usuario
+
+  function showError(text) {
+    showMessage(pageMessage, text, 'error');
+  }
+
+  // Link "Escuchar" que se repite en las dos listas.
+  function createListenLink(topline) {
+    const link = document.createElement('a');
+    link.href = safeUrl(topline.audioUrl);
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'Escuchar topline';
+    return link;
+  }
+
+  /* ---------- Propuestas sobre mis beats ---------- */
+
+  // Una fila: quien subio el topline, el estado, y los botones para decidir o
+  // quitar la propuesta.
+  async function createIncomingRow(topline, collaboration) {
+    const row = document.createElement('div');
+    row.className = 'topline';
+
+    const header = document.createElement('p');
+    const name = document.createElement('b');
+    name.textContent = await getUserName(topline.artistId);
+    header.appendChild(name);
+    header.appendChild(document.createTextNode(' - ' + formatDate(topline.createdAt) + ' '));
+    header.appendChild(createStatusTag(collaboration));
+    row.appendChild(header);
+    row.appendChild(createListenLink(topline));
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    if (collaboration !== undefined) {
+      if (collaboration.status === 'PENDING') {
+        actions.appendChild(createDecisionButton(collaboration, 'ACCEPTED', loadAll, showError));
+        actions.appendChild(createDecisionButton(collaboration, 'REJECTED', loadAll, showError));
+      }
+      // Cualquiera de las dos partes puede quitar la propuesta (DELETE).
+      actions.appendChild(createDeleteControl('Quitar propuesta', async function (button) {
+        setLoading(button, true, 'Si, borrar');
+        try {
+          await apiFetch('/api/collaborations/' + collaboration.id, 'DELETE');
+          loadAll();
+        } catch (error) {
+          setLoading(button, false, 'Si, borrar');
+          showError(error.message);
+        }
+      }));
+    }
+    row.appendChild(actions);
+    return row;
+  }
+
+  // Dibuja los beats del usuario con sus toplines, aplicando el filtro de estado.
+  async function renderIncoming() {
+    const wanted = filterStatus.value; // '' = todas
+    incomingList.innerHTML = '';
+    let shown = 0;
+
+    for (const group of incomingGroups) {
+      // Se queda solo con los toplines cuya propuesta tiene el estado elegido.
+      const rows = group.toplines.filter(function (topline) {
+        const collaboration = collaborations[topline.id];
+        if (wanted === '') return true;
+        return collaboration !== undefined && collaboration.status === wanted;
+      });
+      if (rows.length === 0) continue;
+
+      const title = document.createElement('h3');
+      const link = document.createElement('a');
+      link.href = 'beat.html?id=' + group.beat.id;
+      link.textContent = group.beat.title;
+      title.appendChild(link);
+      incomingList.appendChild(title);
+
+      for (const topline of rows) {
+        incomingList.appendChild(await createIncomingRow(topline, collaborations[topline.id]));
+        shown++;
+      }
+    }
+
+    if (shown === 0) {
+      incomingList.innerHTML = '<p class="muted">No hay propuestas para mostrar.</p>';
+    }
+  }
+
+  async function loadIncoming() {
+    // Para cada beat del usuario se piden sus toplines. Promise.all los pide
+    // todos a la vez en vez de esperar uno por uno.
+    const beats = await apiFetch('/api/beats?producerId=' + user.id);
+    incomingGroups = await Promise.all(beats.map(async function (beat) {
+      return { beat: beat, toplines: await apiFetch('/api/toplines?beatId=' + beat.id) };
+    }));
+    await renderIncoming();
+  }
+
+  filterStatus.addEventListener('change', renderIncoming);
+  document.getElementById('filter-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+  });
+
+  /* ---------- Mis toplines ---------- */
+
+  // Boton "Editar link": muestra una cajita para cambiar el audioUrl (PUT).
+  function createEditControl(topline) {
+    const box = document.createElement('div');
+    box.className = 'inline-edit';
+    box.hidden = true;
+
+    const input = document.createElement('input');
+    input.type = 'url';
+    input.value = topline.audioUrl;
+
+    const save = createButton('Guardar', 'btn btn-small', async function () {
+      const audioUrl = input.value.trim();
+      if (!audioUrl.startsWith('http')) {
+        showError('El link al audio tiene que empezar con http.');
+        return;
+      }
+      setLoading(save, true, 'Guardar');
+      try {
+        await apiFetch('/api/toplines/' + topline.id, 'PUT', { audioUrl: audioUrl });
+        loadAll();
+      } catch (error) {
+        setLoading(save, false, 'Guardar');
+        showError(error.message);
+      }
+    });
+    const cancel = createButton('Cancelar', 'btn btn-small btn-outline', function () {
+      box.hidden = true;
+    });
+
+    box.appendChild(input);
+    box.appendChild(save);
+    box.appendChild(document.createTextNode(' '));
+    box.appendChild(cancel);
+
+    const open = createButton('Editar link', 'btn btn-small btn-outline', function () {
+      box.hidden = false;
+      input.focus();
+    });
+    return { open: open, box: box };
+  }
+
+  function createMineRow(topline, collaboration) {
+    const row = document.createElement('div');
+    row.className = 'topline';
+
+    // El topline trae el beat completo adentro, asi que el titulo no hace falta pedirlo.
+    const header = document.createElement('p');
+    const beatLink = document.createElement('a');
+    beatLink.href = 'beat.html?id=' + topline.beat.id;
+    const beatName = document.createElement('b');
+    beatName.textContent = topline.beat.title;
+    beatLink.appendChild(beatName);
+    header.appendChild(beatLink);
+    header.appendChild(document.createTextNode(' - ' + formatDate(topline.createdAt) + ' '));
+    header.appendChild(createStatusTag(collaboration));
+    row.appendChild(header);
+    row.appendChild(createListenLink(topline));
+
+    const edit = createEditControl(topline);
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    actions.appendChild(edit.open);
+    actions.appendChild(createDeleteControl('Borrar topline', async function (button) {
+      setLoading(button, true, 'Si, borrar');
+      try {
+        await apiFetch('/api/toplines/' + topline.id, 'DELETE');
+        loadAll();
+      } catch (error) {
+        setLoading(button, false, 'Si, borrar');
+        showError(error.message);
+      }
+    }));
+    row.appendChild(actions);
+    row.appendChild(edit.box);
+    return row;
+  }
+
+  async function loadMine() {
+    const toplines = await apiFetch('/api/toplines?artistId=' + user.id);
+    mineList.innerHTML = '';
+    if (toplines.length === 0) {
+      mineList.innerHTML = '<p class="muted">Todavia no subiste ningun topline. Entra a un beat y subi el primero.</p>';
+      return;
+    }
+    for (const topline of toplines) {
+      mineList.appendChild(createMineRow(topline, collaborations[topline.id]));
+    }
+  }
+
+  /* ---------- Cargar todo ---------- */
+
+  // Se llama al abrir la pagina y despues de cada cambio (aceptar, borrar, editar),
+  // asi las dos listas siempre muestran lo que hay en el backend.
+  async function loadAll() {
+    hideMessage(pageMessage);
+    try {
+      collaborations = await loadCollaborationsByTopline();
+      await Promise.all([loadIncoming(), loadMine()]);
+    } catch (error) {
+      showError(error.message);
+    }
+  }
+
+  renderNav();
+
+  // Mismo criterio que el resto de las paginas protegidas: sin sesion no hay datos.
+  if (user === null) {
+    showMessage(pageMessage, 'Tenes que iniciar sesion para ver tus colaboraciones.', 'error');
+    const link = document.createElement('a');
+    link.href = 'login.html';
+    link.className = 'btn';
+    link.textContent = 'Entrar';
+    pageMessage.after(link);
+  } else if (user.role !== 'ARTIST') {
+    showMessage(pageMessage, 'Las colaboraciones son solo para artistas.', 'error');
+  } else {
+    document.getElementById('incoming-section').hidden = false;
+    document.getElementById('mine-section').hidden = false;
+    loadAll();
+  }
+</script>
+</body>
+</html>
