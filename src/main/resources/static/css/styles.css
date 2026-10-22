@@ -315,6 +315,52 @@ th {
   line-height: 80px;
 }
 
+/* ---------- Toplines y colaboraciones ----------
+   Cada topline es una fila: arriba el texto, abajo los botones. */
+.topline {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.topline:last-child {
+  border-bottom: none;
+}
+
+.topline p {
+  margin: 0 0 6px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Un color por estado de la colaboracion. */
+.tag-pending {
+  background-color: #fdf0d5;
+  color: #8a5a00;
+}
+
+.tag-accepted {
+  background-color: #e3f5ea;
+  color: var(--ok);
+}
+
+.tag-rejected {
+  background-color: #fde8e6;
+  color: var(--error);
+}
+
+.inline-edit {
+  margin-top: 8px;
+}
+
+.inline-edit input {
+  margin-bottom: 8px;
+}
+
 /* ---------- Celular ----------
    Por debajo de 600px de ancho los campos que estaban uno al lado del otro
    pasan a estar uno abajo del otro. */

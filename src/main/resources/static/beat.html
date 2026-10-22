@@ -13,6 +13,7 @@
   <nav>
     <a href="index.html">Inicio</a>
     <a href="beats.html" class="active">Beats</a>
+    <a href="collaborations.html">Colaboraciones</a>
     <a href="challenges.html">Desafios</a>
     <a href="ranking.html">Ranking</a>
     <a href="premium.html">Premium</a>
@@ -72,6 +73,26 @@
       <button type="button" class="btn btn-outline" id="delete-no">Cancelar</button>
     </div>
   </section>
+
+  <!-- Toplines: voces que artistas subieron sobre este beat. -->
+  <section id="toplines-section" class="card">
+    <h2>Toplines sobre este beat</h2>
+    <p class="muted">
+      Un topline es la voz de un artista sobre este beat. Al subirlo se crea una propuesta
+      de colaboracion que el dueño del beat puede aceptar o rechazar.
+    </p>
+    <div id="toplines-message" hidden></div>
+    <div id="toplines-list"><p class="loading">Cargando toplines...</p></div>
+
+    <form id="topline-form" novalidate hidden>
+      <h3 style="margin-top: 25px;">Subir un topline</h3>
+      <div id="topline-form-message" hidden></div>
+      <label for="topline-audio">Link al audio *</label>
+      <input type="url" id="topline-audio" placeholder="https://...">
+      <button type="submit" class="btn" id="topline-button">Subir topline</button>
+    </form>
+    <p id="topline-hint" class="muted" hidden></p>
+  </section>
 </main>
 
 <footer>
@@ -83,10 +104,12 @@
 </footer>
 
 <script src="js/api.js"></script>
+<script src="js/collab.js"></script>
 <script>
   // El id del beat viene en la URL: beat.html?id=3
   const beatId = getParam('id');
   const pageMessage = document.getElementById('page-message');
+  let currentBeat = null; // el beat que se esta mostrando
 
   // Agrega una linea "Etiqueta: valor" al detalle.
   function addRow(container, label, value) {
@@ -144,11 +167,13 @@
     }
     try {
       const beat = await apiFetch('/api/beats/' + beatId);
+      currentBeat = beat;
       await showDetail(beat);
       if (canModify(beat)) {
         fillEditForm(beat);
         document.getElementById('owner-actions').hidden = false;
       }
+      loadToplines();
     } catch (error) {
       document.getElementById('detail').innerHTML = '';
       showMessage(pageMessage, error.message, 'error');
@@ -216,6 +241,137 @@
     } catch (error) {
       showMessage(pageMessage, error.message, 'error');
       setLoading(button, false, 'Si, borrar');
+    }
+  });
+
+  /* ---------- Toplines sobre este beat ---------- */
+
+  const toplinesList = document.getElementById('toplines-list');
+  const toplinesMessage = document.getElementById('toplines-message');
+
+  function showToplinesError(text) {
+    showMessage(toplinesMessage, text, 'error');
+  }
+
+  // Una fila por topline: quien lo subio, el estado de la propuesta y los botones
+  // que le correspondan al usuario logueado.
+  async function createToplineRow(topline, collaboration) {
+    const row = document.createElement('div');
+    row.className = 'topline';
+
+    const header = document.createElement('p');
+    const name = document.createElement('b');
+    name.textContent = await getUserName(topline.artistId);
+    header.appendChild(name);
+    header.appendChild(document.createTextNode(' - ' + formatDate(topline.createdAt) + ' '));
+    header.appendChild(createStatusTag(collaboration));
+    row.appendChild(header);
+
+    const listen = document.createElement('a');
+    listen.href = safeUrl(topline.audioUrl);
+    listen.target = '_blank';
+    listen.rel = 'noopener';
+    listen.textContent = 'Escuchar topline';
+    row.appendChild(listen);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const user = getUser();
+
+    // Solo el dueño del beat decide, y solo mientras la propuesta esta pendiente.
+    const isBeatOwner = user !== null && currentBeat !== null && user.id === currentBeat.producerId;
+    if (isBeatOwner && collaboration !== undefined && collaboration.status === 'PENDING') {
+      actions.appendChild(createDecisionButton(collaboration, 'ACCEPTED', loadToplines, showToplinesError));
+      actions.appendChild(createDecisionButton(collaboration, 'REJECTED', loadToplines, showToplinesError));
+    }
+
+    // El artista que lo subio (o un admin) puede borrarlo.
+    if (canModifyTopline(topline)) {
+      actions.appendChild(createDeleteControl('Borrar topline', async function (button) {
+        setLoading(button, true, 'Si, borrar');
+        try {
+          await apiFetch('/api/toplines/' + topline.id, 'DELETE');
+          loadToplines();
+        } catch (error) {
+          setLoading(button, false, 'Si, borrar');
+          showToplinesError(error.message);
+        }
+      }));
+    }
+
+    if (actions.children.length > 0) {
+      row.appendChild(actions);
+    }
+    return row;
+  }
+
+  // Pide los toplines de este beat y las colaboraciones, y dibuja la lista.
+  async function loadToplines() {
+    hideMessage(toplinesMessage);
+    try {
+      const toplines = await apiFetch('/api/toplines?beatId=' + beatId);
+      const collaborations = await loadCollaborationsByTopline();
+      toplinesList.innerHTML = '';
+
+      if (toplines.length === 0) {
+        toplinesList.innerHTML = '<p class="muted">Todavia nadie subio un topline sobre este beat.</p>';
+        return;
+      }
+      for (const topline of toplines) {
+        toplinesList.appendChild(await createToplineRow(topline, collaborations[topline.id]));
+      }
+    } catch (error) {
+      toplinesList.innerHTML = '';
+      showToplinesError(error.message);
+    }
+  }
+
+  /* ---------- Subir un topline (POST) ---------- */
+
+  const toplineForm = document.getElementById('topline-form');
+  const toplineFormMessage = document.getElementById('topline-form-message');
+  const toplineButton = document.getElementById('topline-button');
+  const toplineHint = document.getElementById('topline-hint');
+
+  // Solo los ARTIST pueden subir toplines (lo mismo que chequea el backend).
+  const sessionUser = getUser();
+  if (sessionUser === null) {
+    toplineHint.textContent = 'Inicia sesion como artista para subir un topline.';
+    toplineHint.hidden = false;
+  } else if (sessionUser.role !== 'ARTIST') {
+    toplineHint.textContent = 'Solo los artistas pueden subir toplines.';
+    toplineHint.hidden = false;
+  } else {
+    toplineForm.hidden = false;
+  }
+
+  toplineForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    hideMessage(toplineFormMessage);
+
+    const audioUrl = document.getElementById('topline-audio').value.trim();
+    if (!audioUrl.startsWith('http')) {
+      showMessage(toplineFormMessage, 'El link al audio tiene que empezar con http.', 'error');
+      return;
+    }
+
+    setLoading(toplineButton, true, 'Subir topline');
+    try {
+      // El backend solo lee beat.id del objeto beat, el resto lo busca el.
+      await apiFetch('/api/toplines', 'POST', { beat: { id: Number(beatId) }, audioUrl: audioUrl });
+      showMessage(toplineFormMessage, 'Topline subido. Se creo una propuesta de colaboracion pendiente.', 'ok');
+      toplineForm.reset();
+      loadToplines();
+    } catch (error) {
+      // Un 403 al subir un topline casi siempre es el limite del plan Free.
+      if (error.message === messageForStatus(403)) {
+        showMessage(toplineFormMessage,
+          'No se pudo subir: llegaste al limite de 50 producciones del plan Free. Mira la pagina Premium.', 'error');
+      } else {
+        showMessage(toplineFormMessage, error.message, 'error');
+      }
+    } finally {
+      setLoading(toplineButton, false, 'Subir topline');
     }
   });
 
