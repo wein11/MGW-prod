@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Desafio</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html">Beats</a>
+    <a href="challenges.html" class="active">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <p><a href="challenges.html">&larr; Volver a desafios</a></p>
+  <div id="page-message" hidden></div>
+
+  <section id="detail" class="card">
+    <p class="loading">Cargando desafio...</p>
+  </section>
+
+  <!-- Resultados: solo si el desafio ya se cerro. -->
+  <section id="results-section" class="card" hidden>
+    <h2>Resultados</h2>
+    <div id="results"></div>
+  </section>
+
+  <!-- Cerrar el desafio: solo ADMIN y si todavia no se cerro. -->
+  <section id="close-section" class="card" hidden>
+    <h2>Cerrar desafio</h2>
+    <p class="muted">Calcula el puntaje de cada entrega y reparte los puntos del podio.</p>
+    <button type="button" class="btn btn-danger" id="close-button">Cerrar y calcular resultados</button>
+  </section>
+
+  <!-- Mandar entrega: solo ARTIST, con el desafio abierto. -->
+  <section id="submit-section" class="card" hidden>
+    <h2>Mandar mi entrega</h2>
+    <form id="submit-form" novalidate>
+      <div id="submit-message" hidden></div>
+      <label for="audioUrl">Link al audio *</label>
+      <input type="url" id="audioUrl" placeholder="https://...">
+      <button type="submit" class="btn" id="submit-button">Enviar entrega</button>
+    </form>
+  </section>
+
+  <h2>Entregas</h2>
+  <div id="submissions"></div>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <a href="about.html">Quienes somos</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  const challengeId = getParam('id');
+  const pageMessage = document.getElementById('page-message');
+  const user = getUser();
+
+  // Se llenan en loadPage() y los usan las demas funciones.
+  let challenge = null;
+  let closed = false;
+
+  function addRow(container, label, value) {
+    const p = document.createElement('p');
+    const b = document.createElement('b');
+    b.textContent = label + ': ';
+    p.appendChild(b);
+    p.appendChild(document.createTextNode(value));
+    container.appendChild(p);
+  }
+
+  function isPastDeadline() {
+    return new Date(challenge.deadline) < new Date();
+  }
+
+  async function showDetail() {
+    const detail = document.getElementById('detail');
+    detail.innerHTML = '';
+
+    const title = document.createElement('h1');
+    title.textContent = challenge.title;
+    detail.appendChild(title);
+
+    let status = 'Abierto';
+    if (closed) {
+      status = 'Cerrado con resultados';
+    } else if (isPastDeadline()) {
+      status = 'Vencido, esperando resultados';
+    }
+
+    addRow(detail, 'Estado', status);
+    addRow(detail, 'Genero', challenge.genre);
+    addRow(detail, 'BPM', challenge.bpm);
+    if (challenge.key) addRow(detail, 'Tonalidad', challenge.key);
+    if (challenge.theme) addRow(detail, 'Tema', challenge.theme);
+    addRow(detail, 'Cierra', formatDate(challenge.deadline));
+    addRow(detail, 'Artista invitado', await getUserName(challenge.guestArtistId));
+    if (challenge.prizeFirst) addRow(detail, '1er premio', challenge.prizeFirst);
+    if (challenge.prizeSecond) addRow(detail, '2do premio', challenge.prizeSecond);
+    if (challenge.prizeThird) addRow(detail, '3er premio', challenge.prizeThird);
+  }
+
+  // Muestra el podio. Cada resultado trae submissionId, rank y pointsAwarded;
+  // con la lista de entregas se busca de quien era cada una.
+  async function showResults(results, submissions) {
+    const container = document.getElementById('results');
+    container.innerHTML = '';
+    results.sort(function (a, b) { return a.rank - b.rank; });
+
+    for (const result of results) {
+      const submission = submissions.find(function (s) { return s.id === result.submissionId; });
+      let name = 'Entrega #' + result.submissionId;
+      if (submission) {
+        name = await getUserName(submission.producerId);
+      }
+      let text = result.rank + '° puesto - ' + name + ' - ' + result.pointsAwarded + ' puntos';
+      if (result.prizeText) {
+        text = text + ' - Premio: ' + result.prizeText;
+      }
+      const p = document.createElement('p');
+      p.textContent = text;
+      container.appendChild(p);
+    }
+    document.getElementById('results-section').hidden = false;
+  }
+
+  // Formulario para votar una entrega (puntaje del 1 al 10).
+  function createVoteForm(submission) {
+    const form = document.createElement('form');
+    form.className = 'form-row';
+    form.noValidate = true;
+
+    const scoreBox = document.createElement('div');
+    const score = document.createElement('select');
+    for (let i = 10; i >= 1; i--) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = i + ' puntos';
+      score.appendChild(option);
+    }
+    scoreBox.appendChild(score);
+
+    const commentBox = document.createElement('div');
+    const comment = document.createElement('input');
+    comment.type = 'text';
+    comment.placeholder = 'Comentario (opcional)';
+    commentBox.appendChild(comment);
+
+    const buttonBox = document.createElement('div');
+    const button = document.createElement('button');
+    button.type = 'submit';
+    button.className = 'btn';
+    button.textContent = 'Votar';
+    buttonBox.appendChild(button);
+
+    const message = document.createElement('div');
+    message.hidden = true;
+
+    form.appendChild(scoreBox);
+    form.appendChild(commentBox);
+    form.appendChild(buttonBox);
+
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      hideMessage(message);
+      setLoading(button, true, 'Votar');
+      try {
+        await apiFetch('/api/submissions/' + submission.id + '/votes', 'POST', {
+          score: Number(score.value),
+          comment: comment.value.trim() || null
+        });
+        form.hidden = true;
+        showMessage(message, 'Voto registrado. ¡Gracias!', 'ok');
+      } catch (error) {
+        // 403 aca casi siempre es "ya votaste esta entrega".
+        showMessage(message, error.message + ' (¿ya votaste esta entrega?)', 'error');
+        setLoading(button, false, 'Votar');
+      }
+    });
+
+    // Se devuelven juntos para que el mensaje quede debajo del formulario.
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(form);
+    wrapper.appendChild(message);
+    return wrapper;
+  }
+
+  async function showSubmissions(submissions) {
+    const container = document.getElementById('submissions');
+    container.innerHTML = '';
+
+    if (submissions.length === 0) {
+      container.innerHTML = '<p class="muted">Todavia no hay entregas.</p>';
+      return;
+    }
+
+    for (const submission of submissions) {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const name = document.createElement('h3');
+      name.textContent = await getUserName(submission.producerId);
+
+      const date = document.createElement('p');
+      date.className = 'muted';
+      date.textContent = 'Enviada el ' + formatDate(submission.submittedAt);
+
+      const audio = document.createElement('a');
+      audio.href = submission.audioUrl;
+      audio.target = '_blank';
+      audio.textContent = 'Escuchar entrega';
+
+      card.appendChild(name);
+      card.appendChild(date);
+      card.appendChild(audio);
+
+      // Se puede votar con sesion, si no es la entrega propia y el desafio no se cerro.
+      const isOwn = user !== null && user.id === submission.producerId;
+      if (user !== null && !isOwn && !closed) {
+        card.appendChild(createVoteForm(submission));
+      }
+      container.appendChild(card);
+    }
+  }
+
+  async function loadPage() {
+    if (challengeId === null) {
+      document.getElementById('detail').innerHTML = '';
+      showMessage(pageMessage, 'Falta el id del desafio en la direccion.', 'error');
+      return;
+    }
+    try {
+      challenge = await apiFetch('/api/challenges/' + challengeId);
+      const submissions = await apiFetch('/api/challenges/' + challengeId + '/submissions');
+
+      // No hay un endpoint de "resultados de un desafio": se piden todos y se
+      // quedan los de este. Si hay alguno, el desafio ya se cerro.
+      const allResults = await apiFetch('/api/challenges/results');
+      const results = allResults.filter(function (r) { return r.challengeId === challenge.id; });
+      closed = results.length > 0;
+
+      await showDetail();
+      if (closed) {
+        await showResults(results, submissions);
+      }
+      await showSubmissions(submissions);
+
+      // Secciones que dependen del rol y del estado del desafio.
+      document.getElementById('close-section').hidden = !(user !== null && user.role === 'ADMIN' && !closed);
+      document.getElementById('submit-section').hidden = !(user !== null && user.role === 'ARTIST' && !closed && !isPastDeadline());
+    } catch (error) {
+      document.getElementById('detail').innerHTML = '';
+      showMessage(pageMessage, error.message, 'error');
+    }
+  }
+
+  /* ---------- Mandar entrega ---------- */
+
+  const submitForm = document.getElementById('submit-form');
+  const submitMessage = document.getElementById('submit-message');
+  const submitButton = document.getElementById('submit-button');
+
+  submitForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    hideMessage(submitMessage);
+
+    const audioUrl = document.getElementById('audioUrl').value.trim();
+    if (!audioUrl.startsWith('http')) {
+      showMessage(submitMessage, 'El link al audio tiene que empezar con http.', 'error');
+      return;
+    }
+
+    setLoading(submitButton, true, 'Enviar entrega');
+    try {
+      await apiFetch('/api/challenges/' + challengeId + '/submissions', 'POST', { audioUrl: audioUrl });
+      submitForm.reset();
+      showMessage(submitMessage, 'Entrega enviada.', 'ok');
+      loadPage();
+    } catch (error) {
+      showMessage(submitMessage, error.message, 'error');
+    } finally {
+      setLoading(submitButton, false, 'Enviar entrega');
+    }
+  });
+
+  /* ---------- Cerrar desafio (ADMIN) ---------- */
+
+  document.getElementById('close-button').addEventListener('click', async function () {
+    const button = document.getElementById('close-button');
+    setLoading(button, true, 'Cerrar y calcular resultados');
+    try {
+      await apiFetch('/api/challenges/' + challengeId + '/close', 'PUT');
+      loadPage(); // al recargar ya aparecen los resultados
+    } catch (error) {
+      showMessage(pageMessage, error.message, 'error');
+    } finally {
+      setLoading(button, false, 'Cerrar y calcular resultados');
+    }
+  });
+
+  renderNav();
+  loadPage();
+</script>
+</body>
+</html>

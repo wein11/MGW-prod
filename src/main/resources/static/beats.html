@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Beats</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html" class="active">Beats</a>
+    <a href="challenges.html">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <h1>Beats</h1>
+
+  <!-- Filtros: se mandan al backend como query params (?genre=Trap&bpm=140). -->
+  <form id="filter-form" class="card">
+    <div class="form-row">
+      <div>
+        <label for="filter-genre">Genero</label>
+        <input type="text" id="filter-genre" placeholder="Ej: Trap">
+      </div>
+      <div>
+        <label for="filter-bpm">BPM</label>
+        <input type="number" id="filter-bpm" min="1" placeholder="Ej: 140">
+      </div>
+    </div>
+    <button type="submit" class="btn">Filtrar</button>
+    <button type="button" class="btn btn-outline" id="clear-filters">Limpiar</button>
+  </form>
+
+  <!-- Alta de beat: solo para usuarios ARTIST. El script la muestra si corresponde. -->
+  <section id="create-section" class="card" hidden>
+    <h2>Publicar un beat</h2>
+    <form id="create-form" novalidate>
+      <div id="create-message" hidden></div>
+      <div class="form-row">
+        <div>
+          <label for="title">Titulo *</label>
+          <input type="text" id="title">
+        </div>
+        <div>
+          <label for="genre">Genero *</label>
+          <input type="text" id="genre">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="bpm">BPM *</label>
+          <input type="number" id="bpm" min="1">
+        </div>
+        <div>
+          <label for="key">Tonalidad</label>
+          <input type="text" id="key" placeholder="Ej: Am">
+        </div>
+      </div>
+      <label for="audioUrl">Link al audio *</label>
+      <input type="url" id="audioUrl" placeholder="https://...">
+      <button type="submit" class="btn" id="create-button">Publicar</button>
+    </form>
+  </section>
+
+  <p id="count" class="muted"></p>
+  <div id="list" class="grid"></div>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <a href="about.html">Quienes somos</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  const list = document.getElementById('list');
+  const count = document.getElementById('count');
+
+  // Arma la tarjeta de un beat. Usa textContent (y no innerHTML) para los datos
+  // que cargo un usuario: asi, si alguien pone HTML en el titulo, se muestra
+  // como texto y no se ejecuta.
+  function createBeatCard(beat) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const title = document.createElement('h3');
+    title.textContent = beat.title;
+
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = beat.genre;
+
+    const info = document.createElement('p');
+    info.className = 'muted';
+    info.textContent = beat.bpm + ' BPM' + (beat.key ? ' - ' + beat.key : '');
+
+    // El nombre del productor se pide aparte; mientras tanto se ve "...".
+    const producer = document.createElement('p');
+    producer.textContent = 'Por ...';
+    getUserName(beat.producerId).then(function (name) {
+      producer.textContent = 'Por ' + name;
+    });
+
+    const link = document.createElement('a');
+    link.href = 'beat.html?id=' + beat.id;
+    link.className = 'btn btn-small';
+    link.textContent = 'Ver detalle';
+
+    card.appendChild(title);
+    card.appendChild(tag);
+    card.appendChild(info);
+    card.appendChild(producer);
+    card.appendChild(link);
+    return card;
+  }
+
+  // Pide la lista al backend (con los filtros que haya) y la dibuja.
+  async function loadBeats() {
+    list.innerHTML = '<p class="loading">Cargando beats...</p>';
+    count.textContent = '';
+
+    const genre = document.getElementById('filter-genre').value.trim();
+    const bpm = document.getElementById('filter-bpm').value;
+
+    let path = '/api/beats';
+    const params = new URLSearchParams();
+    if (genre !== '') params.append('genre', genre);
+    if (bpm !== '') params.append('bpm', bpm);
+    if (params.toString() !== '') {
+      path = path + '?' + params.toString();
+    }
+
+    try {
+      const beats = await apiFetch(path);
+      list.innerHTML = '';
+      count.textContent = beats.length + ' beats encontrados';
+
+      if (beats.length === 0) {
+        list.innerHTML = '<p class="muted">No hay beats con esos filtros.</p>';
+        return;
+      }
+      for (const beat of beats) {
+        list.appendChild(createBeatCard(beat));
+      }
+    } catch (error) {
+      list.innerHTML = '';
+      const message = document.createElement('p');
+      message.className = 'message message-error';
+      message.textContent = error.message;
+      list.appendChild(message);
+    }
+  }
+
+  document.getElementById('filter-form').addEventListener('submit', function (event) {
+    // Sin esto el navegador recarga la pagina al mandar el formulario.
+    event.preventDefault();
+    loadBeats();
+  });
+
+  document.getElementById('clear-filters').addEventListener('click', function () {
+    document.getElementById('filter-form').reset();
+    loadBeats();
+  });
+
+  /* ---------- Publicar un beat ---------- */
+
+  const createForm = document.getElementById('create-form');
+  const createMessage = document.getElementById('create-message');
+  const createButton = document.getElementById('create-button');
+
+  // Validacion en el cliente: los mismos campos obligatorios que valida el
+  // BeatController. Asi el usuario ve el error sin esperar al servidor.
+  // Devuelve el texto del error, o null si esta todo bien.
+  function validateBeat(beat) {
+    if (beat.title === '') return 'El titulo es obligatorio.';
+    if (beat.genre === '') return 'El genero es obligatorio.';
+    if (isNaN(beat.bpm) || beat.bpm < 1) return 'El BPM tiene que ser un numero mayor a 0.';
+    if (!beat.audioUrl.startsWith('http')) return 'El link al audio tiene que empezar con http.';
+    return null;
+  }
+
+  createForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    hideMessage(createMessage);
+
+    const beat = {
+      title: document.getElementById('title').value.trim(),
+      genre: document.getElementById('genre').value.trim(),
+      bpm: Number(document.getElementById('bpm').value),
+      key: document.getElementById('key').value.trim() || null,
+      audioUrl: document.getElementById('audioUrl').value.trim()
+    };
+
+    const error = validateBeat(beat);
+    if (error !== null) {
+      showMessage(createMessage, error, 'error');
+      return;
+    }
+
+    setLoading(createButton, true, 'Publicar');
+    try {
+      await apiFetch('/api/beats', 'POST', beat);
+      showMessage(createMessage, 'Beat publicado.', 'ok');
+      createForm.reset();
+      loadBeats(); // se vuelve a pedir la lista para que aparezca el nuevo
+    } catch (err) {
+      showMessage(createMessage, err.message, 'error');
+    } finally {
+      setLoading(createButton, false, 'Publicar');
+    }
+  });
+
+  /* ---------- Al cargar la pagina ---------- */
+  renderNav();
+
+  // Solo los ARTIST pueden publicar (lo mismo que chequea el backend con isArtist).
+  const user = getUser();
+  if (user !== null && user.role === 'ARTIST') {
+    document.getElementById('create-section').hidden = false;
+  }
+
+  loadBeats();
+</script>
+</body>
+</html>

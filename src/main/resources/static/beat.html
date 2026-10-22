@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Detalle del beat</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html" class="active">Beats</a>
+    <a href="challenges.html">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <p><a href="beats.html">&larr; Volver a beats</a></p>
+  <div id="page-message" hidden></div>
+
+  <!-- Detalle -->
+  <section id="detail" class="card">
+    <p class="loading">Cargando beat...</p>
+  </section>
+
+  <!-- Acciones del dueño (o de un admin). El script las muestra si corresponde. -->
+  <section id="owner-actions" class="card" hidden>
+    <h2>Modificar beat</h2>
+    <form id="edit-form" novalidate>
+      <div id="edit-message" hidden></div>
+      <div class="form-row">
+        <div>
+          <label for="title">Titulo *</label>
+          <input type="text" id="title">
+        </div>
+        <div>
+          <label for="genre">Genero *</label>
+          <input type="text" id="genre">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="bpm">BPM *</label>
+          <input type="number" id="bpm" min="1">
+        </div>
+        <div>
+          <label for="key">Tonalidad</label>
+          <input type="text" id="key">
+        </div>
+      </div>
+      <label for="audioUrl">Link al audio *</label>
+      <input type="url" id="audioUrl">
+      <button type="submit" class="btn" id="edit-button">Guardar cambios</button>
+    </form>
+
+    <h2 style="margin-top: 30px;">Borrar beat</h2>
+    <p class="muted">Esta accion no se puede deshacer.</p>
+    <button type="button" class="btn btn-danger" id="delete-button">Borrar</button>
+
+    <!-- Confirmacion en dos pasos: el primer click solo muestra esta caja. -->
+    <div id="delete-confirm" hidden>
+      <p><b>¿Seguro que queres borrar este beat?</b></p>
+      <button type="button" class="btn btn-danger" id="delete-yes">Si, borrar</button>
+      <button type="button" class="btn btn-outline" id="delete-no">Cancelar</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <a href="about.html">Quienes somos</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  // El id del beat viene en la URL: beat.html?id=3
+  const beatId = getParam('id');
+  const pageMessage = document.getElementById('page-message');
+
+  // Agrega una linea "Etiqueta: valor" al detalle.
+  function addRow(container, label, value) {
+    const p = document.createElement('p');
+    const b = document.createElement('b');
+    b.textContent = label + ': ';
+    p.appendChild(b);
+    p.appendChild(document.createTextNode(value));
+    container.appendChild(p);
+  }
+
+  async function showDetail(beat) {
+    const detail = document.getElementById('detail');
+    detail.innerHTML = '';
+
+    const title = document.createElement('h1');
+    title.textContent = beat.title;
+    detail.appendChild(title);
+
+    addRow(detail, 'Productor', await getUserName(beat.producerId));
+    addRow(detail, 'Genero', beat.genre);
+    addRow(detail, 'BPM', beat.bpm);
+    addRow(detail, 'Tonalidad', beat.key || 'Sin especificar');
+    addRow(detail, 'Publicado', formatDate(beat.createdAt));
+
+    const audio = document.createElement('a');
+    audio.href = beat.audioUrl;
+    audio.target = '_blank';
+    audio.className = 'btn';
+    audio.textContent = 'Escuchar';
+    detail.appendChild(audio);
+  }
+
+  // Copia los datos actuales del beat en el formulario de edicion.
+  function fillEditForm(beat) {
+    document.getElementById('title').value = beat.title;
+    document.getElementById('genre').value = beat.genre;
+    document.getElementById('bpm').value = beat.bpm;
+    document.getElementById('key').value = beat.key || '';
+    document.getElementById('audioUrl').value = beat.audioUrl;
+  }
+
+  // Misma regla que BeatService.canModify: el dueño o un admin.
+  function canModify(beat) {
+    const user = getUser();
+    if (user === null) return false;
+    return user.id === beat.producerId || user.role === 'ADMIN';
+  }
+
+  async function loadBeat() {
+    if (beatId === null) {
+      document.getElementById('detail').innerHTML = '';
+      showMessage(pageMessage, 'Falta el id del beat en la direccion.', 'error');
+      return;
+    }
+    try {
+      const beat = await apiFetch('/api/beats/' + beatId);
+      await showDetail(beat);
+      if (canModify(beat)) {
+        fillEditForm(beat);
+        document.getElementById('owner-actions').hidden = false;
+      }
+    } catch (error) {
+      document.getElementById('detail').innerHTML = '';
+      showMessage(pageMessage, error.message, 'error');
+    }
+  }
+
+  /* ---------- Modificar (PUT) ---------- */
+
+  const editForm = document.getElementById('edit-form');
+  const editMessage = document.getElementById('edit-message');
+  const editButton = document.getElementById('edit-button');
+
+  editForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    hideMessage(editMessage);
+
+    const changes = {
+      title: document.getElementById('title').value.trim(),
+      genre: document.getElementById('genre').value.trim(),
+      bpm: Number(document.getElementById('bpm').value),
+      key: document.getElementById('key').value.trim() || null,
+      audioUrl: document.getElementById('audioUrl').value.trim()
+    };
+
+    if (changes.title === '' || changes.genre === '' || changes.audioUrl === '') {
+      showMessage(editMessage, 'Titulo, genero y link al audio son obligatorios.', 'error');
+      return;
+    }
+    if (isNaN(changes.bpm) || changes.bpm < 1) {
+      showMessage(editMessage, 'El BPM tiene que ser un numero mayor a 0.', 'error');
+      return;
+    }
+
+    setLoading(editButton, true, 'Guardar cambios');
+    try {
+      const updated = await apiFetch('/api/beats/' + beatId, 'PUT', changes);
+      await showDetail(updated); // el detalle de arriba se actualiza con lo que devolvio el backend
+      showMessage(editMessage, 'Cambios guardados.', 'ok');
+    } catch (error) {
+      showMessage(editMessage, error.message, 'error');
+    } finally {
+      setLoading(editButton, false, 'Guardar cambios');
+    }
+  });
+
+  /* ---------- Borrar (DELETE) ---------- */
+
+  const deleteConfirm = document.getElementById('delete-confirm');
+
+  document.getElementById('delete-button').addEventListener('click', function () {
+    deleteConfirm.hidden = false;
+  });
+
+  document.getElementById('delete-no').addEventListener('click', function () {
+    deleteConfirm.hidden = true;
+  });
+
+  document.getElementById('delete-yes').addEventListener('click', async function () {
+    const button = document.getElementById('delete-yes');
+    setLoading(button, true, 'Si, borrar');
+    try {
+      await apiFetch('/api/beats/' + beatId, 'DELETE');
+      // Borrado OK (204): no hay nada mas que mostrar aca, se vuelve al listado.
+      window.location.href = 'beats.html';
+    } catch (error) {
+      showMessage(pageMessage, error.message, 'error');
+      setLoading(button, false, 'Si, borrar');
+    }
+  });
+
+  renderNav();
+  loadBeat();
+</script>
+</body>
+</html>

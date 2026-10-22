@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Premium</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html">Beats</a>
+    <a href="challenges.html">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html" class="active">Premium</a>
+    <a href="about.html">Nosotros</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <h1>Pasate a Premium</h1>
+  <div id="page-message" hidden></div>
+
+  <!-- Todo el flujo de compra. Queda oculto si el usuario no puede comprar. -->
+  <div id="checkout" hidden>
+
+    <div class="steps">
+      <span id="step-label-1">1. Plan</span>
+      <span id="step-label-2">2. Pago</span>
+      <span id="step-label-3">3. Confirmacion</span>
+    </div>
+
+    <!-- Paso 1: elegir el plan -->
+    <section id="step-1">
+      <p>Tu plan actual: <b id="current-plan">...</b></p>
+      <div class="grid">
+        <div class="card">
+          <h2>Free</h2>
+          <p class="muted">$0 / mes</p>
+          <p>Hasta 50 producciones (beats y toplines).</p>
+        </div>
+        <div class="card">
+          <h2>Premium</h2>
+          <p class="muted">$4.999 / mes</p>
+          <p>Producciones ilimitadas.</p>
+          <button type="button" class="btn" id="choose-premium">Elegir Premium</button>
+        </div>
+      </div>
+      <!-- Solo se ve si ya es Premium: permite volver a Free. -->
+      <div id="downgrade-box" class="card" style="margin-top: 20px;" hidden>
+        <p>Ya sos Premium. Si queres, podes volver al plan Free.</p>
+        <button type="button" class="btn btn-outline" id="downgrade-button">Volver a Free</button>
+      </div>
+    </section>
+
+    <!-- Paso 2: datos de pago (simulados) -->
+    <section id="step-2" class="card small-form" hidden>
+      <h2>Datos de pago</h2>
+      <p class="muted">
+        Es una simulacion: los datos de la tarjeta se revisan en el navegador pero no se
+        envian a ningun lado. Podes usar 4111 1111 1111 1111.
+      </p>
+      <form id="payment-form" novalidate>
+        <div id="payment-message" hidden></div>
+        <label for="card-name">Nombre en la tarjeta</label>
+        <input type="text" id="card-name">
+        <label for="card-number">Numero de tarjeta</label>
+        <input type="text" id="card-number" inputmode="numeric" placeholder="1234 5678 9012 3456">
+        <div class="form-row">
+          <div>
+            <label for="card-expiry">Vencimiento</label>
+            <input type="text" id="card-expiry" placeholder="MM/AA">
+          </div>
+          <div>
+            <label for="card-cvv">CVV</label>
+            <input type="text" id="card-cvv" inputmode="numeric" placeholder="123">
+          </div>
+        </div>
+        <p><b>Total: $4.999</b></p>
+        <button type="submit" class="btn" id="pay-button">Pagar</button>
+        <button type="button" class="btn btn-outline" id="back-button">Volver</button>
+      </form>
+    </section>
+
+    <!-- Paso 3: confirmacion -->
+    <section id="step-3" class="card" hidden>
+      <h2>¡Listo!</h2>
+      <p>Tu plan ahora es <b id="new-plan"></b>. Ya podes publicar sin limite.</p>
+      <a href="beats.html" class="btn">Publicar un beat</a>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <a href="about.html">Quienes somos</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  const pageMessage = document.getElementById('page-message');
+
+  // Muestra solo la seccion del paso indicado y marca su etiqueta arriba.
+  function showStep(number) {
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById('step-' + i).hidden = (i !== number);
+      const label = document.getElementById('step-label-' + i);
+      if (i === number) {
+        label.className = 'current';
+      } else {
+        label.className = '';
+      }
+    }
+  }
+
+  // Paso 1: consulta el plan actual en el backend.
+  async function loadCurrentPlan() {
+    try {
+      const subscription = await apiFetch('/api/subscriptions/me');
+      document.getElementById('current-plan').textContent = subscription.plan;
+      const isPremium = subscription.plan === 'PREMIUM';
+      document.getElementById('choose-premium').hidden = isPremium;
+      document.getElementById('downgrade-box').hidden = !isPremium;
+    } catch (error) {
+      showMessage(pageMessage, error.message, 'error');
+    }
+  }
+
+  document.getElementById('choose-premium').addEventListener('click', function () {
+    showStep(2);
+  });
+
+  document.getElementById('back-button').addEventListener('click', function () {
+    showStep(1);
+  });
+
+  /* ---------- Paso 2: validar la tarjeta ----------
+     Solo se revisa el formato. Ningun dato de la tarjeta viaja al backend. */
+
+  function onlyDigits(text) {
+    return text.replace(/\s/g, ''); // saca los espacios: "4111 1111" -> "41111111"
+  }
+
+  function validateCard() {
+    const name = document.getElementById('card-name').value.trim();
+    const number = onlyDigits(document.getElementById('card-number').value);
+    const expiry = document.getElementById('card-expiry').value.trim();
+    const cvv = document.getElementById('card-cvv').value.trim();
+
+    if (name === '') return 'Completa el nombre de la tarjeta.';
+    // Expresion regular: ^ inicio, \d{16} exactamente 16 digitos, $ fin.
+    if (!/^\d{16}$/.test(number)) return 'El numero de tarjeta tiene que tener 16 digitos.';
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) return 'El vencimiento tiene que tener el formato MM/AA.';
+    const month = Number(expiry.substring(0, 2));
+    if (month < 1 || month > 12) return 'El mes de vencimiento no es valido.';
+    if (!/^\d{3}$/.test(cvv)) return 'El CVV tiene que tener 3 digitos.';
+    return null;
+  }
+
+  const paymentForm = document.getElementById('payment-form');
+  const paymentMessage = document.getElementById('payment-message');
+  const payButton = document.getElementById('pay-button');
+
+  paymentForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    hideMessage(paymentMessage);
+
+    const error = validateCard();
+    if (error !== null) {
+      showMessage(paymentMessage, error, 'error');
+      return;
+    }
+
+    setLoading(payButton, true, 'Pagar');
+    try {
+      // Paso 3: el "cobro" lo simula el backend. POST /api/subscriptions/upgrade
+      // cambia el plan a PREMIUM y devuelve la suscripcion actualizada.
+      const subscription = await apiFetch('/api/subscriptions/upgrade', 'POST');
+      document.getElementById('new-plan').textContent = subscription.plan;
+      paymentForm.reset();
+      showStep(3);
+    } catch (err) {
+      showMessage(paymentMessage, err.message, 'error');
+    } finally {
+      setLoading(payButton, false, 'Pagar');
+    }
+  });
+
+  /* ---------- Volver a Free (PUT) ---------- */
+  document.getElementById('downgrade-button').addEventListener('click', async function () {
+    try {
+      await apiFetch('/api/subscriptions/downgrade', 'PUT');
+      showMessage(pageMessage, 'Volviste al plan Free.', 'ok');
+      loadCurrentPlan();
+    } catch (error) {
+      showMessage(pageMessage, error.message, 'error');
+    }
+  });
+
+  /* ---------- Al cargar la pagina ---------- */
+  renderNav();
+
+  // El backend solo deja comprar a usuarios ARTIST (403 para los demas).
+  // Se avisa antes de mostrar el formulario.
+  const user = getUser();
+  if (user === null) {
+    pageMessage.innerHTML = 'Para comprar Premium tenes que <a href="login.html">iniciar sesion</a>.';
+    pageMessage.className = 'message message-error';
+    pageMessage.hidden = false;
+  } else if (user.role !== 'ARTIST') {
+    showMessage(pageMessage, 'El plan Premium es solo para cuentas de artista.', 'error');
+  } else {
+    document.getElementById('checkout').hidden = false;
+    showStep(1);
+    loadCurrentPlan();
+  }
+</script>
+</body>
+</html>

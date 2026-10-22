@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Crear cuenta</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html">Beats</a>
+    <a href="challenges.html">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <section class="card small-form">
+    <h1>Crear cuenta</h1>
+    <form id="register-form" novalidate>
+      <div id="message" hidden></div>
+      <label for="displayName">Nombre artistico *</label>
+      <input type="text" id="displayName">
+      <label for="email">Email *</label>
+      <input type="email" id="email" autocomplete="username">
+      <label for="password">Contraseña * (minimo 8 caracteres)</label>
+      <input type="password" id="password" autocomplete="new-password">
+      <label for="city">Ciudad</label>
+      <input type="text" id="city">
+      <label for="role">Tipo de cuenta *</label>
+      <!-- ADMIN no aparece: el backend no deja crear admins desde afuera (403). -->
+      <select id="role">
+        <option value="ARTIST">Artista / productor</option>
+        <option value="DISCOGRAFICA">Discografica</option>
+      </select>
+      <button type="submit" class="btn" id="register-button">Crear cuenta</button>
+    </form>
+    <p>¿Ya tenes cuenta? <a href="login.html">Inicia sesion</a></p>
+  </section>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <a href="about.html">Quienes somos</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  const form = document.getElementById('register-form');
+  const message = document.getElementById('message');
+  const button = document.getElementById('register-button');
+
+  // Mismas reglas que AuthController.register, revisadas antes de mandar.
+  function validate(user) {
+    if (user.displayName === '') return 'El nombre es obligatorio.';
+    if (!user.email.includes('@')) return 'El email no es valido.';
+    if (user.password.length < 8) return 'La contraseña tiene que tener al menos 8 caracteres.';
+    return null;
+  }
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    hideMessage(message);
+
+    const user = {
+      displayName: document.getElementById('displayName').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value,
+      city: document.getElementById('city').value.trim() || null,
+      role: document.getElementById('role').value
+    };
+
+    const error = validate(user);
+    if (error !== null) {
+      showMessage(message, error, 'error');
+      return;
+    }
+
+    setLoading(button, true, 'Crear cuenta');
+    try {
+      await apiFetch('/api/auth/register', 'POST', user);
+      // El registro no devuelve token: para no hacer loguear al usuario a mano,
+      // se hace el login automaticamente con los mismos datos.
+      const session = await apiFetch('/api/auth/login', 'POST', { email: user.email, password: user.password });
+      saveSession(session);
+      window.location.href = 'index.html';
+    } catch (err) {
+      showMessage(message, err.message, 'error');
+      setLoading(button, false, 'Crear cuenta');
+    }
+  });
+
+  renderNav();
+</script>
+</body>
+</html>
