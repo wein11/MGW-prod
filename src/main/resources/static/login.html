@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Iniciar sesion</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html">Beats</a>
+    <a href="challenges.html">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <section class="card small-form">
+    <h1>Iniciar sesion</h1>
+    <form id="login-form" novalidate>
+      <div id="message" hidden></div>
+      <label for="email">Email</label>
+      <input type="email" id="email" autocomplete="username">
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" autocomplete="current-password">
+      <button type="submit" class="btn" id="login-button">Entrar</button>
+    </form>
+    <p>¿No tenes cuenta? <a href="register.html">Registrate</a></p>
+  </section>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <a href="about.html">Quienes somos</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  const form = document.getElementById('login-form');
+  const message = document.getElementById('message');
+  const button = document.getElementById('login-button');
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    hideMessage(message);
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (email === '' || password === '') {
+      showMessage(message, 'Completa email y contraseña.', 'error');
+      return;
+    }
+
+    setLoading(button, true, 'Entrar');
+    try {
+      // POST /api/auth/login devuelve la sesion con el token.
+      const session = await apiFetch('/api/auth/login', 'POST', { email: email, password: password });
+      saveSession(session);
+      window.location.href = 'index.html';
+    } catch (error) {
+      // El backend responde 401 tanto si el email no existe como si la contraseña
+      // esta mal: a proposito no dice cual de los dos fallo.
+      showMessage(message, 'Email o contraseña incorrectos.', 'error');
+      setLoading(button, false, 'Entrar');
+    }
+  });
+
+  renderNav();
+</script>
+</body>
+</html>

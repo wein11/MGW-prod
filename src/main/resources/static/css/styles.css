@@ -1,0 +1,331 @@
+/* ==========================================================================
+   styles.css — un solo archivo de estilos para todo el sitio.
+   Orden: colores, base, header/footer, componentes, paginas, celular.
+   ========================================================================== */
+
+/* ---------- Colores ----------
+   Variables CSS: se definen una vez aca y se usan con var(--nombre).
+   Si queremos cambiar el color principal, se cambia en un solo lugar. */
+:root {
+  --dark: #17141f;
+  --light: #f6f4fa;
+  --white: #ffffff;
+  --primary: #6d3df5;
+  --primary-dark: #5229c9;
+  --text: #2b2833;
+  --muted: #6f6a7a;
+  --border: #ddd8e8;
+  --ok: #1d7a46;
+  --error: #b42318;
+}
+
+/* ---------- Base ---------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--light);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--primary);
+}
+
+h1, h2, h3 {
+  margin-top: 0;
+}
+
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+/* ---------- Header con la barra de navegacion ---------- */
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 30px;
+  background-color: var(--dark);
+}
+
+.logo {
+  color: var(--white);
+  font-size: 22px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.logo span {
+  color: var(--primary);
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+nav a {
+  color: var(--white);
+  text-decoration: none;
+}
+
+nav a:hover,
+nav a.active {
+  color: #b9a3ff;
+  text-decoration: underline;
+}
+
+#session-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-name {
+  color: var(--white);
+  font-size: 14px;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 20px 30px;
+  margin-top: 40px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---------- Botones ---------- */
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  border: 2px solid var(--primary);
+  border-radius: 6px;
+  background-color: var(--primary);
+  color: var(--white);
+  font-size: 15px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--primary);
+}
+
+header .btn-outline {
+  color: var(--white);
+}
+
+.btn-danger {
+  background-color: var(--error);
+  border-color: var(--error);
+}
+
+.btn-small {
+  padding: 5px 12px;
+  font-size: 14px;
+}
+
+/* ---------- Tarjetas (cajas blancas) ---------- */
+.card {
+  background-color: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Grilla de tarjetas: auto-fill pone tantas columnas de 230px como entren. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.grid .card {
+  margin-bottom: 0;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background-color: #ece6ff;
+  color: var(--primary-dark);
+  font-size: 13px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ---------- Formularios ---------- */
+form label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+form input,
+form select,
+form textarea {
+  width: 100%;
+  padding: 9px;
+  margin-bottom: 15px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row > div {
+  flex: 1;
+}
+
+.small-form {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ---------- Mensajes de error / exito ---------- */
+.message {
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.message-error {
+  background-color: #fde8e6;
+  color: var(--error);
+}
+
+.message-ok {
+  background-color: #e3f5ea;
+  color: var(--ok);
+}
+
+.loading {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ---------- Tablas (ranking) ---------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--white);
+}
+
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+th {
+  background-color: var(--dark);
+  color: var(--white);
+}
+
+/* ---------- Landing ---------- */
+.hero {
+  padding: 60px 20px;
+  text-align: center;
+  background-color: var(--dark);
+  color: var(--white);
+}
+
+.hero h1 {
+  font-size: 40px;
+}
+
+.hero p {
+  max-width: 600px;
+  margin: 0 auto 25px;
+  font-size: 18px;
+}
+
+/* ---------- Compra: los 3 pasos ---------- */
+.steps {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.steps span {
+  flex: 1;
+  padding: 8px;
+  text-align: center;
+  border-bottom: 3px solid var(--border);
+  color: var(--muted);
+}
+
+.steps span.current {
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: bold;
+}
+
+/* ---------- Equipo ---------- */
+.member {
+  text-align: center;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: var(--white);
+  font-size: 30px;
+  line-height: 80px;
+}
+
+/* ---------- Celular ----------
+   Por debajo de 600px de ancho los campos que estaban uno al lado del otro
+   pasan a estar uno abajo del otro. */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  header {
+    padding: 15px;
+  }
+
+  .hero h1 {
+    font-size: 30px;
+  }
+}

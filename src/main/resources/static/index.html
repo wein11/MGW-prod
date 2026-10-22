@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Inicio</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html" class="active">Inicio</a>
+    <a href="beats.html">Beats</a>
+    <a href="challenges.html">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<section class="hero">
+  <h1>Tu musica, frente a quien la tiene que escuchar</h1>
+  <p>
+    MGW Prod es la plataforma donde productores y artistas emergentes publican beats,
+    compiten en desafios con jurado y suman puntos para hacerse conocer.
+  </p>
+  <a href="beats.html" class="btn">Ver beats</a>
+  <a href="register.html" class="btn btn-outline">Crear cuenta</a>
+</section>
+
+<main>
+  <h2>Que podes hacer</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Publicar beats</h3>
+      <p>Subi tus producciones con genero, BPM y tonalidad para que otros artistas las encuentren.</p>
+    </div>
+    <div class="card">
+      <h3>Competir en desafios</h3>
+      <p>Mandá tu entrega. La vota la comunidad, los productores verificados y un artista invitado.</p>
+    </div>
+    <div class="card">
+      <h3>Subir en el ranking</h3>
+      <p>Cada podio suma puntos. Los mejores productores quedan arriba de todo.</p>
+    </div>
+  </div>
+
+  <h2 style="margin-top: 40px;">Ultimos beats</h2>
+  <!-- Lo completa el script con los datos que vienen del backend. -->
+  <div id="latest" class="grid">
+    <p class="loading">Cargando beats...</p>
+  </div>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <a href="about.html">Quienes somos</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  // Pide todos los beats y muestra los 3 mas nuevos.
+  async function loadLatestBeats() {
+    const container = document.getElementById('latest');
+    try {
+      const beats = await apiFetch('/api/beats');
+      container.innerHTML = '';
+
+      if (beats.length === 0) {
+        container.innerHTML = '<p class="muted">Todavia no hay beats publicados.</p>';
+        return;
+      }
+
+      // Los ids son autoincrementales: el id mas alto es el mas nuevo.
+      beats.sort(function (a, b) { return b.id - a.id; });
+      const latest = beats.slice(0, 3);
+
+      for (const beat of latest) {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const title = document.createElement('h3');
+        title.textContent = beat.title;
+
+        const info = document.createElement('p');
+        info.className = 'muted';
+        info.textContent = beat.genre + ' - ' + beat.bpm + ' BPM';
+
+        const link = document.createElement('a');
+        link.href = 'beat.html?id=' + beat.id;
+        link.textContent = 'Ver detalle';
+
+        card.appendChild(title);
+        card.appendChild(info);
+        card.appendChild(link);
+        container.appendChild(card);
+      }
+    } catch (error) {
+      container.innerHTML = '';
+      const message = document.createElement('p');
+      message.className = 'message message-error';
+      message.textContent = error.message;
+      container.appendChild(message);
+    }
+  }
+
+  renderNav();
+  loadLatestBeats();
+</script>
+</body>
+</html>

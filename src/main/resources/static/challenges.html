@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Desafios</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html">Beats</a>
+    <a href="challenges.html" class="active">Desafios</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <h1>Desafios</h1>
+
+  <section class="card">
+    <h2>Como se gana</h2>
+    <p>
+      Cada entrega la votan tres grupos: la comunidad (30%), los productores verificados (30%)
+      y el artista invitado (40%). Al cerrar el desafio, los tres primeros suman 500, 300 y 150
+      puntos en el ranking.
+    </p>
+  </section>
+
+  <!-- Crear desafio: solo ADMIN y DISCOGRAFICA. -->
+  <section id="create-section" class="card" hidden>
+    <h2>Crear desafio</h2>
+    <form id="create-form" novalidate>
+      <div id="create-message" hidden></div>
+      <div class="form-row">
+        <div>
+          <label for="title">Titulo *</label>
+          <input type="text" id="title">
+        </div>
+        <div>
+          <label for="genre">Genero *</label>
+          <input type="text" id="genre">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="bpm">BPM *</label>
+          <input type="number" id="bpm" min="1">
+        </div>
+        <div>
+          <label for="key">Tonalidad</label>
+          <input type="text" id="key">
+        </div>
+        <div>
+          <label for="deadline">Fecha de cierre *</label>
+          <input type="date" id="deadline">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="theme">Tema</label>
+          <input type="text" id="theme">
+        </div>
+        <div>
+          <label for="guestArtistId">ID del artista invitado *</label>
+          <input type="number" id="guestArtistId" min="1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="prizeFirst">1er premio</label>
+          <input type="text" id="prizeFirst">
+        </div>
+        <div>
+          <label for="prizeSecond">2do premio</label>
+          <input type="text" id="prizeSecond">
+        </div>
+        <div>
+          <label for="prizeThird">3er premio</label>
+          <input type="text" id="prizeThird">
+        </div>
+      </div>
+      <button type="submit" class="btn" id="create-button">Crear desafio</button>
+    </form>
+  </section>
+
+  <div id="list" class="grid"></div>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <a href="about.html">Quienes somos</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  const list = document.getElementById('list');
+
+  function isOpen(challenge) {
+    return new Date(challenge.deadline) > new Date();
+  }
+
+  function createChallengeCard(challenge) {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const title = document.createElement('h3');
+    title.textContent = challenge.title;
+
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = isOpen(challenge) ? 'Abierto' : 'Cerrado';
+
+    const info = document.createElement('p');
+    info.className = 'muted';
+    info.textContent = challenge.genre + ' - ' + challenge.bpm + ' BPM';
+
+    const deadline = document.createElement('p');
+    deadline.textContent = 'Cierra el ' + formatDate(challenge.deadline);
+
+    const link = document.createElement('a');
+    link.href = 'challenge.html?id=' + challenge.id;
+    link.className = 'btn btn-small';
+    link.textContent = 'Ver desafio';
+
+    card.appendChild(title);
+    card.appendChild(tag);
+    card.appendChild(info);
+    card.appendChild(deadline);
+    card.appendChild(link);
+    return card;
+  }
+
+  async function loadChallenges() {
+    list.innerHTML = '<p class="loading">Cargando desafios...</p>';
+    try {
+      const challenges = await apiFetch('/api/challenges');
+      list.innerHTML = '';
+      if (challenges.length === 0) {
+        list.innerHTML = '<p class="muted">Todavia no hay desafios.</p>';
+        return;
+      }
+      for (const challenge of challenges) {
+        list.appendChild(createChallengeCard(challenge));
+      }
+    } catch (error) {
+      list.innerHTML = '';
+      const message = document.createElement('p');
+      message.className = 'message message-error';
+      message.textContent = error.message;
+      list.appendChild(message);
+    }
+  }
+
+  /* ---------- Crear desafio ---------- */
+
+  const createForm = document.getElementById('create-form');
+  const createMessage = document.getElementById('create-message');
+  const createButton = document.getElementById('create-button');
+
+  // Lee un campo de texto; si esta vacio devuelve null (el backend lo guarda vacio).
+  function optionalValue(id) {
+    const value = document.getElementById(id).value.trim();
+    return value === '' ? null : value;
+  }
+
+  createForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    hideMessage(createMessage);
+
+    const deadlineText = document.getElementById('deadline').value; // "2026-12-01"
+    const challenge = {
+      title: document.getElementById('title').value.trim(),
+      genre: document.getElementById('genre').value.trim(),
+      bpm: Number(document.getElementById('bpm').value),
+      key: optionalValue('key'),
+      theme: optionalValue('theme'),
+      guestArtistId: Number(document.getElementById('guestArtistId').value),
+      prizeFirst: optionalValue('prizeFirst'),
+      prizeSecond: optionalValue('prizeSecond'),
+      prizeThird: optionalValue('prizeThird')
+    };
+
+    if (challenge.title === '' || challenge.genre === '') {
+      showMessage(createMessage, 'Titulo y genero son obligatorios.', 'error');
+      return;
+    }
+    if (isNaN(challenge.bpm) || challenge.bpm < 1) {
+      showMessage(createMessage, 'El BPM tiene que ser un numero mayor a 0.', 'error');
+      return;
+    }
+    if (deadlineText === '') {
+      showMessage(createMessage, 'Elegi la fecha de cierre.', 'error');
+      return;
+    }
+    if (challenge.guestArtistId < 1) {
+      showMessage(createMessage, 'Falta el ID del artista invitado.', 'error');
+      return;
+    }
+
+    // El backend espera la fecha completa en formato ISO (un Instant de Java).
+    // Se toma el final de ese dia para que el desafio siga abierto durante el dia elegido.
+    challenge.deadline = new Date(deadlineText + 'T23:59:59').toISOString();
+
+    if (new Date(challenge.deadline) < new Date()) {
+      showMessage(createMessage, 'La fecha de cierre tiene que ser futura.', 'error');
+      return;
+    }
+
+    setLoading(createButton, true, 'Crear desafio');
+    try {
+      await apiFetch('/api/challenges', 'POST', challenge);
+      showMessage(createMessage, 'Desafio creado.', 'ok');
+      createForm.reset();
+      loadChallenges();
+    } catch (error) {
+      showMessage(createMessage, error.message, 'error');
+    } finally {
+      setLoading(createButton, false, 'Crear desafio');
+    }
+  });
+
+  /* ---------- Al cargar la pagina ---------- */
+  renderNav();
+
+  const user = getUser();
+  if (user !== null && (user.role === 'ADMIN' || user.role === 'DISCOGRAFICA')) {
+    document.getElementById('create-section').hidden = false;
+  }
+
+  loadChallenges();
+</script>
+</body>
+</html>

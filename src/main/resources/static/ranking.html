@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGW Prod - Ranking</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="logo">MGW<span>PROD</span></a>
+  <nav>
+    <a href="index.html">Inicio</a>
+    <a href="beats.html">Beats</a>
+    <a href="challenges.html">Desafios</a>
+    <a href="ranking.html" class="active">Ranking</a>
+    <a href="premium.html">Premium</a>
+    <a href="about.html">Nosotros</a>
+  </nav>
+  <div id="session-area"></div>
+</header>
+
+<main>
+  <h1>Ranking de productores</h1>
+  <p class="muted">Suma de todos los puntos ganados en desafios.</p>
+  <div id="page-message" hidden></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Puesto</th>
+        <th>Productor</th>
+        <th>Puntos</th>
+      </tr>
+    </thead>
+    <tbody id="rows">
+      <tr><td colspan="3" class="loading">Cargando ranking...</td></tr>
+    </tbody>
+  </table>
+</main>
+
+<footer>
+  <span>MGW Prod 2026 - TPO Aplicaciones Interactivas (UADE)</span>
+  <a href="about.html">Quienes somos</a>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  // Agrega una celda <td> con el texto indicado a una fila.
+  function addCell(row, text) {
+    const cell = document.createElement('td');
+    cell.textContent = text;
+    row.appendChild(cell);
+  }
+
+  async function loadRanking() {
+    const rows = document.getElementById('rows');
+    try {
+      // Cada entrada es { producerId, totalPoints }, ya ordenada de mayor a menor.
+      const entries = await apiFetch('/api/ranking');
+      rows.innerHTML = '';
+
+      if (entries.length === 0) {
+        rows.innerHTML = '<tr><td colspan="3" class="muted">Todavia no hay puntos repartidos.</td></tr>';
+        return;
+      }
+
+      let position = 1;
+      for (const entry of entries) {
+        const row = document.createElement('tr');
+        addCell(row, position);
+        addCell(row, await getUserName(entry.producerId));
+        addCell(row, entry.totalPoints);
+        rows.appendChild(row);
+        position++;
+      }
+    } catch (error) {
+      rows.innerHTML = '';
+      showMessage(document.getElementById('page-message'), error.message, 'error');
+    }
+  }
+
+  renderNav();
+  loadRanking();
+</script>
+</body>
+</html>
