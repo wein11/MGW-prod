@@ -50,7 +50,7 @@ desafíos, entregas, ranking top 10, planes, usuarios de demo), para que nadie m
 Después hacer la Tarea 2 en la rama front/a-landing. La Tarea 6 (QA) va cuando estén los 3 PR.
 ```
 
-## B: Beats + Detalle de beat
+## B (Mateo): Beats + Detalle de beat
 
 ```
 [pegar el prompt común]
@@ -65,7 +65,7 @@ y toplines (aceptar/rechazar el dueño, subir topline un ARTIST).
 Probalo como visitante, como DJ Nova (artista@mgw.com / mgw12345) y como otro artista.
 ```
 
-## C: Colaboraciones + Desafíos + Ranking
+## C (Paolo): Colaboraciones + Desafíos + Ranking
 
 ```
 [pegar el prompt común]
@@ -82,7 +82,7 @@ Probalo como visitante, como ARTIST (artista@mgw.com / mgw12345) y como LABEL
 (discografica@mgw.com / mgw12345).
 ```
 
-## D: Premium + Login + Registro + Contacto
+## D (Danilo): Premium + Login + Registro + Contacto
 
 ```
 [pegar el prompt común]

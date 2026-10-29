@@ -64,10 +64,10 @@ frontend/
 
 | Persona | Tareas | Pantallas | Criterios de rúbrica que "lleva" |
 |---|---|---|---|
-| **A (sugerido: Santiago)** | 1 (base), 2, 6 (QA final) | Landing escritorio + celular, Nosotros, Política de privacidad, 404 | 2 Estructura, 3 Accesibilidad, 8 Calidad técnica |
-| **B** | 3 | Beats, Detalle de beat | 1 Negocio, 6 Interacción (filtros, comentar, editar/borrar) |
-| **C** | 4 | Colaboraciones, Desafíos, Ranking | 6 Interacción (aceptar/rechazar, votar, podio) |
-| **D** | 5 | Premium 1-2-3, Login, Registro, Contacto | 7 Formularios, validaciones y estados; datos sensibles |
+| **A (Santiago)** | 1 (base), 2, 6 (QA final) | Landing escritorio + celular, Nosotros, Política de privacidad, 404 | 2 Estructura, 3 Accesibilidad, 8 Calidad técnica |
+| **B (Mateo)** | 3 | Beats, Detalle de beat | 1 Negocio, 6 Interacción (filtros, comentar, editar/borrar) |
+| **C (Paolo)** | 4 | Colaboraciones, Desafíos, Ranking | 6 Interacción (aceptar/rechazar, votar, podio) |
+| **D (Danilo)** | 5 | Premium 1-2-3, Login, Registro, Contacto | 7 Formularios, validaciones y estados; datos sensibles |
 
 **Cómo se hace sin pisarse:** la Tarea 1 fija los contratos (props de cada componente y forma de los datos simulados). Con eso, **B, C y D arrancan el mismo día**: escriben sus páginas contra esas interfaces aunque A todavía no haya mergeado la base.
 
