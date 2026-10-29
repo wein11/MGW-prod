@@ -1,0 +1,29 @@
+/* Tokens de diseño: todos los colores, tipografías y medidas salen de acá.
+   Si hay que cambiar la paleta, se cambia en un solo lugar. */
+:root {
+  --dark: #16110f;
+  --light: #f2e7df;
+  --primary: #d8381a;      /* solo fondos de botón con texto blanco */
+  --primary-dark: #af2a11; /* texto rojo sobre fondo claro (contraste 5,4:1) */
+  --accent: #f0a020;
+  --surface: #e8d9ce;
+  --muted: #6b5a52;
+  --border: #d8c6bb;
+  --success: #1f6b3a;
+  --white: #ffffff;
+
+  /* Sin Google Fonts: fuentes del sistema, para no depender de recursos externos. */
+  --font-display: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+  --space-6: 4rem;
+
+  --container: 80rem;
+  --shadow-hard: 4px 4px 0 var(--dark);
+}

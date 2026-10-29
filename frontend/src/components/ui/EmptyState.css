@@ -1,0 +1,8 @@
+.empty-state {
+  padding: var(--space-4);
+  background: var(--surface);
+}
+
+.empty-state h2 {
+  font-size: 1.25rem;
+}

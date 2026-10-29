@@ -1,0 +1,29 @@
+.alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  color: var(--white);
+}
+
+.alert-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.alert-error {
+  background: var(--primary-dark);
+}
+
+.alert-success {
+  background: var(--success);
+}
+
+.alert-info {
+  background: var(--surface);
+  color: var(--dark);
+}

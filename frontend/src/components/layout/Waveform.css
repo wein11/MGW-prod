@@ -1,0 +1,12 @@
+.waveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 48px;
+  overflow: hidden;
+}
+
+/* Las barras crecen para cubrir todo el ancho; en celular las que no entran se recortan. */
+.waveform span {
+  flex: 1 0 2px;
+}

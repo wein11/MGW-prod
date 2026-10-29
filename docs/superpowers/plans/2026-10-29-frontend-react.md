@@ -86,8 +86,17 @@ frontend/
 **Archivos:** todo lo de la estructura salvo `pages/`. Las páginas quedan como placeholders con su `h1`.
 
 **Interfaces que produce (el resto las usa tal cual):**
-- `<PageHeader title: string, description?: string, stats?: {value, label}[] />`: renderiza `h1` + `p` + `StatRow` + `Waveform`. **Sin eyebrow.**
-- `<Button variant="primary"|"secondary"|"link", type, disabled, onClick>`
+> ✅ **Hecha (2026-10-29).** Lo de abajo es el contrato real implementado. Además del plan original se sumaron: `DataContext`, `PrivacyConsent`, `utils/format.js`, `utils/form.js` y `utils/ids.js`.
+
+- `<PageHeader title: string, description?: string, stats?: {value, label}[], wave?: boolean = true>{acciones}</PageHeader>`: renderiza `h1` + `p` + acciones + `StatRow` + `Waveform`, y pone el título de la pestaña. **Sin eyebrow.**
+- `<Button to?: string, variant="primary"|"secondary"|"link", type, disabled, onClick, ref>`: con `to` es un `Link` (navega); sin `to` es un `<button>` (acción).
+- `<PrivacyConsent checked: boolean, onChange: (bool) => void, error?: string />`: checkbox con `id="privacy"` y link a `/privacidad`.
+- `useData() -> { beats, setBeats, comments, setComments, toplines, setToplines, submissions, setSubmissions }`: estado compartido entre páginas (aceptar un topline en el detalle se ve en Colaboraciones). `challenges`, `ranking` y `plans` se importan directo de `mockData.js` (no cambian).
+- `utils/format.js`: `formatDate('2026-10-12') -> '12/10/2026'`, `formatPrice(15000) -> '$15.000'`, `plural(3, 'comentario') -> '3 comentarios'`, `todayIso()`.
+- `utils/form.js`: `focusFirstError(errors)` (el id del campo tiene que ser igual a la clave del error) y `hasErrors(errors)`.
+- `utils/ids.js`: `nextId(items)` para lo que se crea en la demo.
+- `mockData.js` también exporta `GENRES`, `JURY_WEIGHTS`, `PRIZE_POINTS`, `RANKING_TOTAL_PRODUCERS` y `DEMO_PRODUCTIONS_USED`. Un tercer usuario de prueba: `Kira Beats / kira@mgw.com / mgw12345 / ARTIST`.
+- `useAuth()` también tiene `upgradeToPremium()`, y `user` incluye `plan: 'FREE' | 'PREMIUM'`. `register({ name, role })`.
 - `<FormField id, label, type="text"|"email"|"password"|"textarea"|"select", value, onChange, error?: string, hint?: string, options?: {value,label}[], ...inputProps />`: `label htmlFor`; si hay error, `aria-invalid="true"` + `aria-describedby` apuntando al mensaje.
 - `<Alert kind="error"|"success"|"info">children</Alert>`: `role="alert"` para error, `role="status"` para el resto.
 - `<StatusBadge status="PENDING"|"ACCEPTED"|"REJECTED"|"OPEN"|"VOTING"|"CLOSED" />`: texto en español ("Pendiente", "Aceptada", …).

@@ -1,0 +1,17 @@
+.auth-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.auth-header {
+  padding-top: var(--space-4);
+}
+
+.auth-main {
+  flex: 1;
+  width: 100%;
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
+}

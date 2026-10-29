@@ -1,0 +1,43 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--dark);
+  background: var(--light);
+  color: var(--dark);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted);
+}
+
+.field-error input,
+.field-error select,
+.field-error textarea {
+  border-color: var(--primary-dark);
+}
+
+.field-hint,
+.field-message {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.field-hint {
+  color: var(--muted);
+}
+
+.field-message {
+  color: var(--primary-dark);
+  font-weight: 700;
+}
