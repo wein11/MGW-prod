@@ -1,0 +1,180 @@
+/* Estilos de Beats y Detalle de beat. */
+
+/* Etiqueta con borde para avisos de permiso ("Visible solo para artistas"). */
+.tag {
+  padding: var(--space-1) var(--space-2);
+  border: 2px solid var(--dark);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Grilla de campos que se acomoda sola: 2 columnas en escritorio, 1 en celular. */
+.form-grid {
+  display: grid;
+  gap: 0 var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.publish-form,
+.narrow-form {
+  max-width: 48rem;
+  margin-bottom: var(--space-3);
+}
+
+.publish-form .btn,
+.narrow-form .btn {
+  margin-bottom: var(--space-3);
+}
+
+/* Filtros: los tres campos y "Limpiar" en una fila; en celular se apilan. */
+.beat-filters {
+  display: grid;
+  gap: 0 var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  align-items: end;
+  margin-bottom: var(--space-4);
+}
+
+.beat-filters .btn {
+  margin-bottom: var(--space-3);
+}
+
+/* Listas de beats, comentarios y toplines: filas separadas por una línea. */
+.beat-list,
+.item-list {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  border-top: 2px solid var(--border);
+}
+
+.beat-list li,
+.item-list li {
+  padding: var(--space-3) 0;
+  border-bottom: 2px solid var(--border);
+}
+
+.beat-row,
+.topline-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.beat-row > div:first-child {
+  flex: 1 1 14rem;
+}
+
+.beat-row h3,
+.topline-row h3 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.beat-meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.beat-row-info {
+  display: flex;
+  gap: var(--space-4);
+  margin: 0;
+  color: var(--muted);
+}
+
+.beat-row-count {
+  font-family: var(--font-mono);
+  color: var(--dark);
+}
+
+/* Detalle: portada a la izquierda y "escuchar" + descripción a la derecha. */
+.beat-media {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 16rem) 1fr;
+  align-items: center;
+}
+
+.beat-media img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.beat-description {
+  max-width: 40rem;
+  margin-top: var(--space-3);
+  color: var(--muted);
+}
+
+.section-intro {
+  max-width: 40rem;
+  color: var(--muted);
+}
+
+.comment-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.comment-head time,
+.comment p:last-child {
+  margin: 0;
+}
+
+.comment-head time {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* Gestionar mi beat: editar y borrar lado a lado. */
+.manage-grid {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  align-items: start;
+}
+
+.manage-grid form .btn {
+  margin-bottom: var(--space-3);
+}
+
+.manage-delete {
+  padding: var(--space-4);
+  background: var(--surface);
+}
+
+.topline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Celular: la portada arriba y los botones de cada fila debajo del texto. */
+@media (max-width: 640px) {
+  .beat-media {
+    grid-template-columns: 1fr;
+  }
+
+  .beat-media img {
+    max-width: 16rem;
+  }
+
+  .beat-row,
+  .topline-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
