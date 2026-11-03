@@ -30,6 +30,11 @@ h3 {
   font-family: var(--font-display);
   line-height: 1.1;
   margin: 0 0 var(--space-3);
+  /* Un título de una sola palabra larga no tiene dónde cortar y se sale del
+     contenedor: a 375 px, "COLABORACIONES" mide 367 px dentro de una caja de
+     323 y hacía scrollear la página entera en horizontal. Con esto la palabra
+     se parte antes de desbordar. */
+  overflow-wrap: break-word;
 }
 
 h1 {
