@@ -1,0 +1,15 @@
+.contact form,
+.contact-success {
+  max-width: 40rem;
+}
+
+.contact .field-row {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+/* El foco programático al mensaje de éxito no necesita aro: no es un control. */
+.contact-success:focus {
+  outline: none;
+}
