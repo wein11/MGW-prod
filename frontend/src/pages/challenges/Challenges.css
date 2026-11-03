@@ -1,0 +1,213 @@
+/* Estilos de Desafíos.
+   Igual que Colaboraciones, reusa .item-list, .topline-row y .beat-meta de
+   pages/beats/Beats.css (ver la nota en Collaborations.css). */
+
+/* ---------- Banda del jurado ----------
+   Franja a todo el ancho, pegada al encabezado: explica de dónde salen los
+   números de arriba, así que comparte superficie con ellos. */
+.jury {
+  background: var(--surface);
+  padding: var(--space-4) 0;
+}
+
+.jury-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+}
+
+/* Es un h2 real (la sección necesita nombre accesible) pero se ve como una
+   etiqueta chica, no como un título: no compite con el h1 de la página. */
+.jury-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--primary-dark);
+}
+
+.jury-weights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+/* dt es el porcentaje y dd la fuente del voto. El número va arriba por CSS;
+   el orden del documento sigue siendo término -> definición. */
+.jury-weights dt {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+
+.jury-weights dd {
+  margin: 0;
+}
+
+.jury-note {
+  max-width: 26rem;
+  margin: 0 0 0 auto;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* ---------- Votar ---------- */
+
+.vote-form {
+  max-width: 40rem;
+}
+
+.vote-form .btn {
+  margin-bottom: var(--space-3);
+}
+
+.score-group {
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  border: 0;
+}
+
+.score-group legend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+}
+
+.score-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* Cada opción es un label con el radio adentro: al tocar el número se marca
+   el radio, sin JavaScript. */
+.score-option {
+  position: relative;
+}
+
+/* El radio no se oculta con display:none, que lo sacaría del recorrido de
+   teclado y del lector de pantalla: se vuelve transparente y queda encima del
+   número, que es lo que se ve. */
+.score-option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.score-option span {
+  display: grid;
+  place-items: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 2px solid var(--dark);
+  background: var(--light);
+  font-family: var(--font-mono);
+}
+
+.score-option input:checked + span {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--white);
+}
+
+/* El foco se dibuja sobre el número, porque el radio es invisible. */
+.score-option input:focus-visible + span {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.score-group-error .score-option span {
+  border-color: var(--primary-dark);
+}
+
+/* ---------- Podio ----------
+   El HTML va 1, 2, 3 (es una lista ordenada). Acá se reacomoda a 2 - 1 - 3
+   con "order", que cambia solo lo visual y no el orden del documento. */
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.podium-place {
+  flex: 1 1 0;
+  max-width: 14rem;
+  text-align: center;
+}
+
+.podium-place-1 { order: 2; }
+.podium-place-2 { order: 1; }
+.podium-place-3 { order: 3; }
+
+.podium-name {
+  margin: 0;
+  font-weight: 700;
+}
+
+.podium-points {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* El cajón: el ganador más alto y en rojo, los otros dos más bajos. */
+.podium-number {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  background: var(--surface);
+  font-family: var(--font-display);
+  font-size: 2rem;
+}
+
+.podium-place-1 .podium-number {
+  height: 7.5rem;
+  background: var(--primary);
+  color: var(--white);
+}
+
+.podium-place-2 .podium-number { height: 5.5rem; }
+.podium-place-3 .podium-number { height: 4.5rem; }
+
+/* ---------- Celular ---------- */
+@media (max-width: 640px) {
+  .jury-note {
+    margin-left: 0;
+  }
+
+  /* Los 10 puntajes en dos filas de cinco: a 375 px en una sola fila cada
+     botón quedaría más chico que el mínimo táctil. */
+  .score-option span {
+    min-width: 2.5rem;
+  }
+
+  /* El podio apilado pierde el sentido del cajón, así que vuelve al orden
+     natural 1, 2, 3 y se lee como lista. */
+  .podium {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .podium-place,
+  .podium-place-1,
+  .podium-place-2,
+  .podium-place-3 {
+    order: 0;
+    max-width: none;
+  }
+
+  .podium-place-1 .podium-number,
+  .podium-place-2 .podium-number,
+  .podium-place-3 .podium-number {
+    height: 3rem;
+  }
+}

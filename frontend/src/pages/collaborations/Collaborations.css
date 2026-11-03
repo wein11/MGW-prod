@@ -1,0 +1,72 @@
+/* Estilos de Colaboraciones.
+
+   Reusa .item-list, .topline-row y .beat-meta, que hoy viven en
+   pages/beats/Beats.css. Funciona porque App.jsx importa BeatsPage de forma
+   estática, así que ese CSS entra siempre en el bundle; pero son primitivas de
+   lista que usan dos pantallas de personas distintas y deberían estar en
+   styles/global.css. Lo dejo anotado para la revisión final en vez de
+   duplicarlas acá (dos definiciones de la misma clase se pisan entre sí). */
+
+/* El filtro de estado es un solo campo: sin esto se estira a todo el ancho. */
+.collab-filter {
+  max-width: 16rem;
+  margin-bottom: var(--space-4);
+}
+
+/* Cada grupo es un beat con sus propuestas debajo. */
+.collab-group {
+  margin-bottom: var(--space-5);
+}
+
+.collab-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.collab-group-head h3 {
+  margin: 0;
+}
+
+/* El nombre del artista dentro de una propuesta es un h4: cuelga del h3 del
+   beat, y los encabezados no pueden saltarse niveles. */
+.topline-row h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  line-height: 1.1;
+}
+
+/* La fila de "Mis toplines" puede abrir el formulario de edición debajo, así
+   que apila: fila arriba, formulario abajo. */
+.my-topline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.inline-edit {
+  max-width: 40rem;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+}
+
+.inline-edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* En celular los botones de cada fila bajan debajo del texto en vez de
+   apretarse contra el borde derecho. */
+@media (max-width: 640px) {
+  .collab-filter {
+    max-width: none;
+  }
+
+  .inline-edit-actions .btn {
+    flex: 1 1 100%;
+  }
+}
