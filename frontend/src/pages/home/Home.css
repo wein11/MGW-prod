@@ -1,0 +1,21 @@
+/* Estilos de la Landing. Las filas de "Últimos beats" usan .beat-list y
+   .beat-row de styles/global.css. */
+
+/* Tres tarjetas en fila en escritorio; en celular, una debajo de la otra
+   (auto-fit las acomoda solas, sin media query). */
+.feature-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4) var(--space-5);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature-list h3 {
+  margin-bottom: var(--space-2);
+}
+
+.feature-list p {
+  color: var(--muted);
+}

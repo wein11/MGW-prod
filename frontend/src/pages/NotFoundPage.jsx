@@ -1,9 +1,17 @@
 import PageHeader from '../components/layout/PageHeader'
+import Button from '../components/ui/Button'
 
-// Placeholder: la implementa A (Santiago) · Tarea 2 siguiendo el plan
-// (docs/superpowers/plans/2026-10-29-frontend-react.md).
+// 404: se muestra para cualquier ruta que no existe (Route path="*" en App).
 function NotFoundPage() {
-  return <PageHeader title="Página no encontrada" description="Pantalla en construcción." />
+  return (
+    <PageHeader
+      title="Página no encontrada"
+      description="La dirección que buscás no existe o cambió. Revisá el link o volvé al inicio."
+    >
+      <Button to="/">Ir al inicio</Button>
+      <Button to="/beats" variant="secondary">Ver beats</Button>
+    </PageHeader>
+  )
 }
 
 export default NotFoundPage

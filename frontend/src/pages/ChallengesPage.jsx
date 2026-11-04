@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import JuryBand from '../components/layout/JuryBand'
 import PageHeader from '../components/layout/PageHeader'
 import Alert from '../components/ui/Alert'
 import Button from '../components/ui/Button'
@@ -123,29 +124,10 @@ function ChallengesPage() {
 
       {/* Cómo se reparte el puntaje. Va pegado al destacado porque explica de
           dónde salen los números que se ven arriba. */}
-      <section className="jury" aria-labelledby="jury-title">
-        <div className="container jury-inner">
-          <h2 id="jury-title" className="label-caps jury-title">Jurado</h2>
-          <dl className="jury-weights">
-            <div>
-              <dt>{JURY_WEIGHTS.community}%</dt>
-              <dd className="label-caps">Comunidad</dd>
-            </div>
-            <div>
-              <dt>{JURY_WEIGHTS.verified}%</dt>
-              <dd className="label-caps">Verificados</dd>
-            </div>
-            <div>
-              <dt>{JURY_WEIGHTS.guest}%</dt>
-              <dd className="label-caps">Invitado</dd>
-            </div>
-          </dl>
-          <p className="jury-note">
-            Al cerrar se reparten {PRIZE_POINTS.join(', ')} puntos. Ganar un desafío verifica tu
-            perfil.
-          </p>
-        </div>
-      </section>
+      <JuryBand>
+        Al cerrar se reparten {PRIZE_POINTS.join(', ')} puntos. Ganar un desafío verifica tu
+        perfil.
+      </JuryBand>
 
       <section className="section" aria-labelledby="challenges-title">
         <div className="container">

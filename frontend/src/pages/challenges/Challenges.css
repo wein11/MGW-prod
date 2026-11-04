@@ -1,56 +1,8 @@
 /* Estilos de Desafíos.
-   Igual que Colaboraciones, reusa .item-list, .topline-row y .beat-meta de
-   pages/beats/Beats.css (ver la nota en Collaborations.css). */
+   Reusa .item-list, .topline-row y .beat-meta de styles/global.css. */
 
-/* ---------- Banda del jurado ----------
-   Franja a todo el ancho, pegada al encabezado: explica de dónde salen los
-   números de arriba, así que comparte superficie con ellos. */
-.jury {
-  background: var(--surface);
-  padding: var(--space-4) 0;
-}
-
-.jury-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3) var(--space-5);
-}
-
-/* Es un h2 real (la sección necesita nombre accesible) pero se ve como una
-   etiqueta chica, no como un título: no compite con el h1 de la página. */
-.jury-title {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--primary-dark);
-}
-
-.jury-weights {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin: 0;
-}
-
-/* dt es el porcentaje y dd la fuente del voto. El número va arriba por CSS;
-   el orden del documento sigue siendo término -> definición. */
-.jury-weights dt {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  line-height: 1.1;
-}
-
-.jury-weights dd {
-  margin: 0;
-}
-
-.jury-note {
-  max-width: 26rem;
-  margin: 0 0 0 auto;
-  font-size: 0.875rem;
-  color: var(--muted);
-}
+/* La banda del jurado vive en components/layout/JuryBand (la usa también la
+   Landing). */
 
 /* ---------- Votar ---------- */
 
