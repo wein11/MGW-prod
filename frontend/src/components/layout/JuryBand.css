@@ -1,0 +1,56 @@
+/* Banda del jurado: franja a todo el ancho con los porcentajes del voto. */
+.jury {
+  background: var(--surface);
+  padding: var(--space-4) 0;
+}
+
+.jury-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+}
+
+/* Es un h2 real (la sección necesita nombre accesible) pero se ve como una
+   etiqueta chica, no como un título: no compite con el h1 de la página. */
+.jury-title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--primary-dark);
+}
+
+.jury-weights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+/* El número va arriba por CSS (column-reverse); en el HTML el orden sigue
+   siendo término (fuente del voto) -> definición (porcentaje). */
+.jury-weights div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.jury-weights dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+
+.jury-note {
+  max-width: 26rem;
+  margin: 0 0 0 auto;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* En celular la nota ya no se empuja a la derecha. */
+@media (max-width: 640px) {
+  .jury-note {
+    margin-left: 0;
+  }
+}

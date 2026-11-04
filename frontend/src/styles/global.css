@@ -127,6 +127,70 @@ button {
   color: var(--muted);
 }
 
+/* Listas de beats, comentarios y toplines: filas separadas por una línea.
+   Viven acá (y no en el CSS de una página) porque las usan Beats,
+   Colaboraciones, Desafíos y la Landing. */
+.beat-list,
+.item-list {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  border-top: 2px solid var(--border);
+}
+
+.beat-list li,
+.item-list li {
+  padding: var(--space-3) 0;
+  border-bottom: 2px solid var(--border);
+}
+
+.beat-row,
+.topline-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.beat-row > div:first-child {
+  flex: 1 1 14rem;
+}
+
+.beat-row h3,
+.topline-row h3 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.beat-meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.beat-row-info {
+  display: flex;
+  gap: var(--space-4);
+  margin: 0;
+  color: var(--muted);
+}
+
+.beat-row-count {
+  font-family: var(--font-mono);
+  color: var(--dark);
+}
+
+/* Celular: los botones de cada fila pasan debajo del texto. */
+@media (max-width: 640px) {
+  .beat-row,
+  .topline-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;

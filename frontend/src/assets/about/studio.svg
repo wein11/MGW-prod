@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <rect width="640" height="360" fill="#16110f"/>
+  <!-- Consola de mezcla: fila de faders -->
+  <rect x="60" y="210" width="520" height="110" fill="#2a211d"/>
+  <g fill="#6b5a52">
+    <rect x="95" y="225" width="6" height="80"/><rect x="155" y="225" width="6" height="80"/>
+    <rect x="215" y="225" width="6" height="80"/><rect x="275" y="225" width="6" height="80"/>
+    <rect x="335" y="225" width="6" height="80"/><rect x="395" y="225" width="6" height="80"/>
+    <rect x="455" y="225" width="6" height="80"/><rect x="515" y="225" width="6" height="80"/>
+  </g>
+  <g fill="#f0a020">
+    <rect x="86" y="260" width="24" height="10"/><rect x="146" y="240" width="24" height="10"/>
+    <rect x="206" y="280" width="24" height="10"/><rect x="266" y="250" width="24" height="10"/>
+    <rect x="326" y="235" width="24" height="10"/><rect x="386" y="270" width="24" height="10"/>
+    <rect x="446" y="245" width="24" height="10"/><rect x="506" y="285" width="24" height="10"/>
+  </g>
+  <!-- Onda de audio en la pantalla -->
+  <g fill="#d8381a">
+    <rect x="80" y="110" width="12" height="40"/><rect x="100" y="90" width="12" height="80"/>
+    <rect x="120" y="120" width="12" height="20"/><rect x="140" y="70" width="12" height="120"/>
+    <rect x="160" y="100" width="12" height="60"/><rect x="180" y="85" width="12" height="90"/>
+    <rect x="200" y="115" width="12" height="30"/><rect x="220" y="60" width="12" height="140"/>
+    <rect x="240" y="95" width="12" height="70"/><rect x="260" y="110" width="12" height="40"/>
+    <rect x="280" y="80" width="12" height="100"/><rect x="300" y="120" width="12" height="20"/>
+  </g>
+  <g fill="#f0a020">
+    <rect x="320" y="90" width="12" height="80"/><rect x="340" y="105" width="12" height="50"/>
+    <rect x="360" y="70" width="12" height="120"/><rect x="380" y="115" width="12" height="30"/>
+    <rect x="400" y="85" width="12" height="90"/><rect x="420" y="100" width="12" height="60"/>
+    <rect x="440" y="65" width="12" height="130"/><rect x="460" y="110" width="12" height="40"/>
+    <rect x="480" y="95" width="12" height="70"/><rect x="500" y="120" width="12" height="20"/>
+    <rect x="520" y="80" width="12" height="100"/><rect x="540" y="105" width="12" height="50"/>
+  </g>
+</svg>
