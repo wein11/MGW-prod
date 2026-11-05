@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import PageHeader from '../components/layout/PageHeader'
+import Button from '../components/ui/Button'
+import EmptyState from '../components/ui/EmptyState'
 import { useAuth } from '../context/AuthContext'
 import { formatPrice } from '../utils/format'
 import { plans } from '../data/mockData'
@@ -59,6 +61,24 @@ function PremiumPage() {
 
   // Sin sesión no se puede pagar: se manda a Login.
   if (!user) return <Navigate to="/login" replace />
+
+  // Igual que en el backend, los planes son solo para artistas: una
+  // discográfica no publica producciones, así que no tiene nada que ampliar.
+  if (user.role !== 'ARTIST') {
+    return (
+      <>
+        <PageHeader title="Premium" description="El plan Premium amplía las producciones que puede publicar un artista." />
+        <section className="section">
+          <div className="container">
+            <EmptyState title="Premium es solo para artistas.">
+              <p>Tu cuenta es de discográfica. Podés seguir los desafíos y el ranking para encontrar productores.</p>
+              <Button to="/desafios">Ver desafíos</Button>
+            </EmptyState>
+          </div>
+        </section>
+      </>
+    )
+  }
 
   function handlePaid(card) {
     upgradeToPremium()

@@ -6,9 +6,9 @@ import './about/About.css'
 // Integrantes reales del grupo y el módulo del backend que armó cada uno.
 const TEAM = [
   { name: 'Santiago Weinbinder', initials: 'SW', role: 'Usuarios y autenticación · Catálogo de beats' },
-  { name: 'Mateo Galluzo', initials: 'MG', role: 'Catálogo de beats' },
+  { name: 'Mateo Galluzzo', initials: 'MG', role: 'Catálogo de beats' },
   { name: 'Paolo Maffei', initials: 'PM', role: 'Desafíos, votación y ranking' },
-  { name: 'Dani Gariboldi', initials: 'DG', role: 'Colaboraciones, toplines y Premium' },
+  { name: 'Danilo Gariboldi', initials: 'DG', role: 'Colaboraciones, toplines y Premium' },
 ]
 
 // Nosotros (board 7 del wireframe): qué es MGW Prod y quiénes lo hacen.

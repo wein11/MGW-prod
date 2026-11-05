@@ -97,19 +97,19 @@ export const PRIZE_POINTS = [500, 300, 150]
 export const challenges = [
   {
     id: 1, title: 'Mejor beat de trap', genre: 'Trap', bpmRange: '130 a 160 BPM', rules: 'libre',
-    status: 'VOTING', closesAt: '2026-10-30', prize: 'Sesión de estudio',
+    status: 'VOTING', closesAt: '2026-11-30', prize: 'Sesión de estudio',
   },
   {
     id: 2, title: 'Cumbia futurista', genre: 'Cumbia', bpmRange: '90 a 110 BPM', rules: 'sin samples',
-    status: 'OPEN', closesAt: '2026-11-15', prize: 'Mezcla y master',
+    status: 'OPEN', closesAt: '2026-12-15', prize: 'Mezcla y master',
   },
   {
     id: 3, title: 'Boom bap con samples', genre: 'Boom bap', bpmRange: '80 a 95 BPM', rules: 'sample obligatorio',
     status: 'CLOSED', closesAt: '2026-10-05', prize: 'Pack de plugins',
     podium: [
-      { place: 1, name: 'DJ Nova', points: 47 },
-      { place: 2, name: 'Kira Beats', points: 42 },
-      { place: 3, name: 'Tomi Loop', points: 38 },
+      { place: 1, name: 'DJ Nova', points: 500 },
+      { place: 2, name: 'Kira Beats', points: 300 },
+      { place: 3, name: 'Tomi Loop', points: 150 },
     ],
   },
 ]
@@ -121,17 +121,18 @@ export const submissions = [
   { id: 3, challengeId: 1, beatTitle: 'Noche en Palermo', producerName: 'DJ Nova', bpm: 140, votedByMe: false },
 ]
 
+// Cada total es una suma de premios de podio (500, 300 o 150 puntos).
 export const ranking = [
-  { position: 1, name: 'DJ Nova', points: 312 },
-  { position: 2, name: 'Kira Beats', points: 288 },
-  { position: 3, name: 'Tomi Loop', points: 254 },
-  { position: 4, name: 'Luna Sur', points: 231 },
-  { position: 5, name: 'Beto Sampler', points: 207 },
-  { position: 6, name: 'Mari Trap', points: 188 },
-  { position: 7, name: 'Facu Drums', points: 160 },
-  { position: 8, name: 'Nico 808', points: 142 },
-  { position: 9, name: 'Ceci Loops', points: 121 },
-  { position: 10, name: 'Pablo Keys', points: 97 },
+  { position: 1, name: 'DJ Nova', points: 1300 },
+  { position: 2, name: 'Kira Beats', points: 1100 },
+  { position: 3, name: 'Tomi Loop', points: 950 },
+  { position: 4, name: 'Luna Sur', points: 800 },
+  { position: 5, name: 'Beto Sampler', points: 650 },
+  { position: 6, name: 'Mari Trap', points: 600 },
+  { position: 7, name: 'Facu Drums', points: 500 },
+  { position: 8, name: 'Nico 808', points: 450 },
+  { position: 9, name: 'Ceci Loops', points: 300 },
+  { position: 10, name: 'Pablo Keys', points: 150 },
 ]
 
 export const RANKING_TOTAL_PRODUCERS = 48

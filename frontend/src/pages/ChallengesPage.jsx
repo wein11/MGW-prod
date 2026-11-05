@@ -48,6 +48,9 @@ function ChallengesPage() {
   // veces seguidas el mensaje se vuelva a montar y el lector de pantalla lo
   // anuncie de nuevo aunque el texto sea el mismo.
   const [votesSent, setVotesSent] = useState(0)
+  // Entrega elegida para votar. Vive acá porque la eligen tanto el link
+  // "Votar" de la lista como el select del formulario.
+  const [voteTarget, setVoteTarget] = useState(null)
 
   const featured = pickFeatured(challenges)
   const closed = challenges.find(challenge => challenge.status === 'CLOSED' && challenge.podium)
@@ -67,6 +70,9 @@ function ChallengesPage() {
     label: `${submission.beatTitle}, ${submission.producerName}`,
   }))
 
+  // Si la entrega elegida ya no se puede votar, se usa la primera disponible.
+  const selectedOption = votableOptions.find(option => option.value === voteTarget) ?? votableOptions[0]
+
   function registerVote(submissionId) {
     setSubmissions(current =>
       current.map(submission =>
@@ -83,7 +89,11 @@ function ChallengesPage() {
     if (!user) {
       return <Link to="/login">Entrá para votar</Link>
     }
-    return <a href="#votar">Votar</a>
+    return (
+      <a href="#votar" onClick={() => setVoteTarget(submission.id)}>
+        Votar<span className="visually-hidden"> {submission.beatTitle}</span>
+      </a>
+    )
   }
 
   if (!featured) {
@@ -119,7 +129,9 @@ function ChallengesPage() {
         description={`${featured.genre} / ${featured.bpmRange} / ${featured.rules}`}
         stats={stats}
       >
-        <Button to="#entregas">Ver entregas</Button>
+        {/* <a> común y no Button: el Link del router cambia la URL pero no
+            baja hasta la sección. El navegador sí lo hace con un ancla. */}
+        <a className="btn btn-primary" href="#entregas">Ver entregas</a>
       </PageHeader>
 
       {/* Cómo se reparte el puntaje. Va pegado al destacado porque explica de
@@ -214,6 +226,8 @@ function ChallengesPage() {
             <VoteForm
               key={votableOptions.map(option => option.value).join('-')}
               options={votableOptions}
+              selected={selectedOption.value}
+              onSelect={setVoteTarget}
               onVote={registerVote}
             />
           )}
