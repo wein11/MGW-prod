@@ -1,11 +1,11 @@
 import PageHeader from '../components/layout/PageHeader'
 import { useAuth } from '../context/AuthContext'
-import { RANKING_TOTAL_PRODUCERS, ranking } from '../data/mockData'
+import { PRIZE_POINTS, RANKING_TOTAL_PRODUCERS, ranking } from '../data/mockData'
 import './ranking/Ranking.css'
 
 // Ranking (wireframe 6). Es una tabla de verdad: tres columnas de datos con
 // encabezado, no una lista maquetada. Eso le da a un lector de pantalla el
-// "fila 4, puesto 4, productor Luna Sur, puntos 231" sin que lo armemos a mano.
+// "fila 4, puesto 4, productor Luna Sur, puntos 800" sin que lo armemos a mano.
 function RankingPage() {
   const { user } = useAuth()
   const leader = ranking[0]
@@ -14,7 +14,7 @@ function RankingPage() {
     <>
       <PageHeader
         title="Ranking"
-        description="Los puntos se suman con los votos del jurado en cada desafío."
+        description={`Cada podio suma ${PRIZE_POINTS.join(', ')} puntos según el puesto en el desafío.`}
         stats={[
           { value: RANKING_TOTAL_PRODUCERS, label: 'Productores' },
           { value: leader.points, label: 'Puntos del primero' },

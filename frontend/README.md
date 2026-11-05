@@ -24,6 +24,18 @@ npm run dev      # abre en http://localhost:5173
 | Kira Beats | kira@mgw.com | mgw12345 | ARTIST |
 | Sello Sur | discografica@mgw.com | mgw12345 | LABEL |
 
+También podés crear una cuenta en `/registro`: funciona hasta que se recargue la página.
+
+## Comportamiento simulado
+
+Los datos viven en memoria: F5 borra los beats, comentarios, toplines, votos y cuentas creados en la visita. La sesión abierta se mantiene en `sessionStorage`, que guarda solo `{ name, role, plan }`. Los datos de tarjeta no se guardan nunca.
+
+Premium y Colaboraciones son solo para cuentas de artista.
+
+## Pruebas de punta a punta
+
+Los resultados, las correcciones y cómo repetir la prueba están en `docs/qa/2026-11-05-qa-frontend.md`.
+
 ## Dónde está cada cosa
 
 - `src/pages/`: una página por pantalla (cada uno trabaja en las suyas)

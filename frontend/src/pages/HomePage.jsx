@@ -23,7 +23,7 @@ const FEATURES = [
   },
   {
     title: 'Subir en el ranking',
-    text: 'Cada voto suma puntos a tu perfil y te acerca al primer puesto de la tabla.',
+    text: 'Cada podio suma puntos a tu perfil y te acerca al primer puesto de la tabla.',
     to: '/ranking',
     linkText: 'Ver ranking',
   },

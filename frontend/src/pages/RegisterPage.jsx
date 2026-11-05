@@ -65,7 +65,13 @@ function RegisterPage() {
     setSending(true)
     await fakeRequest(600)
     // register() inicia la sesión; el <Navigate> de arriba lleva al inicio.
-    register({ name: form.name, role })
+    const created = register({ name: form.name, email: form.email, password: form.password, role })
+    if (!created) {
+      const duplicated = { email: 'Ya hay una cuenta con ese email. Probá iniciar sesión.' }
+      setSending(false)
+      setErrors(duplicated)
+      focusFirstError(duplicated)
+    }
   }
 
   return (
