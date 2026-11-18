@@ -5,7 +5,7 @@ import ConfirmDelete from '../../components/ui/ConfirmDelete'
 import EmptyState from '../../components/ui/EmptyState'
 import FormField from '../../components/ui/FormField'
 import StatusBadge from '../../components/ui/StatusBadge'
-import { useData } from '../../context/DataContext'
+import { useApp } from '../../context/AppContext'
 import { TOPLINE_STATUS } from '../../data/mockData'
 import { formatDate, plural } from '../../utils/format'
 
@@ -21,7 +21,7 @@ import { formatDate, plural } from '../../utils/format'
 // destruye nada que el dueño haya hecho; "Borrar topline" sí pregunta, porque
 // deshace una colaboración que ya estaba aceptada.
 function ProposalsSection({ myBeats }) {
-  const { toplines, setToplines } = useData()
+  const { toplines, setToplines } = useApp()
   const [statusFilter, setStatusFilter] = useState('ALL')
   // Id del elemento que tiene que recibir el foco después de una acción: el
   // botón que se tocó desaparece y, sin esto, el foco se pierde al principio

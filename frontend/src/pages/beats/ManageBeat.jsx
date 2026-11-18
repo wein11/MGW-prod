@@ -4,7 +4,7 @@ import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import ConfirmDelete from '../../components/ui/ConfirmDelete'
 import FormField from '../../components/ui/FormField'
-import { useData } from '../../context/DataContext'
+import { useApp } from '../../context/AppContext'
 import { fakeRequest } from '../../data/fakeRequest'
 import { GENRES } from '../../data/mockData'
 import { focusFirstError, hasErrors } from '../../utils/form'
@@ -17,7 +17,7 @@ const GENRE_OPTIONS = GENRES.map(genre => ({ value: genre, label: genre }))
 // decide BeatDetailPage). Los id de los campos llevan el prefijo "edit-"
 // para no chocar con otros formularios de la misma página.
 function ManageBeat({ beat }) {
-  const { setBeats, setComments, setToplines } = useData()
+  const { setBeats, setComments, setToplines } = useApp()
   const navigate = useNavigate()
   // El formulario arranca con los datos actuales del beat.
   const [form, setForm] = useState({

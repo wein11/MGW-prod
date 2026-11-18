@@ -5,8 +5,7 @@ import Button from '../../components/ui/Button'
 import ConfirmDelete from '../../components/ui/ConfirmDelete'
 import FormField from '../../components/ui/FormField'
 import StatusBadge from '../../components/ui/StatusBadge'
-import { useAuth } from '../../context/AuthContext'
-import { useData } from '../../context/DataContext'
+import { useApp } from '../../context/AppContext'
 import { fakeRequest } from '../../data/fakeRequest'
 import { TOPLINE_STATUS } from '../../data/mockData'
 import { formatDate, plural, todayIso } from '../../utils/format'
@@ -18,10 +17,9 @@ import { isValidHttpsUrl } from '../../utils/validation'
 // - el dueño del beat acepta o rechaza los pendientes;
 // - quien subió un topline lo puede borrar;
 // - cualquier ARTIST que no sea el dueño puede subir uno nuevo.
-// Los cambios van al DataContext, así se ven también en Colaboraciones.
+// Los cambios van al AppContext, así se ven también en Colaboraciones.
 function ToplinesSection({ beat, isOwner }) {
-  const { user } = useAuth()
-  const { toplines, setToplines } = useData()
+  const { user, toplines, setToplines } = useApp()
   const [audioUrl, setAudioUrl] = useState('')
   const [errors, setErrors] = useState({})
   const [sending, setSending] = useState(false)

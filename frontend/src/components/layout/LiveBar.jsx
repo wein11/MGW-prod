@@ -1,10 +1,10 @@
-import { useData } from '../../context/DataContext'
+import { useApp } from '../../context/AppContext'
 import { challenges } from '../../data/mockData'
 import './LiveBar.css'
 
 // Franja oscura de arriba con datos "en vivo" calculados de los datos simulados.
 function LiveBar() {
-  const { beats } = useData()
+  const { beats } = useApp()
   const openChallenges = challenges.filter(c => c.status !== 'CLOSED').length
 
   return (

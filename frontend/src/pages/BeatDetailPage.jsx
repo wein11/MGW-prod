@@ -2,8 +2,7 @@ import { useParams } from 'react-router-dom'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
-import { useAuth } from '../context/AuthContext'
-import { useData } from '../context/DataContext'
+import { useApp } from '../context/AppContext'
 import { formatDate } from '../utils/format'
 import CommentsSection from './beats/CommentsSection'
 import ManageBeat from './beats/ManageBeat'
@@ -15,8 +14,7 @@ import './beats/Beats.css'
 // esta página solo decida qué se muestra según quién mira.
 function BeatDetailPage() {
   const { id } = useParams()
-  const { user } = useAuth()
-  const { beats, comments } = useData()
+  const { user, beats, comments } = useApp()
   // useParams devuelve texto: se pasa a número para comparar con beat.id.
   const beat = beats.find(item => item.id === Number(id))
 

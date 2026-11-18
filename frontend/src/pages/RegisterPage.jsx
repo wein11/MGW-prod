@@ -4,7 +4,7 @@ import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
 import FormField from '../components/ui/FormField'
 import PrivacyConsent from '../components/ui/PrivacyConsent'
-import { useAuth } from '../context/AuthContext'
+import { useApp } from '../context/AppContext'
 import { fakeRequest } from '../data/fakeRequest'
 import { focusFirstError, hasErrors } from '../utils/form'
 import { isRequired, isValidEmail, isValidPassword } from '../utils/validation'
@@ -16,9 +16,9 @@ const ACCOUNT_TYPES = [
 ]
 
 // Alta simulada. Al terminar inicia la sesión y va al inicio. La contraseña y
-// el email se validan pero nunca se guardan (useAuth solo guarda nombre y rol).
+// el email se validan pero nunca se guardan (AppContext solo guarda nombre y rol).
 function RegisterPage() {
-  const { user, register } = useAuth()
+  const { user, register } = useApp()
   const [form, setForm] = useState({ name: '', email: '', password: '', city: '' })
   const [role, setRole] = useState('ARTIST')
   const [accepted, setAccepted] = useState(false)

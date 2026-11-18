@@ -5,7 +5,7 @@ import Button from '../../components/ui/Button'
 import ConfirmDelete from '../../components/ui/ConfirmDelete'
 import FormField from '../../components/ui/FormField'
 import StatusBadge from '../../components/ui/StatusBadge'
-import { useData } from '../../context/DataContext'
+import { useApp } from '../../context/AppContext'
 import { fakeRequest } from '../../data/fakeRequest'
 import { formatDate, plural } from '../../utils/format'
 import { focusFirstError, hasErrors } from '../../utils/form'
@@ -15,7 +15,7 @@ import { isValidHttpsUrl } from '../../utils/validation'
 // (se edita en la misma fila, sin cambiar de pantalla, porque es un cambio
 // de un solo campo) o borrarlo.
 function MyToplinesSection({ myToplines, beatsById }) {
-  const { setToplines } = useData()
+  const { setToplines } = useApp()
   // Id del topline que se está editando: solo uno a la vez.
   const [editingId, setEditingId] = useState(null)
   const [draftUrl, setDraftUrl] = useState('')

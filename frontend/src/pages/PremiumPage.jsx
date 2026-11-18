@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import PageHeader from '../components/layout/PageHeader'
-import { useAuth } from '../context/AuthContext'
+import { useApp } from '../context/AppContext'
 import { formatPrice } from '../utils/format'
 import { plans } from '../data/mockData'
 import DoneStep from './premium/DoneStep'
@@ -39,7 +39,7 @@ const HEADERS = {
 // 3 confirmación. El paso es estado local; el formulario de pago vive en su
 // propio componente para que sus datos se descarten al salir del paso 2.
 function PremiumPage() {
-  const { user, upgradeToPremium } = useAuth()
+  const { user, upgradeToPremium } = useApp()
   const [step, setStep] = useState(1)
   const [maskedCard, setMaskedCard] = useState('')
   const previousStep = useRef(step)
