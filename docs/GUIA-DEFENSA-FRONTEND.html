@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MGW Prod: defensa del frontend</title>
+<style>
+:root {
+  /* Paleta del propio front de MGW Prod (tokens.css): una sola temática clara. */
+  --dark: #16110f;
+  --light: #f2e7df;
+  --surface: #e8d9ce;
+  --primary: #af2a11;
+  --accent: #f0a020;
+  --muted: #5e4f48;
+  --border: #d8c6bb;
+  --ok: #1f6b3a;
+  --font-display: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* Layout: columna de lectura de ~70ch con índice pegajoso arriba. */
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--light); color: var(--dark); font: 16px/1.55 var(--font-body); }
+a { color: var(--primary); }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+code { font-family: var(--font-mono); font-size: .88em; background: var(--surface); padding: .05em .3em; border-radius: 3px; }
+.wrap { max-width: 52rem; margin: 0 auto; padding: 0 1rem; }
+header.top { background: var(--dark); color: var(--light); padding: 2rem 0 1.5rem; border-bottom: 6px solid var(--primary); }
+header.top h1 { font-family: var(--font-display); font-size: clamp(1.7rem, 5vw, 2.6rem); line-height: 1.1; margin: 0 0 .5rem; text-wrap: balance; }
+header.top p { margin: 0; color: #d9c9be; max-width: 62ch; }
+.score { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.25rem; }
+.score div { display: flex; flex-direction: column; }
+.score strong { font-family: var(--font-display); font-size: 1.8rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+.score span { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: #d9c9be; }
+nav.toc { position: sticky; top: 0; z-index: 2; background: var(--surface); border-bottom: 1px solid var(--border); }
+nav.toc ul { list-style: none; margin: 0 auto; padding: .5rem 1rem; display: flex; flex-wrap: wrap; gap: .25rem 1rem; max-width: 52rem; font-size: .9rem; }
+nav.toc a { text-decoration: none; font-weight: 600; }
+section { padding: 2rem 0 .5rem; scroll-margin-top: 3rem; }
+h2 { font-family: var(--font-display); font-size: 1.35rem; margin: 0 0 .75rem; text-wrap: balance; }
+h2 .n { color: var(--primary); margin-right: .4rem; }
+h3 { font-size: 1.05rem; margin: 1.25rem 0 .4rem; }
+p, li { max-width: 68ch; }
+ul, ol { padding-left: 1.2rem; }
+li { margin: .2rem 0; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+th, td { text-align: left; vertical-align: top; padding: .45rem .6rem; border-bottom: 1px solid var(--border); }
+th { background: var(--surface); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.pill { display: inline-block; font-size: .75rem; font-weight: 700; padding: .1rem .5rem; border-radius: 99px; white-space: nowrap; }
+.low { background: #d6eadb; color: var(--ok); }
+.mid { background: #fbe6c2; color: #7a4a00; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; }
+.card { background: #fff; border: 1px solid var(--border); border-top: 4px solid var(--primary); padding: .9rem 1rem; border-radius: 4px; }
+.card h3 { margin-top: 0; }
+.card ul { margin: 0; font-size: .93rem; }
+.card .who { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+dl.qa dt { font-weight: 700; margin-top: .9rem; }
+dl.qa dd { margin: .2rem 0 0; max-width: 68ch; }
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: .5rem 1.5rem; }
+.concepts p { margin: .3rem 0; font-size: .95rem; }
+.warn { border-left: 4px solid var(--accent); background: #fff; padding: .6rem .9rem; margin: .6rem 0; }
+.warn strong { color: var(--primary); }
+pre { background: var(--dark); color: var(--light); padding: .9rem 1rem; overflow-x: auto; font: .85rem/1.5 var(--font-mono); border-radius: 4px; }
+footer { padding: 2rem 0 3rem; color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Defensa del frontend de MGW Prod</h1>
+    <p>Lo que hay que saber para defender la Etapa 2 (React + Vite + datos simulados), ordenado según los 8 criterios de la rúbrica del profe.</p>
+    <div class="score">
+      <div><strong>85–95</strong><span>nota estimada / 100</span></div>
+      <div><strong>60</strong><span>para aprobar</span></div>
+      <div><strong>13</strong><span>rutas</span></div>
+      <div><strong>9</strong><span>tests verdes</span></div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Índice">
+  <ul>
+    <li><a href="#consigna">Consigna</a></li>
+    <li><a href="#rubrica">Rúbrica</a></li>
+    <li><a href="#como-funciona">Cómo funciona</a></li>
+    <li><a href="#react">React en 12 ideas</a></li>
+    <li><a href="#partes">Tu parte</a></li>
+    <li><a href="#preguntas">Preguntas</a></li>
+    <li><a href="#flojos">Puntos flojos</a></li>
+    <li><a href="#demo">Demo</a></li>
+  </ul>
+</nav>
+
+<main class="wrap">
+
+<section id="consigna">
+  <h2><span class="n">1</span>Qué pide la consigna y dónde está</h2>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th scope="col">Pide</th><th scope="col">Dónde</th></tr></thead>
+    <tbody>
+      <tr><td>Landing con navegación</td><td><code>/</code> + <code>Header</code> en todas las páginas</td></tr>
+      <tr><td>Productos: listado y detalle</td><td><code>/beats</code> (con filtros) y <code>/beats/:id</code></td></tr>
+      <tr><td>Productos: modificación y borrado</td><td>"Gestionar mi beat" en el detalle (<code>ManageBeat</code>), borrado con confirmación</td></tr>
+      <tr><td>Flujo de compra simulado</td><td><code>/premium</code>: Plan → Pago → Listo</td></tr>
+      <tr><td>Acerca de con integrantes</td><td><code>/nosotros</code></td></tr>
+      <tr><td>Diseño previo de pantallas</td><td><code>docs/wireframes/</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Extras: Colaboraciones, Desafíos con votación, Ranking, Login, Registro, Contacto, Privacidad y 404. <strong>El producto es el beat y lo que se compra es Premium</strong>, porque el profe autorizó que no sea un e-commerce.</p>
+  <p>La rúbrica dice que <strong>no es obligatorio conectar con el backend</strong> y que React no suma puntos extra.</p>
+</section>
+
+<section id="rubrica">
+  <h2><span class="n">2</span>Rúbrica: qué mostrar en cada criterio</h2>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th scope="col">Criterio</th><th scope="col">Pts</th><th scope="col">Qué mostrar</th><th scope="col">Riesgo</th></tr></thead>
+    <tbody>
+      <tr><td>1. Modelo de negocio</td><td class="num">15</td><td>La UI cambia según quién mira: visitante, artista o discográfica</td><td><span class="pill low">Bajo</span></td></tr>
+      <tr><td>2. Estructura</td><td class="num">10</td><td>Rutas en <code>App.jsx</code>, 2 layouts, mismo menú y footer, 404</td><td><span class="pill low">Bajo</span></td></tr>
+      <tr><td>3. Semántica y accesibilidad</td><td class="num">15</td><td>Un <code>h1</code> por página, labels, <code>alt</code>, "Saltar al contenido", tabla real en Ranking, foco visible y manejado</td><td><span class="pill low">Bajo</span></td></tr>
+      <tr><td>4. Diseño visual</td><td class="num">15</td><td>Colores y espacios en <code>tokens.css</code>, mismo encabezado y botones en todo el sitio</td><td><span class="pill mid">Medio</span></td></tr>
+      <tr><td>5. Responsive</td><td class="num">10</td><td>Menú hamburguesa, títulos con <code>clamp()</code>, probado a 375 / 768 / 1280 px</td><td><span class="pill low">Bajo</span></td></tr>
+      <tr><td>6. Interacción</td><td class="num">15</td><td>Filtros, publicar, editar, borrar, aceptar, votar, pasos de Premium, todo con aviso</td><td><span class="pill mid">Medio</span></td></tr>
+      <tr><td>7. Formularios</td><td class="num">10</td><td>Error debajo del campo, foco al primer error, "Enviando…", aviso verde de éxito</td><td><span class="pill low">Bajo</span></td></tr>
+      <tr><td>8. Calidad técnica</td><td class="num">10</td><td>Componentes reusables, validaciones con tests, lint limpio</td><td><span class="pill low">Bajo</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="como-funciona">
+  <h2><span class="n">3</span>Cómo funciona, en un minuto</h2>
+  <pre>main.jsx  → AuthProvider (sesión) → DataProvider (beats, comentarios, toplines, votos) → App
+App.jsx   → rutas: Layout (con menú) para casi todo, AuthLayout (sin menú) para Login/Registro
+pages/    → una página por ruta          components/ui → Button, FormField, Alert, ConfirmDelete…
+utils/    → validation.js (con tests), format.js, form.js      data/ → mockData + fakeRequest</pre>
+  <h3>Dos tipos de estado (la idea central)</h3>
+  <ul>
+    <li><strong>Local</strong> (<code>useState</code> en el componente): lo que escribís, los errores, "Enviando…", el paso de Premium, los filtros. Solo le importa a esa pantalla.</li>
+    <li><strong>Global</strong> (Context): quién está logueado y los datos. Si aceptás un topline en el detalle del beat, se ve también en Colaboraciones.</li>
+  </ul>
+  <h3>Qué pasa al enviar un formulario</h3>
+  <ol>
+    <li><code>preventDefault()</code> para que no recargue la página.</li>
+    <li><code>validate()</code> arma los errores; si hay, se muestran y el foco va al primero.</li>
+    <li>Si está todo bien: "Enviando…" + <code>await fakeRequest(600)</code> (simula el servidor).</li>
+    <li>Se actualiza el estado con una lista nueva y aparece el aviso verde.</li>
+  </ol>
+</section>
+
+<section id="react">
+  <h2><span class="n">4</span>React en 12 ideas</h2>
+  <div class="concepts">
+    <p><strong>Componente:</strong> función que devuelve JSX. Se usa como etiqueta: <code>&lt;Button&gt;</code>.</p>
+    <p><strong>Props vs estado:</strong> las props vienen del padre y no se cambian; el estado es propio y al cambiar redibuja.</p>
+    <p><strong>useState:</strong> <code>const [step, setStep] = useState(1)</code>.</p>
+    <p><strong>Setter con función:</strong> <code>setBeats(current =&gt; …)</code> cuando el valor nuevo depende del anterior.</p>
+    <p><strong>Inmutabilidad:</strong> nunca <code>push</code>. Agregar <code>[nuevo, ...current]</code>, editar <code>map</code>, borrar <code>filter</code>.</p>
+    <p><strong>useEffect:</strong> corre después de dibujar. Solo lo usamos para el título de la pestaña y el scroll arriba. El array dice cuándo repetir.</p>
+    <p><strong>Context:</strong> comparte datos sin pasar props por 4 niveles. Tenemos uno solo: <code>const { user, beats } = useApp()</code>.</p>
+    <p><strong>key:</strong> identifica cada ítem de una lista. Usamos el <code>id</code>, no el índice. Cambiar la key reinicia el componente.</p>
+    <p><strong>Input controlado:</strong> el valor sale del estado y cada tecla pasa por <code>onChange</code>.</p>
+    <p><strong>Virtual DOM:</strong> React arma la pantalla en memoria y toca en el DOM real solo lo que cambió.</p>
+    <p><strong>Router:</strong> <code>Link</code> navega sin recargar, <code>useParams</code> lee el <code>:id</code>, <code>Navigate</code> redirige.</p>
+  </div>
+</section>
+
+<section id="partes">
+  <h2><span class="n">5</span>Cada uno defiende su parte</h2>
+  <div class="cards">
+    <article class="card">
+      <p class="who">A · Santiago</p>
+      <h3>Landing, Nosotros, Privacidad, 404 + base</h3>
+      <ul>
+        <li>Los números de la Landing salen de los datos, por eso coinciden con la barra "En vivo".</li>
+        <li>"Crear cuenta" solo aparece sin sesión.</li>
+        <li>Los links "Ver detalle" tienen texto oculto con el nombre del beat para el lector de pantalla.</li>
+        <li>Nosotros: los 4 integrantes desde un array con <code>map</code>.</li>
+        <li>Base: <code>Button</code> es link si lleva a otra página y botón si hace una acción.</li>
+      </ul>
+    </article>
+    <article class="card">
+      <p class="who">B · Mateo</p>
+      <h3>Beats: listado, detalle, editar, borrar</h3>
+      <ul>
+        <li>Los filtros no guardan otra lista: se calcula <code>beats.filter(...)</code> en cada render.</li>
+        <li><code>useParams</code> da texto, por eso <code>Number(id)</code>. Si no existe: "Beat no encontrado".</li>
+        <li>Editar y borrar solo los ve el dueño (<code>isOwner</code>).</li>
+        <li>Borrar un beat borra también sus comentarios y toplines.</li>
+        <li>Borrado en 2 pasos, con el foco en "Cancelar".</li>
+      </ul>
+    </article>
+    <article class="card">
+      <p class="who">C · Paolo</p>
+      <h3>Colaboraciones, Desafíos, Ranking</h3>
+      <ul>
+        <li>Propuestas agrupadas por beat, con filtro por estado.</li>
+        <li>Después de aceptar, rechazar o borrar aparece un <code>Alert</code> de confirmación (un <code>useState</code> llamado <code>message</code>).</li>
+        <li>El voto usa 10 radios dentro de un <code>fieldset</code>, así se recorre con flechas.</li>
+        <li>Podio: el HTML va 1-2-3 y el orden visual 2-1-3 sale del CSS.</li>
+        <li>Ranking es una <code>&lt;table&gt;</code> de verdad; tu fila dice "(vos)".</li>
+      </ul>
+    </article>
+    <article class="card">
+      <p class="who">D · Dani</p>
+      <h3>Premium, Login, Registro, Contacto</h3>
+      <ul>
+        <li>Premium: 3 pasos en una ruta, con el paso como estado local.</li>
+        <li>Tarjeta: 16 dígitos + algoritmo de Luhn, vencimiento y CVV.</li>
+        <li>La tarjeta nunca se guarda: al pasar al paso 3 se descarta y solo queda <code>•••• 1111</code>.</li>
+        <li>Login fallido: aviso rojo, se borra la contraseña y el foco vuelve ahí.</li>
+        <li>Registro, Contacto y Pago piden aceptar la Política de privacidad.</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<section id="preguntas">
+  <h2><span class="n">6</span>Preguntas probables</h2>
+  <dl class="qa">
+    <dt>¿Por qué React y no HTML/JS plano?</dt>
+    <dd>Con 13 pantallas y 4 personas necesitábamos piezas reusables (un solo formulario de campo, un solo botón) y datos compartidos entre pantallas. Es la misma estructura del TodoList de clase.</dd>
+    <dt>¿Por qué Context y no Redux?</dt>
+    <dd>Para este tamaño alcanza con lo que trae React. Una librería más no suma nada.</dd>
+    <dt>¿Dónde se guardan los datos? ¿Qué pasa si recargo?</dt>
+    <dd>En memoria. Al recargar vuelven los datos de ejemplo; la rúbrica no exige persistencia. La sesión también se cierra (guarda solo nombre, rol y plan, nunca email ni contraseña). En la demo, no apretar F5.</dd>
+    <dt>¿Cómo validan?</dt>
+    <dd>Con funciones de <code>validation.js</code>. Usamos <code>noValidate</code> para mostrar nuestros mensajes en castellano en vez de los del navegador.</dd>
+    <dt>¿Qué es Luhn?</dt>
+    <dd>El dígito verificador de las tarjetas: se duplica uno de cada dos dígitos desde la derecha y la suma tiene que dar múltiplo de 10. Detecta números mal tipeados.</dd>
+    <dt>¿Cómo simulan el servidor?</dt>
+    <dd><code>fakeRequest(600)</code> es una promesa que tarda 600 ms. Mientras tanto el botón dice "Enviando…" y queda deshabilitado.</dd>
+    <dt>¿Qué hicieron de accesibilidad?</dt>
+    <dd>HTML semántico, un <code>h1</code> por página, labels, "Saltar al contenido", foco visible, estados escritos (no solo color) y el foco vuelve a su lugar cuando algo desaparece.</dd>
+    <dt>¿Por qué no está conectado al backend?</dt>
+    <dd>La rúbrica dice que no es obligatorio en esta instancia. El backend existe (Etapa 1) y se integra después.</dd>
+    <dt>¿Qué pasa con <code>/beats/999</code> o una URL inventada?</dt>
+    <dd>El beat que no existe muestra "Beat no encontrado"; una URL inventada muestra la 404.</dd>
+  </dl>
+</section>
+
+<section id="flojos">
+  <h2><span class="n">7</span>Puntos flojos: decirlos antes de que los encuentre</h2>
+  <div class="warn"><strong>Botón "Ver entregas" en Desafíos.</strong> Es un link del router a <code>#entregas</code> y probablemente no baja la página. Sin probar todavía; si falla, se arregla en una línea.</div>
+  <div class="warn"><strong>Lighthouse sin correr.</strong> No hay número de accesibilidad para mostrar.</div>
+  <div class="warn"><strong>La discográfica no puede crear desafíos en el front.</strong> Está en el backend; en el front quedó fuera de alcance.</div>
+  <div class="warn"><strong>Lo más difícil de explicar:</strong> la <code>key</code> para reiniciar el formulario de voto y <code>setField(key)</code>, que devuelve una función.</div>
+</section>
+
+<section id="demo">
+  <h2><span class="n">8</span>Demo de 10 minutos</h2>
+  <p>Correr con <code>cd frontend &amp;&amp; npm install &amp;&amp; npm run dev</code>. Usuario: <code>artista@mgw.com</code> / <code>mgw12345</code> (dueño de "Noche en Palermo").</p>
+  <ol>
+    <li>Landing; achicar la ventana para mostrar el menú de celular.</li>
+    <li>Beats sin sesión: filtrar, filtro sin resultados, "Limpiar".</li>
+    <li>Login con contraseña mala, después la buena.</li>
+    <li>Publicar vacío (errores + foco), BPM 300, después uno válido.</li>
+    <li>"Noche en Palermo": comentar, editar BPM, aceptar topline, borrar con confirmación.</li>
+    <li>Colaboraciones: el topline aceptado aparece como "Aceptada".</li>
+    <li>Desafíos: votar sin puntaje (error) y con 8 (éxito); mostrar el podio.</li>
+    <li>Premium con tarjeta mala, después <code>4111 1111 1111 1111</code>, <code>12/30</code>, <code>123</code>.</li>
+    <li>Nosotros, y Tab desde arriba para mostrar "Saltar al contenido".</li>
+  </ol>
+</section>
+
+</main>
+<footer class="wrap">TPO Aplicaciones Interactivas, UADE. Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi.</footer>
+</body>
+</html>
