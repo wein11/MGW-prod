@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
@@ -24,29 +24,24 @@ function ToplinesSection({ beat, isOwner }) {
   const [errors, setErrors] = useState({})
   const [sending, setSending] = useState(false)
   const [uploaded, setUploaded] = useState(false)
-  // Id del elemento que tiene que recibir el foco después de un cambio.
-  const [focusTarget, setFocusTarget] = useState(null)
+  // Mensaje de confirmación de la última acción. Se muestra con <Alert>, que
+  // tiene role="status": el lector de pantalla lo lee solo.
+  const [message, setMessage] = useState('')
 
   const beatToplines = toplines.filter(topline => topline.beatId === beat.id)
   const canUpload = user?.role === 'ARTIST' && !isOwner
 
-  // Al aceptar, rechazar o borrar, el botón que se tocó desaparece y el foco
-  // quedaría perdido en la página. Esto lo lleva a la fila (que anuncia el
-  // nuevo estado) o al título de la sección, para quien usa teclado.
-  useEffect(() => {
-    if (focusTarget) document.getElementById(focusTarget)?.focus()
-  }, [focusTarget])
-
-  function changeStatus(toplineId, status) {
+  function changeStatus(topline, status) {
     setToplines(current =>
-      current.map(topline => (topline.id === toplineId ? { ...topline, status } : topline))
+      current.map(item => (item.id === topline.id ? { ...item, status } : item))
     )
-    setFocusTarget(`topline-${toplineId}`)
+    const action = status === TOPLINE_STATUS.ACCEPTED ? 'Aceptaste' : 'Rechazaste'
+    setMessage(`${action} el topline de ${topline.artistName}.`)
   }
 
   function removeTopline(toplineId) {
     setToplines(current => current.filter(topline => topline.id !== toplineId))
-    setFocusTarget('toplines-title')
+    setMessage('Borraste tu topline.')
   }
 
   async function handleSubmit(event) {
@@ -82,7 +77,7 @@ function ToplinesSection({ beat, isOwner }) {
     <section className="section" aria-labelledby="toplines-title">
       <div className="container">
         <div className="section-head">
-          <h2 id="toplines-title" tabIndex={-1}>Toplines sobre este beat</h2>
+          <h2 id="toplines-title">Toplines sobre este beat</h2>
           <p>{plural(beatToplines.length, 'topline')}</p>
         </div>
         <p className="section-intro">
@@ -90,14 +85,14 @@ function ToplinesSection({ beat, isOwner }) {
           colaboración que el dueño del beat puede aceptar o rechazar.
         </p>
 
+        {message && <Alert kind="success">{message}</Alert>}
+
         {beatToplines.length === 0 ? (
           <p>Todavía nadie subió un topline.</p>
         ) : (
           <ul className="item-list">
             {beatToplines.map(topline => (
-              // tabIndex -1: la fila puede recibir foco desde el código pero no
-              // suma un paso más al recorrer la página con Tab.
-              <li key={topline.id} id={`topline-${topline.id}`} tabIndex={-1} className="topline-row">
+              <li key={topline.id} className="topline-row">
                 <div>
                   <h3>{topline.artistName}</h3>
                   <p className="beat-meta">
@@ -111,12 +106,12 @@ function ToplinesSection({ beat, isOwner }) {
                   </a>
                   {isOwner && topline.status === TOPLINE_STATUS.PENDING && (
                     <>
-                      <Button onClick={() => changeStatus(topline.id, TOPLINE_STATUS.ACCEPTED)}>
+                      <Button onClick={() => changeStatus(topline, TOPLINE_STATUS.ACCEPTED)}>
                         Aceptar<span className="visually-hidden"> topline de {topline.artistName}</span>
                       </Button>
                       <Button
                         variant="secondary"
-                        onClick={() => changeStatus(topline.id, TOPLINE_STATUS.REJECTED)}
+                        onClick={() => changeStatus(topline, TOPLINE_STATUS.REJECTED)}
                       >
                         Rechazar<span className="visually-hidden"> topline de {topline.artistName}</span>
                       </Button>

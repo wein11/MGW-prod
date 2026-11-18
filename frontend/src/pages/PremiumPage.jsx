@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import PageHeader from '../components/layout/PageHeader'
 import { useApp } from '../context/AppContext'
@@ -42,20 +42,6 @@ function PremiumPage() {
   const { user, upgradeToPremium } = useApp()
   const [step, setStep] = useState(1)
   const [maskedCard, setMaskedCard] = useState('')
-  const previousStep = useRef(step)
-
-  // Al cambiar de paso el foco pasa al título: quien usa teclado o lector de
-  // pantalla se entera de que la pantalla cambió. (Se compara con el paso
-  // anterior para no mover el foco al cargar la página.)
-  useEffect(() => {
-    if (previousStep.current === step) return
-    previousStep.current = step
-    const heading = document.querySelector('h1')
-    if (heading) {
-      heading.tabIndex = -1
-      heading.focus()
-    }
-  }, [step])
 
   // Sin sesión no se puede pagar: se manda a Login.
   if (!user) return <Navigate to="/login" replace />
