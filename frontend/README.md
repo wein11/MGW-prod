@@ -12,7 +12,6 @@ npm run dev      # abre en http://localhost:5173
 
 ## Comandos
 
-- `npm test`: tests de las validaciones (Vitest)
 - `npm run lint`: revisa el código (oxlint, con reglas de accesibilidad)
 - `npm run build`: genera la versión final en `dist/`
 
