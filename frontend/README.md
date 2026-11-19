@@ -12,7 +12,6 @@ npm run dev      # abre en http://localhost:5173
 
 ## Comandos
 
-- `npm test`: tests de las validaciones (Vitest)
 - `npm run lint`: revisa el código (oxlint, con reglas de accesibilidad)
 - `npm run build`: genera la versión final en `dist/`
 
@@ -28,7 +27,7 @@ También podés crear una cuenta en `/registro`: funciona hasta que se recargue 
 
 ## Comportamiento simulado
 
-Los datos viven en memoria: F5 borra los beats, comentarios, toplines, votos y cuentas creados en la visita. La sesión abierta se mantiene en `sessionStorage`, que guarda solo `{ name, role, plan }`. Los datos de tarjeta no se guardan nunca.
+Los datos viven en memoria: F5 borra los beats, comentarios, toplines, votos y cuentas creados en la visita, y también cierra la sesión. Los datos de tarjeta no se guardan nunca.
 
 Premium y Colaboraciones son solo para cuentas de artista.
 
@@ -41,7 +40,7 @@ Los resultados, las correcciones y cómo repetir la prueba están en `docs/qa/20
 - `src/pages/`: una página por pantalla (cada uno trabaja en las suyas)
 - `src/components/layout/`: header, footer, PageHeader, onda decorativa
 - `src/components/ui/`: Button, FormField, Alert, StatusBadge, ConfirmDelete, EmptyState, PrivacyConsent
-- `src/context/`: sesión simulada (`useAuth`) y datos compartidos (`useData`)
+- `src/context/`: `AppContext`, con la sesión simulada y los datos compartidos (se usa con `useApp()`)
 - `src/data/`: datos simulados y `fakeRequest`
 - `src/utils/`: validaciones, formatos y ayudas de formularios
 

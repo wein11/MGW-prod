@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import FormField from '../../components/ui/FormField'
-import { useAuth } from '../../context/AuthContext'
-import { useData } from '../../context/DataContext'
+import { useApp } from '../../context/AppContext'
 import { fakeRequest } from '../../data/fakeRequest'
 import { formatDate, plural, todayIso } from '../../utils/format'
 import { focusFirstError, hasErrors } from '../../utils/form'
@@ -15,8 +14,7 @@ const MAX_LENGTH = 500
 // Comentarios de un beat: la lista y el formulario para sumar uno.
 // Comenta cualquier usuario con sesión (artista o discográfica).
 function CommentsSection({ beatId }) {
-  const { user } = useAuth()
-  const { comments, setComments } = useData()
+  const { user, comments, setComments } = useApp()
   const [text, setText] = useState('')
   const [errors, setErrors] = useState({})
   const [sending, setSending] = useState(false)

@@ -3,17 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './styles/tokens.css'
 import './styles/global.css'
 import App from './App.jsx'
-import { AuthProvider } from './context/AuthContext'
-import { DataProvider } from './context/DataContext'
+import { AppProvider } from './context/AppContext'
 
-// Los providers envuelven toda la app: sesión simulada y datos compartidos
-// quedan disponibles en cualquier página con useAuth() y useData().
+// AppProvider envuelve toda la app: la sesión simulada y los datos compartidos
+// quedan disponibles en cualquier página con useApp().
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <DataProvider>
-        <App />
-      </DataProvider>
-    </AuthProvider>
+    <AppProvider>
+      <App />
+    </AppProvider>
   </StrictMode>,
 )

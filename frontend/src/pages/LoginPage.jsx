@@ -4,16 +4,16 @@ import PageHeader from '../components/layout/PageHeader'
 import Alert from '../components/ui/Alert'
 import Button from '../components/ui/Button'
 import FormField from '../components/ui/FormField'
-import { useAuth } from '../context/AuthContext'
+import { useApp } from '../context/AppContext'
 import { fakeRequest } from '../data/fakeRequest'
 import { focusFirstError, hasErrors } from '../utils/form'
 import { isRequired, isValidEmail } from '../utils/validation'
 import './AuthPages.css'
 
 // Login simulado: compara con los usuarios de demo (mockData). Si coincide,
-// useAuth guarda la sesión y esta página redirige al inicio.
+// AppContext guarda la sesión y esta página redirige al inicio.
 function LoginPage() {
-  const { user, login } = useAuth()
+  const { user, login } = useApp()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})

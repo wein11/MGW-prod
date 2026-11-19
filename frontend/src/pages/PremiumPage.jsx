@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { useState } from 'react'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
-import { useAuth } from '../context/AuthContext'
+import { useApp } from '../context/AppContext'
 import { formatPrice } from '../utils/format'
 import { plans } from '../data/mockData'
 import DoneStep from './premium/DoneStep'
@@ -41,26 +40,27 @@ const HEADERS = {
 // 3 confirmación. El paso es estado local; el formulario de pago vive en su
 // propio componente para que sus datos se descarten al salir del paso 2.
 function PremiumPage() {
-  const { user, upgradeToPremium } = useAuth()
+  const { user, upgradeToPremium } = useApp()
   const [step, setStep] = useState(1)
   const [maskedCard, setMaskedCard] = useState('')
-  const previousStep = useRef(step)
 
-  // Al cambiar de paso el foco pasa al título: quien usa teclado o lector de
-  // pantalla se entera de que la pantalla cambió. (Se compara con el paso
-  // anterior para no mover el foco al cargar la página.)
-  useEffect(() => {
-    if (previousStep.current === step) return
-    previousStep.current = step
-    const heading = document.querySelector('h1')
-    if (heading) {
-      heading.tabIndex = -1
-      heading.focus()
-    }
-  }, [step])
-
-  // Sin sesión no se puede pagar: se manda a Login.
-  if (!user) return <Navigate to="/login" replace />
+  // Sin sesión no se puede pagar: se avisa y se ofrece entrar. Es un mensaje
+  // y no una redirección para que "Salir" desde esta página lleve al inicio.
+  if (!user) {
+    return (
+      <>
+        <PageHeader title="Premium" description="El plan Premium amplía las producciones que puede publicar un artista." />
+        <section className="section">
+          <div className="container">
+            <EmptyState title="Entrá para pasar a Premium.">
+              <p>Necesitás una cuenta de artista para elegir un plan.</p>
+              <Button to="/login">Entrar</Button>
+            </EmptyState>
+          </div>
+        </section>
+      </>
+    )
+  }
 
   // Igual que en el backend, los planes son solo para artistas: una
   // discográfica no publica producciones, así que no tiene nada que ampliar.

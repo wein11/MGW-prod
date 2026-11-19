@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import ConfirmDelete from '../../components/ui/ConfirmDelete'
 import FormField from '../../components/ui/FormField'
 import StatusBadge from '../../components/ui/StatusBadge'
-import { useData } from '../../context/DataContext'
+import { useApp } from '../../context/AppContext'
 import { fakeRequest } from '../../data/fakeRequest'
 import { formatDate, plural } from '../../utils/format'
 import { focusFirstError, hasErrors } from '../../utils/form'
@@ -15,39 +15,26 @@ import { isValidHttpsUrl } from '../../utils/validation'
 // (se edita en la misma fila, sin cambiar de pantalla, porque es un cambio
 // de un solo campo) o borrarlo.
 function MyToplinesSection({ myToplines, beatsById }) {
-  const { setToplines } = useData()
+  const { setToplines } = useApp()
   // Id del topline que se está editando: solo uno a la vez.
   const [editingId, setEditingId] = useState(null)
   const [draftUrl, setDraftUrl] = useState('')
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
-  const [savedId, setSavedId] = useState(null)
-  // Igual que en ProposalsSection: el destino del foco va en un ref porque no
-  // se dibuja, y el efecto lo consume después del render.
-  const pendingFocus = useRef(null)
-
-  useEffect(() => {
-    const id = pendingFocus.current
-    if (!id) return
-    pendingFocus.current = null
-    // Si el elemento ya no está (se borró la fila), el foco va al título.
-    const target = document.getElementById(id) ?? document.getElementById('my-toplines-title')
-    target?.focus()
-  })
+  // Mensaje de confirmación de la última acción. Se muestra con <Alert>, que
+  // tiene role="status": el lector de pantalla lo lee solo.
+  const [message, setMessage] = useState('')
 
   function startEditing(topline) {
     setEditingId(topline.id)
     setDraftUrl(topline.audioUrl)
     setErrors({})
-    setSavedId(null)
+    setMessage('')
   }
 
   function cancelEditing() {
-    const id = editingId
     setEditingId(null)
     setErrors({})
-    // El formulario desaparece: el foco vuelve al botón que lo abrió.
-    pendingFocus.current = `edit-${id}`
   }
 
   async function save(event, toplineId) {
@@ -73,22 +60,23 @@ function MyToplinesSection({ myToplines, beatsById }) {
     )
     setSaving(false)
     setEditingId(null)
-    setSavedId(toplineId)
-    pendingFocus.current = `edit-${toplineId}`
+    setMessage('El link se actualizó.')
   }
 
-  function remove(toplineId) {
+  function remove(toplineId, beatTitle) {
     setToplines(current => current.filter(topline => topline.id !== toplineId))
-    pendingFocus.current = 'my-toplines-title'
+    setMessage(`Borraste tu topline para "${beatTitle}".`)
   }
 
   return (
     <section className="section" aria-labelledby="my-toplines-title">
       <div className="container">
         <div className="section-head">
-          <h2 id="my-toplines-title" tabIndex={-1}>Mis toplines</h2>
+          <h2 id="my-toplines-title">Mis toplines</h2>
           <p>{plural(myToplines.length, 'topline')} subido{myToplines.length === 1 ? '' : 's'} por vos</p>
         </div>
+
+        {message && <Alert kind="success">{message}</Alert>}
 
         {myToplines.length === 0 ? (
           <p>
@@ -114,18 +102,14 @@ function MyToplinesSection({ myToplines, beatsById }) {
 
                     <div className="topline-actions">
                       <StatusBadge status={topline.status} />
-                      <Button
-                        variant="secondary"
-                        id={`edit-${topline.id}`}
-                        onClick={() => startEditing(topline)}
-                      >
+                      <Button variant="secondary" onClick={() => startEditing(topline)}>
                         Editar link
                         <span className="visually-hidden"> de tu topline para {beatTitle}</span>
                       </Button>
                       <ConfirmDelete
                         label={`tu topline para "${beatTitle}"`}
                         buttonText="Borrar topline"
-                        onConfirm={() => remove(topline.id)}
+                        onConfirm={() => remove(topline.id, beatTitle)}
                       />
                     </div>
                   </div>
@@ -157,8 +141,6 @@ function MyToplinesSection({ myToplines, beatsById }) {
                       </div>
                     </form>
                   )}
-
-                  {savedId === topline.id && <Alert kind="success">Listo: el link se actualizó.</Alert>}
                 </li>
               )
             })}

@@ -6,8 +6,7 @@ import Alert from '../components/ui/Alert'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
 import StatusBadge from '../components/ui/StatusBadge'
-import { useAuth } from '../context/AuthContext'
-import { useData } from '../context/DataContext'
+import { useApp } from '../context/AppContext'
 import { JURY_WEIGHTS, PRIZE_POINTS, challenges } from '../data/mockData'
 import { formatDate, plural } from '../utils/format'
 import Podium from './challenges/Podium'
@@ -41,8 +40,7 @@ function pickFeatured(list) {
 // Desafíos (wireframe 5): el destacado arriba, la lista de los tres, las
 // entregas del destacado con su voto, y el podio del que ya cerró.
 function ChallengesPage() {
-  const { user } = useAuth()
-  const { submissions, setSubmissions } = useData()
+  const { user, submissions, setSubmissions } = useApp()
   // Cuántos votos se enviaron en esta visita. Sirve de dos cosas: saber si hay
   // que mostrar la confirmación, y como key del Alert, para que al votar dos
   // veces seguidas el mensaje se vuelva a montar y el lector de pantalla lo

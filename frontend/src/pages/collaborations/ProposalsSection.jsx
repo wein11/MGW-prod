@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import ConfirmDelete from '../../components/ui/ConfirmDelete'
 import EmptyState from '../../components/ui/EmptyState'
 import FormField from '../../components/ui/FormField'
 import StatusBadge from '../../components/ui/StatusBadge'
-import { useData } from '../../context/DataContext'
+import { useApp } from '../../context/AppContext'
 import { TOPLINE_STATUS } from '../../data/mockData'
 import { formatDate, plural } from '../../utils/format'
 
@@ -21,25 +22,11 @@ import { formatDate, plural } from '../../utils/format'
 // destruye nada que el dueño haya hecho; "Borrar topline" sí pregunta, porque
 // deshace una colaboración que ya estaba aceptada.
 function ProposalsSection({ myBeats }) {
-  const { toplines, setToplines } = useData()
+  const { toplines, setToplines } = useApp()
   const [statusFilter, setStatusFilter] = useState('ALL')
-  // Id del elemento que tiene que recibir el foco después de una acción: el
-  // botón que se tocó desaparece y, sin esto, el foco se pierde al principio
-  // de la página. Va en un ref y no en estado porque no se dibuja: cambiarlo
-  // no tiene que provocar otro render.
-  const pendingFocus = useRef(null)
-
-  // El efecto corre después de cada render, cuando el DOM ya refleja el cambio.
-  // Si la fila dejó de existir (con el filtro en "Pendiente", la propuesta
-  // recién aceptada ya no entra), el foco va al título de la sección, que
-  // siempre está: si no, quedaría en el body.
-  useEffect(() => {
-    const id = pendingFocus.current
-    if (!id) return
-    pendingFocus.current = null
-    const target = document.getElementById(id) ?? document.getElementById('proposals-title')
-    target?.focus()
-  })
+  // Mensaje de confirmación de la última acción. Se muestra con <Alert>, que
+  // tiene role="status": el lector de pantalla lo lee solo.
+  const [message, setMessage] = useState('')
 
   const myBeatIds = myBeats.map(beat => beat.id)
   const received = toplines.filter(topline => myBeatIds.includes(topline.beatId))
@@ -51,26 +38,28 @@ function ProposalsSection({ myBeats }) {
     .map(beat => ({ beat, items: visible.filter(topline => topline.beatId === beat.id) }))
     .filter(group => group.items.length > 0)
 
-  function changeStatus(toplineId, status) {
+  function changeStatus(topline, status) {
     setToplines(current =>
-      current.map(topline => (topline.id === toplineId ? { ...topline, status } : topline))
+      current.map(item => (item.id === topline.id ? { ...item, status } : item))
     )
-    // La fila anuncia el estado nuevo, así que el foco vuelve ahí.
-    pendingFocus.current = `proposal-${toplineId}`
+    const action = status === TOPLINE_STATUS.ACCEPTED ? 'Aceptaste' : 'Rechazaste'
+    setMessage(`${action} la propuesta de ${topline.artistName}.`)
   }
 
-  function remove(toplineId) {
-    setToplines(current => current.filter(topline => topline.id !== toplineId))
-    pendingFocus.current = 'proposals-title'
+  function remove(topline) {
+    setToplines(current => current.filter(item => item.id !== topline.id))
+    setMessage(`Quitaste la propuesta de ${topline.artistName}.`)
   }
 
   return (
     <section className="section" aria-labelledby="proposals-title">
       <div className="container">
         <div className="section-head">
-          <h2 id="proposals-title" tabIndex={-1}>Propuestas sobre mis beats</h2>
+          <h2 id="proposals-title">Propuestas sobre mis beats</h2>
           <p>{plural(visible.length, 'propuesta')}</p>
         </div>
+
+        {message && <Alert kind="success">{message}</Alert>}
 
         <div className="collab-filter">
           <FormField
@@ -106,14 +95,7 @@ function ProposalsSection({ myBeats }) {
 
               <ul className="item-list">
                 {items.map(topline => (
-                  // tabIndex -1: la fila puede recibir foco desde el código,
-                  // pero no agrega un paso más al recorrer con Tab.
-                  <li
-                    key={topline.id}
-                    id={`proposal-${topline.id}`}
-                    tabIndex={-1}
-                    className="topline-row"
-                  >
+                  <li key={topline.id} className="topline-row">
                     <div>
                       <h4>{topline.artistName}</h4>
                       <p className="beat-meta">
@@ -132,13 +114,13 @@ function ProposalsSection({ myBeats }) {
 
                       {topline.status === TOPLINE_STATUS.PENDING && (
                         <>
-                          <Button onClick={() => changeStatus(topline.id, TOPLINE_STATUS.ACCEPTED)}>
+                          <Button onClick={() => changeStatus(topline, TOPLINE_STATUS.ACCEPTED)}>
                             Aceptar
                             <span className="visually-hidden"> propuesta de {topline.artistName}</span>
                           </Button>
                           <Button
                             variant="secondary"
-                            onClick={() => changeStatus(topline.id, TOPLINE_STATUS.REJECTED)}
+                            onClick={() => changeStatus(topline, TOPLINE_STATUS.REJECTED)}
                           >
                             Rechazar
                             <span className="visually-hidden"> propuesta de {topline.artistName}</span>
@@ -150,10 +132,10 @@ function ProposalsSection({ myBeats }) {
                         <ConfirmDelete
                           label={`el topline de ${topline.artistName} para "${beat.title}"`}
                           buttonText="Borrar topline"
-                          onConfirm={() => remove(topline.id)}
+                          onConfirm={() => remove(topline)}
                         />
                       ) : (
-                        <Button variant="secondary" onClick={() => remove(topline.id)}>
+                        <Button variant="secondary" onClick={() => remove(topline)}>
                           Quitar propuesta
                           <span className="visually-hidden"> de {topline.artistName}</span>
                         </Button>

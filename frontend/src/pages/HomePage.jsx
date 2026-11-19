@@ -1,8 +1,7 @@
 import JuryBand from '../components/layout/JuryBand'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
-import { useAuth } from '../context/AuthContext'
-import { useData } from '../context/DataContext'
+import { useApp } from '../context/AppContext'
 import { PRIZE_POINTS, RANKING_TOTAL_PRODUCERS, challenges } from '../data/mockData'
 import './home/Home.css'
 
@@ -35,8 +34,7 @@ const LATEST_COUNT = 3
 // secciones principales. Los números salen de los datos simulados, así
 // coinciden con la franja "En vivo" de arriba.
 function HomePage() {
-  const { user } = useAuth()
-  const { beats } = useData()
+  const { user, beats } = useApp()
   const openChallenges = challenges.filter(c => c.status !== 'CLOSED').length
   // Los beats nuevos se agregan al principio del array, así que los primeros
   // son los más recientes.

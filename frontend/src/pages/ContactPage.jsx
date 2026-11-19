@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import PageHeader from '../components/layout/PageHeader'
 import Alert from '../components/ui/Alert'
 import Button from '../components/ui/Button'
@@ -18,20 +18,14 @@ const REASONS = [
 const EMPTY_FORM = { name: '', email: '', reason: 'consulta', message: '' }
 
 // Formulario de contacto simulado: no se envía a ningún lado. Al enviar, el
-// formulario se reemplaza por el mensaje de éxito (con "Enviar otro").
+// formulario se reemplaza por el mensaje de éxito (con "Enviar otro"). El
+// mensaje usa <Alert>, que tiene role="status": el lector de pantalla lo lee solo.
 function ContactPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [accepted, setAccepted] = useState(false)
   const [errors, setErrors] = useState({})
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
-  const successRef = useRef(null)
-
-  // Al aparecer el éxito, el foco pasa al mensaje (el formulario desapareció
-  // y sin esto el foco quedaría perdido).
-  useEffect(() => {
-    if (sent) successRef.current?.focus()
-  }, [sent])
 
   function setField(key) {
     return value => setForm(current => ({ ...current, [key]: value }))
@@ -84,7 +78,7 @@ function ContactPage() {
       <section className="section contact" aria-label="Formulario de contacto">
         <div className="container">
           {sent ? (
-            <div ref={successRef} tabIndex={-1} className="contact-success">
+            <div className="contact-success">
               <Alert kind="success">Recibimos tu mensaje. Te respondemos por email.</Alert>
               <Button variant="secondary" onClick={sendAnother}>Enviar otro</Button>
             </div>

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useApp } from '../../context/AppContext'
 import Button from '../ui/Button'
 import Logo from './Logo'
 import './Header.css'
@@ -20,29 +20,13 @@ const NAV_LINKS = [
 // un botón "Menú" con aria-expanded, que avisa al lector de pantalla si está
 // abierto. NavLink agrega aria-current="page" al link de la página actual.
 function Header() {
-  const { user, logout } = useAuth()
+  const { user, logout } = useApp()
   const navigate = useNavigate()
-  const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
-  const leaving = useRef(false)
-
-  // La sesión se cierra recién cuando ya estamos en el inicio. Si se cerrara
-  // antes, una página protegida (Premium) vería "sin sesión" mientras todavía
-  // está en pantalla y mandaría a Login en vez de al inicio.
-  useEffect(() => {
-    if (leaving.current && pathname === '/') {
-      leaving.current = false
-      logout()
-    }
-  }, [pathname, logout])
 
   function handleLogout() {
+    logout()
     setMenuOpen(false)
-    if (pathname === '/') {
-      logout()
-      return
-    }
-    leaving.current = true
     navigate('/')
   }
 
