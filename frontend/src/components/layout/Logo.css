@@ -1,0 +1,16 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--dark);
+  text-decoration: none;
+  letter-spacing: -0.03em;
+}
+
+.logo-mark {
+  background: var(--primary);
+  color: var(--white);
+  padding: 0 var(--space-2);
+}

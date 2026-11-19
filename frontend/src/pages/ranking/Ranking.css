@@ -1,0 +1,67 @@
+/* Estilos del Ranking. */
+
+/* La tabla se desplaza dentro de su caja en pantallas angostas, así la página
+   nunca scrollea en horizontal (es uno de los puntos que se revisa a 375 px). */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  /* Los puntos se comparan de un renglón al otro: con cifras de ancho fijo
+     las unidades quedan alineadas en columna. */
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking-table caption {
+  text-align: left;
+}
+
+.ranking-table th,
+.ranking-table td {
+  padding: var(--space-3);
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+}
+
+/* Encabezados de columna: etiqueta chica, como el resto de la app. */
+.ranking-table thead th {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom-color: var(--dark);
+  white-space: nowrap;
+}
+
+/* El puesto y el nombre, en negrita: son lo que se busca al mirar la tabla. */
+.ranking-table tbody th,
+.ranking-table tbody td:first-of-type {
+  font-weight: 700;
+}
+
+.ranking-points {
+  text-align: right;
+}
+
+/* La fila del usuario. El fondo es un apoyo: quien no distingue el tono igual
+   lee "(vos)" al lado del nombre. */
+.ranking-me {
+  background: var(--surface);
+}
+
+.ranking-hint {
+  margin-top: var(--space-3);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .ranking-table th,
+  .ranking-table td {
+    padding: var(--space-2);
+  }
+}

@@ -1,0 +1,40 @@
+.badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge-pending {
+  background: var(--accent);
+  color: var(--dark);
+}
+
+.badge-accepted {
+  background: var(--success);
+  color: var(--white);
+}
+
+.badge-rejected {
+  background: #f3c6bb;
+  color: var(--dark);
+}
+
+.badge-open {
+  border: 2px solid var(--dark);
+  color: var(--dark);
+}
+
+.badge-voting {
+  background: var(--primary-dark);
+  color: var(--white);
+}
+
+.badge-closed {
+  background: var(--surface);
+  color: var(--muted);
+}

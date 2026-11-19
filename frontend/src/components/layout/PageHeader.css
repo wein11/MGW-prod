@@ -1,0 +1,20 @@
+.page-header {
+  padding-top: var(--space-5);
+}
+
+.page-header .container {
+  padding-bottom: var(--space-5);
+}
+
+.page-header-description {
+  max-width: 38rem;
+  font-size: 1.125rem;
+  color: var(--muted);
+}
+
+.page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}

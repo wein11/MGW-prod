@@ -49,15 +49,36 @@ Santiago. Ver ese directorio para el estado real de avance de la cursada.
 El TPO completo está en `docs/Trabajo Integrador de Aplicaciones Interactivas.pdf` (copiar ahí
 si no está). Dos etapas obligatorias:
 - **Etapa 1** — backend + persistencia, probado con Postman/curl, corre en localhost.
-- **Etapa 2** — frontend HTML5/CSS3/JS plano (sin frameworks) integrado con el backend.
+- **Etapa 2** — frontend, evaluado con la rúbrica propia de la cátedra
+  (`docs/Rubrica Apis Interactivas.pdf`, 100 puntos, 60 para aprobar).
+
+**La rúbrica de la Etapa 2 manda sobre lo que diga esta sección.** Dice textualmente que "la
+evaluación es independiente de la tecnología utilizada" y que "no se otorgan puntos adicionales
+por elegir React, HTMX, JavaScript tradicional u otra tecnología". También que "no es
+obligatorio conectar el frontend con el backend" y que se permite "trabajar con datos
+estáticos, locales o simulados". Evalúa ocho criterios: adecuación al negocio, estructura,
+semántica y accesibilidad, diseño visual, adaptabilidad, interacción, formularios y calidad
+técnica del código.
+
+Hasta octubre de 2026 este archivo decía que la consigna prohibía frameworks en la Etapa 2.
+Era incorrecto: salía del enunciado genérico, antes de que la cátedra publicara la rúbrica.
+Si alguien lo recuerda así, esta es la corrección.
 
 ## Stack
 
 - **Backend:** Java + Spring Boot + Spring Data JPA + MySQL (localhost:3306, mismo motor que
   ya usan en Clase 2 con JDBC).
-- **Frontend:** HTML5 + CSS3 + JavaScript plano (sin React/Vue/etc. — la consigna lo prohíbe
-  para Etapa 2), servido como estático desde `src/main/resources/static` del mismo proyecto
-  Spring Boot (sin CORS, un solo puerto).
+- **Frontend (vigente):** React 19 + Vite + react-router-dom, CSS propio sin frameworks de
+  estilo, en `frontend/` en la raíz del repo. Corre aparte del backend (`cd frontend && npm
+  install && npm run dev`) y trabaja con **datos simulados** en `src/data/mockData.js`: la
+  rúbrica no exige conectar con la API. Rama de trabajo: `front/react`. Plan y reparto en
+  `docs/superpowers/plans/2026-10-29-frontend-react.md`.
+  - Se eligió React porque es lo que la cátedra mostró en clase (el TodoList de
+    `lpueyoUADE/TodoList`), no porque sume puntos: la rúbrica dice expresamente que no.
+- **Frontend (histórico):** la rama `entrega/etapa2` tiene una versión anterior en HTML5 +
+  CSS3 + JavaScript plano, servida como estático desde `src/main/resources/static` del mismo
+  proyecto Spring Boot (sin CORS, un solo puerto). Sirve de referencia y como respaldo; la
+  entrega vigente es la de React.
 - **Auth:** casera simple (password hasheada + token de sesión en tabla propia). Nada de
   Spring Security todavía — se suma solo si la cátedra lo enseña más adelante.
 - **Persistencia vía Spring Data JPA/`Repository`, nunca DAO manual** — confirmado por Clase 4

@@ -1,0 +1,94 @@
+.site-header {
+  padding: var(--space-3) 0;
+}
+
+.site-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.nav-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-list a {
+  display: inline-block;
+  padding: var(--space-2) 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dark);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+.nav-list a:hover {
+  border-bottom-color: var(--border);
+}
+
+.nav-list a[aria-current='page'] {
+  border-bottom-color: var(--primary);
+}
+
+.nav-session {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.nav-user {
+  font-weight: 700;
+}
+
+.menu-toggle {
+  display: none;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--dark);
+  background: var(--light);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+/* Celular y tablet: menú colapsable debajo del logo. */
+@media (max-width: 900px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .nav {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-open {
+    display: flex;
+  }
+
+  .nav-list {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav-list a {
+    padding: var(--space-3) 0;
+  }
+}
