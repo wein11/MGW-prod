@@ -1,0 +1,41 @@
+# MGW Prod: frontend (React + Vite)
+
+Frontend con datos simulados (no se conecta al backend en esta entrega).
+
+## Cómo correrlo
+
+```bash
+cd frontend
+npm install
+npm run dev      # abre en http://localhost:5173
+```
+
+## Comandos
+
+- `npm run lint`: revisa el código (oxlint, con reglas de accesibilidad)
+- `npm run build`: genera la versión final en `dist/`
+
+## Usuarios de prueba (login simulado)
+
+| Nombre | Email | Contraseña | Rol |
+|---|---|---|---|
+| DJ Nova | artista@mgw.com | mgw12345 | ARTIST |
+| Kira Beats | kira@mgw.com | mgw12345 | ARTIST |
+| Sello Sur | discografica@mgw.com | mgw12345 | LABEL |
+
+También podés crear una cuenta en `/registro`: funciona hasta que se recargue la página.
+
+## Comportamiento simulado
+
+Los datos viven en memoria: F5 borra los beats, comentarios, toplines, votos y cuentas creados en la visita, y también cierra la sesión. Los datos de tarjeta no se guardan nunca.
+
+Premium y Colaboraciones son solo para cuentas de artista.
+
+## Dónde está cada cosa
+
+- `src/pages/`: una página por pantalla (cada uno trabaja en las suyas)
+- `src/components/layout/`: header, footer, PageHeader, onda decorativa
+- `src/components/ui/`: Button, FormField, Alert, StatusBadge, ConfirmDelete, EmptyState, PrivacyConsent
+- `src/context/`: `AppContext`, con la sesión simulada y los datos compartidos (se usa con `useApp()`)
+- `src/data/`: datos simulados y `fakeRequest`
+- `src/utils/`: validaciones, formatos y ayudas de formularios

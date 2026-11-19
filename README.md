@@ -3,16 +3,33 @@
 Plataforma de música para productores y artistas: publicar beats, grabar toplines sobre
 beats de otros, colaborar y participar en desafíos con jurado.
 
-TPO de Aplicaciones Interactivas (UADE) — Etapa 1 (backend) y Etapa 2 (frontend).
+TPO de Aplicaciones Interactivas (UADE). Etapa 1: backend (Spring Boot). Etapa 2: frontend
+(React + Vite, en la carpeta `frontend/`).
 Grupo: Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi.
 
-## Requisitos
+## Frontend (Etapa 2)
+
+El frontend está en `frontend/` y funciona solo, con datos simulados: no hace falta levantar
+el backend ni MySQL para probarlo.
+
+```bash
+cd frontend
+npm install
+npm run dev      # abre en http://localhost:5173
+```
+
+Usuario de prueba: `artista@mgw.com` / `mgw12345`. Más detalles (otros usuarios, comandos y
+estructura) en [`frontend/README.md`](frontend/README.md).
+
+## Backend (Etapa 1)
+
+### Requisitos
 
 - JDK 21 o superior.
 - MySQL en `localhost:3306` con usuario `root` y password `admin`.
 - Postman.
 
-## Cómo levantarlo
+### Cómo levantarlo
 
 1. Crear la base y las tablas:
 
@@ -33,28 +50,7 @@ Grupo: Santiago Weinbinder, Mateo Galluzo, Paolo Maffei, Dani Gariboldi.
    ./mvnw test
    ```
 
-## Frontend (Etapa 2)
-
-Con el servidor levantado, abrir `http://localhost:8080` en el navegador. El frontend está
-hecho en HTML5, CSS3 y JavaScript y lo sirve el mismo Spring Boot desde
-`src/main/resources/static` (un solo puerto, sin configuración extra).
-
-| Página | Qué hace |
-|---|---|
-| `index.html` | Landing con barra de navegación y últimos beats |
-| `beats.html` | Listado de beats con filtros y alta (usuarios ARTIST) |
-| `beat.html` | Detalle, modificación y borrado (dueño del beat o ADMIN) |
-| `premium.html` | Compra simulada del plan Premium en 3 pasos (usuarios ARTIST) |
-| `about.html` | Descripción de la compañía e integrantes |
-| `contact.html` | Formulario de contacto (lo envía FormSubmit por mail, sin pasar por el backend) |
-| `login.html` / `register.html` | Inicio de sesión y alta de cuenta |
-| `challenges.html` / `challenge.html` | Desafíos: crear, entregar, votar y cerrar |
-| `ranking.html` | Ranking de productores por puntos |
-
-`js/api.js` concentra la comunicación con la API (fetch + token de sesión) y
-`css/styles.css` tiene los estilos de todo el sitio.
-
-## Probar con Postman
+### Probar con Postman
 
 1. Importar `docs/api/mgw-prod.postman_collection.json` y
    `docs/api/mgw-prod.postman_environment.json`.
@@ -65,7 +61,7 @@ hecho en HTML5, CSS3 y JavaScript y lo sirve el mismo Spring Boot desde
 El usuario administrador no se puede registrar por la API: viene cargado en `schema.sql`
 (email `admin@mgw.com`, contraseña `admin1234`).
 
-## Módulos
+### Módulos
 
 | Paquete | Integrante | Qué hace |
 |---|---|---|

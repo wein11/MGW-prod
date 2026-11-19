@@ -1,0 +1,78 @@
+/* Login y Registro: viven dentro de AuthLayout (columna angosta, sin menú).
+   El PageHeader trae su propio contenedor y padding: acá se anulan para que
+   el título quede alineado con el formulario, y se achica el h1 para que
+   "Iniciar sesión" entre en la columna. */
+.auth-page .container {
+  padding: 0;
+}
+
+.auth-page .page-header {
+  padding-top: 0;
+}
+
+.auth-page .page-header .container {
+  padding-bottom: var(--space-3);
+}
+
+.auth-page h1 {
+  font-size: clamp(1.75rem, 8vw, 2.5rem);
+}
+
+.auth-submit {
+  width: 100%;
+}
+
+/* Tipo de cuenta: dos tarjetas que son radios */
+.account-type {
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.account-type legend {
+  margin-bottom: var(--space-1);
+  padding: 0;
+}
+
+.account-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.account-option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 2px solid var(--dark);
+  background: var(--light);
+  cursor: pointer;
+}
+
+.account-option span {
+  font-size: 0.8125rem;
+}
+
+.account-option-selected {
+  background: var(--primary-dark);
+  color: var(--white);
+}
+
+/* El radio real está oculto: el foco se muestra en la tarjeta entera. */
+.account-option:has(input:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 22rem) {
+  .account-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Aire entre el botón y el link "¿No tenés cuenta?" / "¿Ya tenés cuenta?". */
+.auth-page > p {
+  margin-top: var(--space-4);
+}
