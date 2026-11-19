@@ -28,7 +28,7 @@ npm run dev      # abre en http://localhost:5173
 - `src/pages/`: una página por pantalla (cada uno trabaja en las suyas)
 - `src/components/layout/`: header, footer, PageHeader, onda decorativa
 - `src/components/ui/`: Button, FormField, Alert, StatusBadge, ConfirmDelete, EmptyState, PrivacyConsent
-- `src/context/`: sesión simulada (`useAuth`) y datos compartidos (`useData`)
+- `src/context/`: `AppContext`, con la sesión simulada y los datos compartidos (se usa con `useApp()`)
 - `src/data/`: datos simulados y `fakeRequest`
 - `src/utils/`: validaciones, formatos y ayudas de formularios
 
