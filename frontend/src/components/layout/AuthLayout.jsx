@@ -1,3 +1,15 @@
+// ============================================================================
+// PARA ESTUDIAR: AuthLayout.jsx (molde de Login y Registro)
+// ----------------------------------------------------------------------------
+// QUÉ ES: el segundo layout de la app (el primero es Layout.jsx). Tiene solo
+//   el logo, el formulario (en <Outlet />) y el link a la privacidad.
+// POR QUÉ SIN MENÚ: así lo definimos en el wireframe; en las pantallas de
+//   acceso conviene que la persona no se distraiga.
+// <Outlet />: igual que en Layout, es el lugar donde aparece LoginPage o
+//   RegisterPage según la URL.
+// visually-hidden: clase CSS que oculta el texto en pantalla pero el lector de
+//   pantalla lo lee ("se abre en otra pestaña").
+// ============================================================================
 import { Link, Outlet } from 'react-router-dom'
 import Logo from './Logo'
 import Waveform from './Waveform'

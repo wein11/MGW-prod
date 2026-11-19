@@ -1,3 +1,7 @@
+/* PARA ESTUDIAR: Waveform.css
+   Estilos de la onda decorativa: flexbox con las barras alineadas abajo.
+   La altura y el color de cada barra vienen del componente (style en línea).
+*/
 .waveform {
   display: flex;
   align-items: flex-end;

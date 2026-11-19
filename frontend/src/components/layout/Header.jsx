@@ -1,3 +1,23 @@
+// ============================================================================
+// PARA ESTUDIAR: Header.jsx (menú principal)
+// ----------------------------------------------------------------------------
+// QUÉ ES: la barra con el logo, los links a cada sección y el botón
+//   Entrar/Salir. Está en todas las páginas con menú (via Layout).
+// ESTADO LOCAL: menuOpen (useState) guarda si el menú del celular está abierto.
+//   Es local porque solo le importa al Header (no va en el Context).
+// NAVLINK: es un Link que sabe si es la página actual. Le agrega solo
+//   aria-current="page" (el lector dice "página actual") y lo usamos en CSS
+//   para subrayarlo. end en "/" evita que Inicio quede marcado en todas.
+// RENDERIZADO CONDICIONAL: {user ? (nombre + Salir) : (Entrar)}. Si hay
+//   sesión muestra una cosa; si no, la otra.
+// SALIR: logout() borra la sesión y navigate('/') lleva al inicio.
+//   useNavigate() es el hook de React Router para cambiar de página desde código.
+// MENÚ MÓVIL (criterio 5): en pantallas chicas los links se esconden detrás
+//   del botón "Menú". aria-expanded le dice al lector si está abierto o cerrado
+//   y aria-controls a qué elemento controla.
+// NAV_LINKS es un array y se dibuja con .map(): agregar una sección es
+//   agregar una línea al array.
+// ============================================================================
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'

@@ -1,3 +1,6 @@
+/* PARA ESTUDIAR: PageHeader.css
+   Estilos del encabezado de cada página: título grande, bajada y acciones.
+*/
 .page-header {
   padding-top: var(--space-5);
 }

@@ -1,3 +1,7 @@
+/* PARA ESTUDIAR: StatusBadge.css
+   Estilos de las etiquetas de estado. Una clase por estado (.badge-pending,
+   .badge-accepted...) con colores de buen contraste.
+*/
 .badge {
   display: inline-block;
   padding: var(--space-1) var(--space-2);

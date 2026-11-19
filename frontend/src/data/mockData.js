@@ -1,3 +1,20 @@
+// ============================================================================
+// PARA ESTUDIAR: mockData.js (los datos simulados)
+// ----------------------------------------------------------------------------
+// QUÉ ES: los datos de demo con los que arranca la app: usuarios, beats,
+//   comentarios, toplines, desafíos, entregas, ranking y planes.
+// POR QUÉ: la rúbrica dice que en esta etapa NO hace falta conectar con el
+//   backend y que se pueden usar datos simulados. Los datos tienen la misma
+//   forma (mismos nombres de campos y estados en inglés: PENDING, ARTIST...)
+//   que las entidades del backend, así conectarlo después es reemplazar esto
+//   por llamadas a la API.
+// QUIÉN LOS USA: AppContext los copia a useState al arrancar (los que pueden
+//   cambiar: beats, comments, toplines, submissions). Los que no cambian
+//   (challenges, ranking, plans, constantes) se importan directo.
+// CONSTANTES EN MAYÚSCULA (GENRES, TOPLINE_STATUS, JURY_WEIGHTS...): valores
+//   fijos que se usan en varias pantallas. Están en un solo lugar para no
+//   escribir 'PENDING' a mano en 10 archivos y equivocarse en uno.
+// ============================================================================
 // Datos simulados de toda la app. En esta entrega no hay backend: la rúbrica
 // permite datos locales. Están armados con los mismos ejemplos que el
 // wireframe para que cada pantalla se vea igual que en el diseño.

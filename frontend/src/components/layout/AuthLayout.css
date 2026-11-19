@@ -1,3 +1,6 @@
+/* PARA ESTUDIAR: AuthLayout.css
+   Estilos del molde de Login/Registro: columna angosta centrada con flexbox.
+*/
 .auth-layout {
   display: flex;
   flex-direction: column;

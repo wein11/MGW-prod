@@ -1,3 +1,8 @@
+/* PARA ESTUDIAR: Button.css
+   Estilos del botón único: .btn base y una clase por variante
+   (.btn-primary, .btn-secondary, .btn-link). Incluye :hover, :focus-visible
+   y [disabled] para que cada estado se note (criterio 6: retroalimentación).
+*/
 .btn {
   display: inline-flex;
   align-items: center;

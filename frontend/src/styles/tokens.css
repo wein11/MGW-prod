@@ -1,3 +1,10 @@
+/* PARA ESTUDIAR: tokens.css
+   QUÉ ES: los "tokens de diseño": variables CSS (--primary, --accent, --space-4,
+   fuentes...) definidas en :root. Todos los demás CSS usan var(--nombre).
+   POR QUÉ: si cambiamos un color acá, cambia en toda la app. Es lo que da
+   consistencia visual (criterio 4). Los colores se eligieron con buen
+   contraste sobre el fondo (criterio 3).
+*/
 /* Tokens de diseño: todos los colores, tipografías y medidas salen de acá.
    Si hay que cambiar la paleta, se cambia en un solo lugar. */
 :root {

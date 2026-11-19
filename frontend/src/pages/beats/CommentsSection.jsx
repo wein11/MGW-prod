@@ -1,3 +1,16 @@
+// ============================================================================
+// PARA ESTUDIAR: CommentsSection.jsx (comentarios de un beat)
+// ----------------------------------------------------------------------------
+// QUÉ ES: la lista de comentarios del beat y el formulario para agregar uno.
+// PROPS: beatId (lo pasa BeatDetailPage).
+// beatComments = comments.filter(...) → solo los de este beat.
+// QUIÉN COMENTA: cualquiera con sesión (artista o discográfica). Sin sesión
+//   se muestra un link para entrar.
+// VALIDACIÓN: obligatorio y máximo 500 caracteres (MAX_LENGTH).
+// AL ENVIAR: crea el comentario con nextId y la fecha de hoy, lo agrega al
+//   Context con setComments y muestra "Tu comentario se publicó". El contador
+//   de comentarios del listado se actualiza solo (sale del mismo Context).
+// ============================================================================
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'

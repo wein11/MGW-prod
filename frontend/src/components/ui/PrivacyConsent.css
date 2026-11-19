@@ -1,3 +1,6 @@
+/* PARA ESTUDIAR: PrivacyConsent.css
+   Estilos de la casilla de la Política de privacidad (checkbox + texto).
+*/
 .privacy-consent {
   display: flex;
   flex-wrap: wrap;

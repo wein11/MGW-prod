@@ -1,3 +1,6 @@
+/* PARA ESTUDIAR: LiveBar.css
+   Estilos de la franja negra "En vivo" de arriba y su puntito rojo.
+*/
 .live-bar {
   margin: 0;
   padding: var(--space-2) var(--space-3);

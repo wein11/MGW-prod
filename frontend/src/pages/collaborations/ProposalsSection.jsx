@@ -1,3 +1,20 @@
+// ============================================================================
+// PARA ESTUDIAR: ProposalsSection.jsx (propuestas sobre MIS beats)
+// ----------------------------------------------------------------------------
+// QUÉ ES: la primera bandeja de Colaboraciones.
+// AGRUPADO POR BEAT: `groups` se arma con myBeats.map(...) y se descartan los
+//   beats sin propuestas visibles (.filter(group => group.items.length > 0)).
+// FILTRO DE ESTADO: un select (Todas/Pendiente/Aceptada/Rechazada) guardado en
+//   useState `statusFilter`; `visible` se calcula con .filter().
+//   Si el filtro deja todo vacío → EmptyState "No hay propuestas con ese estado".
+// ACCIONES:
+//   - changeStatus: cambia el estado con setToplines(current => current.map(...)).
+//   - remove: saca la propuesta con .filter().
+//   - Cada una deja un mensaje en `message` (Alert con role="status").
+// TEXTO OCULTO: <span className="visually-hidden"> propuesta de Kira</span>
+//   hace que el lector diga "Aceptar propuesta de Kira" y no solo "Aceptar"
+//   (hay varios botones Aceptar en la página).
+// ============================================================================
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'

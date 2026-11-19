@@ -1,3 +1,10 @@
+/* PARA ESTUDIAR: Header.css
+   Estilos del menú principal. Flexbox para alinear logo, links y sesión.
+   @media (max-width: ...): en pantallas chicas los links se esconden y
+   aparece el botón "Menú"; con la clase .nav-open se muestran en columna.
+   El link de la página actual se marca con [aria-current="page"] (el mismo
+   atributo que lee el lector de pantalla).
+*/
 .site-header {
   padding: var(--space-3) 0;
 }

@@ -1,4 +1,15 @@
 <!doctype html>
+<!--
+  PARA ESTUDIAR: index.html
+  Es el ÚNICO HTML de la app (por eso es una SPA, Single Page Application).
+  - lang="es": el lector de pantalla pronuncia en español (accesibilidad).
+  - meta viewport: hace que en el celular la página use el ancho real de la
+    pantalla; sin esto no funcionan las media queries (criterio 5).
+  - meta description: el texto que muestra Google debajo del título.
+  - <div id="root">: está vacío; main.jsx monta React acá adentro.
+  - <script type="module" src="/src/main.jsx">: Vite lo convierte en el JS
+    final al hacer npm run build.
+-->
 <html lang="es">
   <head>
     <meta charset="UTF-8" />

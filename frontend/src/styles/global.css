@@ -1,3 +1,12 @@
+/* PARA ESTUDIAR: global.css
+   QUÉ ES: estilos que valen para toda la app: reset (box-sizing, márgenes),
+   tipografía base, .container (ancho máximo centrado), :focus-visible (el
+   recuadro que muestra dónde está el foco al usar teclado), .visually-hidden
+   (oculta texto en pantalla pero el lector lo lee) y utilidades comunes.
+   MEDIA QUERIES: ajustan tamaños en pantallas chicas (criterio 5).
+   prefers-reduced-motion: si la persona pidió menos animación en su sistema,
+   se sacan las transiciones (accesibilidad).
+*/
 /* Estilos globales: reset mínimo, tipografía base, foco visible y utilidades
    compartidas. Lo específico de cada componente vive en su propio .css. */
 *,

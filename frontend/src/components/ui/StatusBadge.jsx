@@ -1,3 +1,14 @@
+// ============================================================================
+// PARA ESTUDIAR: StatusBadge.jsx (etiqueta de estado)
+// ----------------------------------------------------------------------------
+// QUÉ ES: la etiquetita de color "Pendiente", "Aceptada", "Abierto", etc.
+// CÓMO FUNCIONA: recibe el estado en inglés (como viene del backend, ej.
+//   'PENDING'), busca el texto en español en LABELS y arma la clase CSS
+//   'badge-pending' para el color.
+// ACCESIBILIDAD: el estado se entiende por el TEXTO, no solo por el color.
+//   Una persona daltónica no distingue verde de rojo (criterio 3: contraste y
+//   no depender solo del color).
+// ============================================================================
 import './StatusBadge.css'
 
 const LABELS = {

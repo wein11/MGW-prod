@@ -1,3 +1,24 @@
+// ============================================================================
+// PARA ESTUDIAR: ChallengesPage.jsx (ruta "/desafios")
+// ----------------------------------------------------------------------------
+// QUÉ ES: los desafíos semanales. Arriba el desafío destacado, la lista de
+//   todos con su estado, las entregas del destacado (con botón para votar) y
+//   el podio del desafío que ya cerró.
+// FUNCIONES AUXILIARES (afuera del componente, porque no usan estado):
+//   - daysUntil(fecha): cuántos días faltan para cerrar.
+//   - pickFeatured(lista): elige el destacado (el que está en votación o, si
+//     no hay, el próximo en cerrar).
+// ESTADO:
+//   - submissions (Context): las entregas; al votar se suma el voto.
+//   - voteTarget (useState): a qué entrega se está votando.
+//   - votesSent (useState): cuántos votos mandó, para el mensaje de éxito.
+// REGLAS (canVote): no podés votar tu propia entrega ni votar dos veces, y
+//   solo se vota si el desafío está en votación (VOTING).
+// VoteForm es un componente hijo; esta página le pasa las opciones y la
+//   función onVote. El mensaje de "voto registrado" lo muestra ESTA página
+//   (ver el comentario de VoteForm para el porqué).
+// PESOS DEL JURADO: JuryBand explica 30/30/40 y PRIZE_POINTS los puntos del podio.
+// ============================================================================
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import JuryBand from '../components/layout/JuryBand'

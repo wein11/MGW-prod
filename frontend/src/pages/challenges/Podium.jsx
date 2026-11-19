@@ -1,3 +1,12 @@
+// ============================================================================
+// PARA ESTUDIAR: Podium.jsx (podio del desafío cerrado)
+// ----------------------------------------------------------------------------
+// QUÉ ES: los 3 primeros puestos con sus puntos.
+// TRUCO DE CSS: en el HTML el orden es 1, 2, 3 (una <ol>, lista ordenada), que
+//   es como lo lee el lector de pantalla. En pantalla se ve 2 - 1 - 3 (el
+//   ganador al medio y más alto) gracias a la propiedad `order` de flexbox.
+//   Así el diseño no rompe la semántica.
+// ============================================================================
 import { plural } from '../../utils/format'
 
 // Podio del desafío cerrado.

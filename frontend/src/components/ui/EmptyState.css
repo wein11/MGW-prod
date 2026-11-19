@@ -1,3 +1,6 @@
+/* PARA ESTUDIAR: EmptyState.css
+   Estilos de la caja de "estado vacío".
+*/
 .empty-state {
   padding: var(--space-4);
   background: var(--surface);

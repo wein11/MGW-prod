@@ -1,3 +1,19 @@
+// ============================================================================
+// PARA ESTUDIAR: MyToplinesSection.jsx (toplines que subí yo)
+// ----------------------------------------------------------------------------
+// QUÉ ES: la segunda bandeja de Colaboraciones: mis toplines en beats ajenos.
+// EDICIÓN EN LÍNEA: al tocar "Editar link" aparece un mini formulario en la
+//   misma fila. editingId (useState) guarda QUÉ topline se está editando
+//   (null = ninguno). Solo la fila con ese id muestra el formulario:
+//   {editingId === topline.id && <form>...}.
+//   draftUrl guarda lo que se va escribiendo, sin tocar el dato real hasta
+//   "Guardar". "Cancelar" descarta el borrador.
+// GUARDAR: valida https, muestra "Enviando…", actualiza el Context y deja el
+//   mensaje "El link se actualizó.".
+// BORRAR: ConfirmDelete + mensaje "Borraste tu topline para ...".
+// beatsById: un objeto { id: beat } que arma la página padre para buscar el
+//   título del beat rápido sin recorrer el array cada vez.
+// ============================================================================
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'

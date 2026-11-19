@@ -1,3 +1,23 @@
+// ============================================================================
+// PARA ESTUDIAR: BeatsPage.jsx (listado de beats, ruta "/beats")
+// ----------------------------------------------------------------------------
+// QUÉ ES: el catálogo. Arriba el formulario para publicar (PublishBeatForm) y
+//   abajo la lista con filtros por género, BPM y productor.
+// FILTROS (criterio 6, interacción):
+//   - Un solo useState `filters` con { genre, bpm, producer }.
+//   - visibleBeats = beats.filter(...): se CALCULA en cada render, no se guarda
+//     en otro estado. Si cambia un filtro o se publica un beat, la lista se
+//     recalcula sola. (Regla: no duplicar en el estado lo que se puede calcular.)
+//   - setFilter(key) devuelve una función que cambia solo ese filtro:
+//     setFilters({ ...filters, [key]: value }) copia los demás y pisa uno.
+//   - "Limpiar" vuelve a EMPTY_FILTERS.
+// MENSAJE AL BORRAR: cuando se borra un beat desde su detalle, ManageBeat
+//   navega acá pasando el título en `state`. useLocation().state?.deletedTitle
+//   lo lee y se muestra el Alert "El beat X se borró".
+// ACCESIBILIDAD: el contador "8 beats" tiene aria-live, así el lector anuncia
+//   cuántos quedaron cuando cambia un filtro.
+// Cada fila tiene un link "Ver detalle" a /beats/:id.
+// ============================================================================
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import PageHeader from '../components/layout/PageHeader'

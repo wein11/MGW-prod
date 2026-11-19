@@ -1,3 +1,16 @@
+// ============================================================================
+// PARA ESTUDIAR: VoteForm.jsx (formulario de voto de un desafío)
+// ----------------------------------------------------------------------------
+// QUÉ ES: elegir una entrega, ponerle puntaje de 1 a 10 y un comentario.
+// RADIOS EN FIELDSET: el puntaje son 10 <input type="radio"> dentro de un
+//   <fieldset> con <legend>. Es la forma accesible de "elegir una opción de
+//   varias": se recorre con flechas y el lector anuncia "8 de 10".
+// PROPS: options (entregas que se pueden votar), selected y onSelect (cuál
+//   está elegida, lo maneja la página), onVote (la función que registra el voto).
+// Estado propio: score, comment, errors, sending.
+// El mensaje de éxito lo muestra la página y no este componente: si votás la
+//   última entrega, este formulario desaparece y se llevaría el mensaje con él.
+// ============================================================================
 import { useState } from 'react'
 import Button from '../../components/ui/Button'
 import FormField from '../../components/ui/FormField'

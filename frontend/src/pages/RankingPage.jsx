@@ -1,3 +1,15 @@
+// ============================================================================
+// PARA ESTUDIAR: RankingPage.jsx (ruta "/ranking")
+// ----------------------------------------------------------------------------
+// QUÉ ES: la tabla de productores ordenada por puntos (el "Music Score").
+// SEMÁNTICA (criterio 3): es un <table> de verdad con <caption>, <thead>,
+//   <th scope="col"> y filas. Para datos tabulares se usa una tabla; si fuera
+//   un montón de <div>, el lector de pantalla no podría decir "fila 4,
+//   columna Puntos".
+// El encabezado explica cómo se ganan los puntos (PRIZE_POINTS: 500/300/150
+//   por puesto del podio) y muestra los puntos del primero.
+// Si hay sesión, se destaca la fila del usuario (renderizado condicional).
+// ============================================================================
 import PageHeader from '../components/layout/PageHeader'
 import { useApp } from '../context/AppContext'
 import { PRIZE_POINTS, RANKING_TOTAL_PRODUCERS, ranking } from '../data/mockData'

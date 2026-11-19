@@ -1,3 +1,8 @@
+/* PARA ESTUDIAR: Collaborations.css
+   Estilos de Colaboraciones: grupos por beat, filas de propuestas y la
+   edición en línea del link. Flexbox con wrap y una media query para que los
+   botones bajen debajo del texto en pantallas chicas.
+*/
 /* Estilos de Colaboraciones.
 
    Reusa .item-list, .topline-row y .beat-meta de styles/global.css

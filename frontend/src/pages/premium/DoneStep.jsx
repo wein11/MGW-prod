@@ -1,3 +1,10 @@
+// ============================================================================
+// PARA ESTUDIAR: DoneStep.jsx (paso 3: confirmación)
+// ----------------------------------------------------------------------------
+// QUÉ ES: el mensaje "¡Listo! Tu plan ahora es PREMIUM" con la tarjeta
+//   enmascarada y botones para seguir (publicar un beat o ver desafíos).
+// Recibe solo maskedCard ("•••• 1111"): nunca el número completo.
+// ============================================================================
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 
