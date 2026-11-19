@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useApp } from '../../context/AppContext'
 import Button from '../ui/Button'
 import Logo from './Logo'
 import './Header.css'
@@ -20,7 +20,7 @@ const NAV_LINKS = [
 // un botón "Menú" con aria-expanded, que avisa al lector de pantalla si está
 // abierto. NavLink agrega aria-current="page" al link de la página actual.
 function Header() {
-  const { user, logout } = useAuth()
+  const { user, logout } = useApp()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 

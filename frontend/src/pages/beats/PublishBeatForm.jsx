@@ -4,8 +4,7 @@ import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'
 import EmptyState from '../../components/ui/EmptyState'
 import FormField from '../../components/ui/FormField'
-import { useAuth } from '../../context/AuthContext'
-import { useData } from '../../context/DataContext'
+import { useApp } from '../../context/AppContext'
 import { fakeRequest } from '../../data/fakeRequest'
 import { GENRES } from '../../data/mockData'
 import { todayIso } from '../../utils/format'
@@ -25,8 +24,7 @@ export const BPM_ERROR = 'El BPM tiene que estar entre 40 y 220. Revisalo y volv
 // Las claves de "errors" son iguales a los id de los campos, así
 // focusFirstError lleva el foco al primer campo con problema.
 function PublishBeatForm() {
-  const { user } = useAuth()
-  const { beats, setBeats } = useData()
+  const { user, beats, setBeats } = useApp()
   const [form, setForm] = useState(EMPTY_BEAT)
   const [errors, setErrors] = useState({})
   const [sending, setSending] = useState(false)

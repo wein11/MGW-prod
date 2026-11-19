@@ -5,7 +5,7 @@ import Alert from '../components/ui/Alert'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
 import FormField from '../components/ui/FormField'
-import { useData } from '../context/DataContext'
+import { useApp } from '../context/AppContext'
 import { GENRES } from '../data/mockData'
 import { plural } from '../utils/format'
 import PublishBeatForm from './beats/PublishBeatForm'
@@ -23,7 +23,7 @@ const GENRE_OPTIONS = [
 // lista aparte: en cada render se calcula "visibles" a partir de los beats
 // del contexto, así un beat recién publicado aparece sin pasos extra.
 function BeatsPage() {
-  const { beats, comments } = useData()
+  const { beats, comments } = useApp()
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   // Si venimos de borrar un beat, el detalle manda su título en el state de
   // la navegación para mostrar la confirmación acá.

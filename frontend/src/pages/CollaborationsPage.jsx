@@ -1,8 +1,7 @@
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
-import { useAuth } from '../context/AuthContext'
-import { useData } from '../context/DataContext'
+import { useApp } from '../context/AppContext'
 import { TOPLINE_STATUS } from '../data/mockData'
 import MyToplinesSection from './collaborations/MyToplinesSection'
 import ProposalsSection from './collaborations/ProposalsSection'
@@ -16,8 +15,7 @@ const DESCRIPTION =
 // Es la única pantalla que depende por completo de quién sos, así que primero
 // resuelve el acceso y recién después calcula los datos.
 function CollaborationsPage() {
-  const { user } = useAuth()
-  const { beats, toplines } = useData()
+  const { user, beats, toplines } = useApp()
 
   // Sin sesión no hay "mis beats" ni "mis toplines" que mostrar.
   if (!user) {

@@ -1,5 +1,5 @@
 import PageHeader from '../components/layout/PageHeader'
-import { useAuth } from '../context/AuthContext'
+import { useApp } from '../context/AppContext'
 import { RANKING_TOTAL_PRODUCERS, ranking } from '../data/mockData'
 import './ranking/Ranking.css'
 
@@ -7,7 +7,7 @@ import './ranking/Ranking.css'
 // encabezado, no una lista maquetada. Eso le da a un lector de pantalla el
 // "fila 4, puesto 4, productor Luna Sur, puntos 231" sin que lo armemos a mano.
 function RankingPage() {
-  const { user } = useAuth()
+  const { user } = useApp()
   const leader = ranking[0]
 
   return (
