@@ -15,8 +15,7 @@ const MAX_COMMENT = 500
 // El mensaje de éxito NO vive acá: lo muestra la página. Si al votar la última
 // entrega disponible este formulario se desmonta, el aviso se iría con él y
 // quien votó no vería nunca la confirmación.
-function VoteForm({ options, onVote }) {
-  const [submissionId, setSubmissionId] = useState(String(options[0].value))
+function VoteForm({ options, selected, onSelect, onVote }) {
   const [score, setScore] = useState('')
   const [comment, setComment] = useState('')
   const [errors, setErrors] = useState({})
@@ -44,7 +43,7 @@ function VoteForm({ options, onVote }) {
     setSending(false)
     setScore('')
     setComment('')
-    onVote(Number(submissionId))
+    onVote(selected)
   }
 
   return (
@@ -53,8 +52,8 @@ function VoteForm({ options, onVote }) {
         id="vote-submission"
         label="Entrega"
         type="select"
-        value={submissionId}
-        onChange={setSubmissionId}
+        value={selected}
+        onChange={value => onSelect(Number(value))}
         options={options}
       />
 

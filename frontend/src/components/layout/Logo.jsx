@@ -5,7 +5,7 @@ import './Logo.css'
 function Logo() {
   return (
     <Link to="/" className="logo" aria-label="MGW Prod, ir al inicio">
-      <span className="logo-mark">MGW</span>
+      <span className="logo-mark">MGW</span>{' '}
       <span className="logo-text">PROD</span>
     </Link>
   )
