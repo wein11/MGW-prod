@@ -1,3 +1,8 @@
+/* PARA ESTUDIAR: FormField.css
+   Estilos de los campos de formulario: label, input, ayuda y error.
+   .field-error pinta el borde y el mensaje en rojo; además del color hay
+   texto, así el error no depende solo del color.
+*/
 .field {
   display: flex;
   flex-direction: column;

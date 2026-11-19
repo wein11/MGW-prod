@@ -1,3 +1,7 @@
+/* PARA ESTUDIAR: Privacy.css
+   Estilos de la Política de privacidad: limita el ancho del texto para que
+   las líneas no sean demasiado largas (mejor legibilidad, criterio 4).
+*/
 /* Política de privacidad: texto largo, así que se limita el ancho de línea
    para que se lea cómodo (unos 70 caracteres). */
 .privacy > * {

@@ -1,3 +1,20 @@
+// ============================================================================
+// PARA ESTUDIAR: ManageBeat.jsx ("Gestionar mi beat": editar y borrar)
+// ----------------------------------------------------------------------------
+// QUÉ ES: el bloque que ve SOLO el dueño en el detalle del beat.
+// EDITAR: el formulario arranca con los datos actuales del beat (useState con
+//   valores iniciales). Al guardar valida, espera (fakeRequest) y reemplaza el
+//   beat en el Context con setBeats(current => current.map(...)).
+//   setX(current => ...) es la forma "función" del setter: recibe el valor
+//   actual y devuelve el nuevo. Es la forma segura cuando el nuevo valor
+//   depende del anterior.
+// BORRAR (handleDelete): saca el beat Y sus comentarios y toplines (si no,
+//   quedarían "huérfanos", como un borrado en cascada en la base de datos).
+//   Después navega a /beats pasando el título en `state` para mostrar el
+//   mensaje "El beat X se borró" allá.
+// Los ids de los campos llevan el prefijo "edit-" para no repetirse con otros
+//   formularios de la misma página (un id tiene que ser único en el HTML).
+// ============================================================================
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'

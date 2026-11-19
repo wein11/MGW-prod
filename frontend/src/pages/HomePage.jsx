@@ -1,3 +1,18 @@
+// ============================================================================
+// PARA ESTUDIAR: HomePage.jsx (Landing / Inicio, ruta "/")
+// ----------------------------------------------------------------------------
+// QUÉ ES: la primera pantalla. Presenta el negocio (descubrir y colaborar en
+//   música, competir en desafíos) y lleva a las secciones principales.
+// CRITERIO 1 (adecuación al negocio): es la página que explica QUÉ es MGW Prod
+//   y QUÉ puede hacer cada usuario.
+// CÓMO ESTÁ ARMADA:
+//   - FEATURES es un array y las tarjetas se dibujan con .map() (no se repite
+//     el mismo HTML tres veces).
+//   - Los números (beats, desafíos abiertos) se calculan de los datos, no se
+//     escriben a mano: así coinciden con la franja "En vivo".
+//   - Muestra los últimos beats con beats.slice(...) y la franja del jurado.
+//   - Según haya sesión o no (user), cambia algún botón (renderizado condicional).
+// ============================================================================
 import JuryBand from '../components/layout/JuryBand'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'

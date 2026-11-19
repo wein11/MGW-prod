@@ -1,3 +1,23 @@
+// ============================================================================
+// PARA ESTUDIAR: PremiumPage.jsx (ruta "/premium", compra en 3 pasos)
+// ----------------------------------------------------------------------------
+// QUÉ ES: el flujo para pasar del plan Free al Premium: 1 Plan → 2 Pago → 3 Listo.
+//   Todo en la misma ruta; el paso actual es un useState `step` (1, 2 o 3).
+// CONTROL DE ACCESO (returns tempranos):
+//   - Sin sesión → mensaje "Entrá para pasar a Premium" con botón Entrar.
+//     Es un mensaje y no una redirección a Login para que "Salir" estando
+//     acá lleve al inicio (si redirigiera, al salir te mandaría a Login).
+//   - Discográfica → "Premium es solo para artistas" (igual que en el backend).
+// COMPONENTES HIJOS: Stepper (indicador de pasos), PlanStep, PaymentStep,
+//   DoneStep. Esta página decide cuál mostrar según `step`.
+// COMUNICACIÓN HIJO → PADRE: PaymentStep recibe onPaid por props. Cuando el
+//   pago sale bien, lo llama con la tarjeta enmascarada; handlePaid sube el
+//   plan (upgradeToPremium del Context), guarda "•••• 1111" y pasa al paso 3.
+// HEADERS: un objeto con el título de cada paso; el <h1> cambia con el paso.
+// PREGUNTA PROBABLE: "¿Dónde queda guardado el número de tarjeta?"
+//   → En ningún lado: vive en el estado de PaymentStep y se descarta al pasar
+//     al paso 3. Afuera solo sale "•••• 1111".
+// ============================================================================
 import { useState } from 'react'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'

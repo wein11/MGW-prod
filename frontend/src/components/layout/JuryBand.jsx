@@ -1,3 +1,14 @@
+// ============================================================================
+// PARA ESTUDIAR: JuryBand.jsx (cómo se reparte el voto de un desafío)
+// ----------------------------------------------------------------------------
+// QUÉ ES: la franja "Jurado: Comunidad 30% · Verificados 30% · Invitado 40%".
+//   Explica la regla de negocio central de los desafíos (criterio 1: la
+//   interfaz representa el negocio).
+// REUTILIZACIÓN: la usan la Landing y Desafíos. Cada una pasa su texto como
+//   children, así el componente es el mismo pero la nota cambia.
+// Los porcentajes vienen de JURY_WEIGHTS en mockData: si cambia la regla, se
+//   cambia en un solo lugar.
+// ============================================================================
 import { JURY_WEIGHTS } from '../../data/mockData'
 import './JuryBand.css'
 

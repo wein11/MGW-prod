@@ -1,3 +1,13 @@
+// ============================================================================
+// PARA ESTUDIAR: LiveBar.jsx (franja negra de arriba)
+// ----------------------------------------------------------------------------
+// QUÉ ES: muestra "En vivo · 2 desafíos abiertos · 8 beats publicados".
+// DATO DERIVADO: los números NO se guardan en un estado aparte; se calculan
+//   en cada render a partir de los datos. beats.length sale del Context, así
+//   que si publicás un beat, el número sube solo (React vuelve a dibujar).
+//   Regla de React: si un valor se puede calcular de otro, no hace falta useState.
+// El puntito rojo tiene aria-hidden porque es solo decoración.
+// ============================================================================
 import { useApp } from '../../context/AppContext'
 import { challenges } from '../../data/mockData'
 import './LiveBar.css'

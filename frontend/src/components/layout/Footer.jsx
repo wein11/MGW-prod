@@ -1,3 +1,13 @@
+// ============================================================================
+// PARA ESTUDIAR: Footer.jsx (pie de página)
+// ----------------------------------------------------------------------------
+// QUÉ ES: el pie que aparece en todas las páginas con menú (está en Layout).
+// SEMÁNTICA: <footer> y un <nav> con aria-label="Pie de página". Como hay dos
+//   <nav> en la página (el del Header y este), el aria-label los diferencia
+//   para el lector de pantalla.
+// CURRENT_YEAR está afuera del componente: se calcula una sola vez al cargar
+//   el archivo, no cada vez que React dibuja el Footer.
+// ============================================================================
 import { Link } from 'react-router-dom'
 import './Footer.css'
 

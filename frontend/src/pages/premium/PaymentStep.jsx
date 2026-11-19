@@ -1,3 +1,20 @@
+// ============================================================================
+// PARA ESTUDIAR: PaymentStep.jsx (paso 2: datos de la tarjeta)
+// ----------------------------------------------------------------------------
+// QUÉ ES: el formulario de pago simulado (nombre, número, vencimiento, CVV y
+//   aceptar la política).
+// FORMATO MIENTRAS SE ESCRIBE: formatCardNumber agrupa de a 4 dígitos y
+//   formatExpiry agrega la barra (MM/AA). setField(key, format) aplica el
+//   formato antes de guardar en el estado.
+// VALIDACIONES: Luhn (isValidCardNumber), vencimiento no vencido
+//   (isValidExpiry), CVV de 3 o 4 dígitos, privacidad aceptada.
+// AUTOCOMPLETE (cc-name, cc-number...): le dice al navegador qué dato es cada
+//   campo para ofrecer autocompletar la tarjeta guardada.
+// DATOS SENSIBLES: los datos viven SOLO en este componente. Al terminar se
+//   llama a onPaid(maskCard(numero)) → hacia afuera solo sale "•••• 1111".
+//   Al pasar al paso 3 este componente se desmonta y React borra su estado.
+// "Volver" (onBack) también descarta lo escrito.
+// ============================================================================
 import { useState } from 'react'
 import Alert from '../../components/ui/Alert'
 import Button from '../../components/ui/Button'

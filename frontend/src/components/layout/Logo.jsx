@@ -1,3 +1,11 @@
+// ============================================================================
+// PARA ESTUDIAR: Logo.jsx
+// ----------------------------------------------------------------------------
+// QUÉ ES: el logo "MGW PROD" hecho con texto (no es una imagen), que siempre
+//   lleva al inicio. Está en el Header y en Login/Registro.
+// ACCESIBILIDAD: aria-label="MGW Prod, ir al inicio" le da un nombre claro al
+//   link. Sin eso, el lector leería solo "MGW PROD" y no sabrías adónde va.
+// ============================================================================
 import { Link } from 'react-router-dom'
 import './Logo.css'
 

@@ -1,3 +1,22 @@
+// ============================================================================
+// PARA ESTUDIAR: ConfirmDelete.jsx (borrar en dos pasos)
+// ----------------------------------------------------------------------------
+// QUÉ ES: el botón "Borrar" que antes de borrar pregunta "¿Seguro?".
+//   Se usa en beats, comentarios y toplines.
+// CÓMO: un useState `confirming` (true/false).
+//   - false → se ve solo el botón "Borrar".
+//   - Al tocarlo pasa a true → se ve la pregunta con "Sí, borrar" y "Cancelar".
+//   - "Cancelar" lo vuelve a false; "Sí, borrar" llama a onConfirm, que es la
+//     función que le pasó la página (la que realmente borra el dato).
+//   Esto es renderizado condicional con un `if` antes del return.
+// autoFocus en Cancelar: al aparecer la pregunta, el foco queda en Cancelar.
+//   Si alguien aprieta Enter sin mirar, cancela en vez de borrar.
+// POR QUÉ NO window.confirm(): el cuadro del navegador no se puede diseñar,
+//   corta la página y no sigue el estilo de la app.
+// PREGUNTA PROBABLE: "¿Por qué onConfirm viene por props?"
+//   → Porque el componente no sabe QUÉ se borra. Cada página le pasa su función
+//     (borrar beat, borrar topline...). Así el mismo componente sirve para todo.
+// ============================================================================
 import { useState } from 'react'
 import Button from './Button'
 import './ConfirmDelete.css'

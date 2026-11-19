@@ -1,3 +1,18 @@
+// ============================================================================
+// PARA ESTUDIAR: ToplinesSection.jsx (toplines de un beat)
+// ----------------------------------------------------------------------------
+// QUÉ ES: un topline es la voz/melodía que un artista graba sobre un beat
+//   ajeno. Subirlo crea una propuesta de colaboración PENDIENTE.
+// PERMISOS SEGÚN QUIÉN MIRA:
+//   - Dueño del beat: Aceptar o Rechazar los pendientes.
+//   - Quien subió el topline: lo puede borrar (ConfirmDelete).
+//   - Otro artista (no dueño): ve el formulario para subir uno nuevo.
+// MENSAJES: useState `message` + <Alert kind="success">. Cada acción deja un
+//   texto ("Aceptaste el topline de Kira Beats.") que el lector de pantalla
+//   lee solo (role="status").
+// TODO VA AL CONTEXT (setToplines): por eso lo que aceptás acá aparece igual
+//   en la página Colaboraciones.
+// ============================================================================
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Alert from '../../components/ui/Alert'

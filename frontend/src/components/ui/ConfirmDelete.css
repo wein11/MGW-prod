@@ -1,3 +1,6 @@
+/* PARA ESTUDIAR: ConfirmDelete.css
+   Estilos de la pregunta "¿Seguro?" del borrado en dos pasos.
+*/
 .confirm-delete {
   padding: var(--space-3);
   background: var(--surface);

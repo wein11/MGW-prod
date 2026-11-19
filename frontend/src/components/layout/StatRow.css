@@ -1,3 +1,7 @@
+/* PARA ESTUDIAR: StatRow.css
+   Estilos de la fila de números grandes. Flexbox con wrap. Con CSS se pone
+   el número (dd) arriba de la etiqueta (dt) sin cambiar el orden del HTML.
+*/
 .stat-row {
   display: flex;
   flex-wrap: wrap;

@@ -1,3 +1,7 @@
+/* PARA ESTUDIAR: JuryBand.css
+   Estilos de la franja del jurado (30/30/40). Flexbox para los porcentajes y
+   una media query que los apila en pantallas chicas.
+*/
 /* Banda del jurado: franja a todo el ancho con los porcentajes del voto. */
 .jury {
   background: var(--surface);

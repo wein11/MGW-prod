@@ -1,3 +1,10 @@
+// ============================================================================
+// PARA ESTUDIAR: NotFoundPage.jsx (la 404)
+// ----------------------------------------------------------------------------
+// QUÉ ES: se muestra para cualquier URL que no existe (Route path="*" en App).
+// POR QUÉ: en una SPA, sin esto la pantalla quedaría en blanco. Con esto la
+//   persona entiende qué pasó y tiene un link para volver al inicio.
+// ============================================================================
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
 

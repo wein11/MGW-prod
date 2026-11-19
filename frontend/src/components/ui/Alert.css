@@ -1,3 +1,8 @@
+/* PARA ESTUDIAR: Alert.css
+   Estilos de los mensajes. Una clase por tipo (.alert-error, .alert-success,
+   .alert-info) con su color. El texto "Error"/"Listo" siempre se ve: no se
+   depende solo del color.
+*/
 .alert {
   display: flex;
   flex-wrap: wrap;

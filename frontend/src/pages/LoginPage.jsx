@@ -1,3 +1,24 @@
+// ============================================================================
+// PARA ESTUDIAR: LoginPage.jsx (ruta "/login")
+// ----------------------------------------------------------------------------
+// QUÉ ES: el inicio de sesión simulado. Compara con las cuentas del Context.
+// FLUJO DEL FORMULARIO (el mismo patrón que Registro, Contacto, etc.):
+//   1. Cada campo es controlado: useState(email), useState(password).
+//   2. handleSubmit recibe el evento y hace event.preventDefault() para que el
+//      navegador no recargue la página (comportamiento por defecto de <form>).
+//   3. validate() arma el objeto de errores (vacío, formato de email).
+//   4. Si hay errores: setErrors + focusFirstError y se corta ahí.
+//   5. Si no: sending=true (botón "Enviando…" y deshabilitado), await
+//      fakeRequest, y se llama a login(email, password) del Context.
+//   6. Si login devuelve false: Alert de error "El email o la contraseña no
+//      son correctos", se borra la contraseña y el foco va a ese campo.
+//   7. Si devuelve true: cambia `user` y el <Navigate to="/"> de arriba
+//      redirige al inicio.
+// <Navigate>: componente de React Router que redirige apenas se dibuja. Con
+//   `replace` reemplaza la entrada del historial ("Atrás" no vuelve al Login).
+// noValidate en <form>: apaga los globos de error del navegador para mostrar
+//   los nuestros, que son accesibles y tienen el estilo de la app.
+// ============================================================================
 import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import PageHeader from '../components/layout/PageHeader'

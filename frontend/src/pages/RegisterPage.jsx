@@ -1,3 +1,18 @@
+// ============================================================================
+// PARA ESTUDIAR: RegisterPage.jsx (ruta "/registro")
+// ----------------------------------------------------------------------------
+// QUÉ ES: el alta de cuenta simulada (artista o discográfica).
+// ESTADO: form (un objeto con name, email, password, city), role, accepted
+//   (checkbox de privacidad), errors y sending.
+//   setField(key) actualiza un solo campo del objeto: { ...form, [key]: value }.
+// VALIDACIONES: nombre y email obligatorios, email con formato, contraseña de
+//   8+ caracteres y aceptar la política. Mismo flujo que el Login.
+// EMAIL REPETIDO: register() del Context devuelve false si el email ya existe.
+//   En ese caso se muestra el error en el campo email y el foco va ahí.
+// TIPO DE CUENTA: dos radio buttons (ACCOUNT_TYPES) con aspecto de tarjeta.
+//   Al ser radios reales, se eligen con las flechas del teclado.
+// Al terminar, register() inicia sesión y el <Navigate> lleva al inicio.
+// ============================================================================
 import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import PageHeader from '../components/layout/PageHeader'

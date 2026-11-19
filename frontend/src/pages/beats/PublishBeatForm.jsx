@@ -1,3 +1,19 @@
+// ============================================================================
+// PARA ESTUDIAR: PublishBeatForm.jsx (formulario "Publicar beat")
+// ----------------------------------------------------------------------------
+// QUÉ ES: el formulario de arriba de la página Beats.
+// QUIÉN PUEDE PUBLICAR (returns tempranos):
+//   - Sin sesión → EmptyState con botón Entrar.
+//   - Discográfica → se explica que solo publican los artistas.
+//   - Artista → se muestra el formulario.
+// VALIDACIONES: título obligatorio, link https (isValidHttpsUrl), BPM entre 40
+//   y 220 (isValidBpm) y tonalidad obligatoria.
+// AL PUBLICAR: se crea un objeto beat nuevo con id = nextId(beats), fecha de
+//   hoy y el usuario como dueño, y se agrega con
+//   setBeats(current => [newBeat, ...current]) para que quede PRIMERO en la lista. Después se limpia el formulario y se
+//   muestra "Tu beat ya está publicado".
+// BPM_ERROR se exporta porque ManageBeat (editar) usa el mismo mensaje.
+// ============================================================================
 import { useState } from 'react'
 import coverDefault from '../../assets/covers/cover-1.svg'
 import Alert from '../../components/ui/Alert'

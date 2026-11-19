@@ -1,3 +1,12 @@
+// ============================================================================
+// PARA ESTUDIAR: PlanStep.jsx (paso 1: elegir plan)
+// ----------------------------------------------------------------------------
+// QUÉ ES: las dos tarjetas Free y Premium con precio y beneficios.
+// PROPS: currentPlan (para marcar "Tu plan actual") y onContinue (la función
+//   de la página que pasa al paso 2).
+// Los planes salen de mockData (plans): precio y límites en un solo lugar.
+// Si ya sos Premium no se ofrece el botón de compra (renderizado condicional).
+// ============================================================================
 import Button from '../../components/ui/Button'
 import { DEMO_PRODUCTIONS_USED, plans } from '../../data/mockData'
 import { formatPrice } from '../../utils/format'

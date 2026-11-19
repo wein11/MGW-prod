@@ -1,3 +1,17 @@
+// ============================================================================
+// PARA ESTUDIAR: ContactPage.jsx (ruta "/contacto")
+// ----------------------------------------------------------------------------
+// QUÉ ES: formulario de contacto simulado (no se envía a ningún lado).
+// ESTADOS DEL FORMULARIO (criterio 7: error, espera y éxito):
+//   - errors: mensajes por campo + resumen arriba.
+//   - sending: mientras "envía" el botón dice "Enviando…" y está deshabilitado
+//     (evita doble envío).
+//   - sent: cuando termina, el formulario se reemplaza por el Alert de éxito y
+//     un botón "Enviar otro" que vuelve todo a cero (sendAnother).
+// VALIDACIONES: nombre, email válido, mensaje de 10+ caracteres y aceptar la
+//   política de privacidad (PrivacyConsent).
+// El select de motivo usa REASONS (array de opciones).
+// ============================================================================
 import { useState } from 'react'
 import PageHeader from '../components/layout/PageHeader'
 import Alert from '../components/ui/Alert'

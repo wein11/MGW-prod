@@ -1,3 +1,7 @@
+/* PARA ESTUDIAR: Layout.css
+   Estilos del link "Saltar al contenido": está fuera de la pantalla y aparece
+   solo cuando recibe el foco con Tab (:focus).
+*/
 .skip-link {
   position: absolute;
   left: var(--space-3);

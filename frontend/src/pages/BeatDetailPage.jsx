@@ -1,3 +1,19 @@
+// ============================================================================
+// PARA ESTUDIAR: BeatDetailPage.jsx (detalle de un beat, ruta "/beats/:id")
+// ----------------------------------------------------------------------------
+// QUÉ ES: la página de UN beat: datos, link al audio, comentarios, toplines y,
+//   si sos el dueño, el bloque para editarlo o borrarlo.
+// useParams(): lee el :id de la URL. Devuelve TEXTO ("3"), por eso se pasa a
+//   Number antes de buscar el beat (beat.id es número).
+// SI NO EXISTE (/beats/999 o /beats/abc): muestra EmptyState "Beat no
+//   encontrado" con link a Beats (estado de error, criterio 7).
+// COMPOSICIÓN: la página no hace todo; reparte en componentes hijos:
+//   - ManageBeat (solo si isOwner)
+//   - CommentsSection (le pasa beatId por props)
+//   - ToplinesSection (le pasa beat e isOwner)
+//   Así cada archivo tiene una responsabilidad (criterio 8).
+// isOwner = hay sesión y el nombre del usuario es el dueño del beat.
+// ============================================================================
 import { useParams } from 'react-router-dom'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'

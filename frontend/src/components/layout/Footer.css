@@ -1,3 +1,7 @@
+/* PARA ESTUDIAR: Footer.css
+   Estilos del pie de página. Flexbox con wrap: en pantallas anchas el texto y
+   los links van en una fila; en las chicas bajan a otra línea solos.
+*/
 .site-footer {
   margin-top: var(--space-6);
   padding: var(--space-4) 0;

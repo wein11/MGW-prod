@@ -1,3 +1,12 @@
+// ============================================================================
+// PARA ESTUDIAR: PrivacyPage.jsx (ruta "/privacidad")
+// ----------------------------------------------------------------------------
+// QUÉ ES: la Política de privacidad. Es necesaria porque la app pide datos
+//   personales (email, contraseña) y simula un pago con tarjeta.
+// La enlazan el Footer, AuthLayout y la casilla de Registro, Contacto y Pago.
+// SEMÁNTICA: un <h1> y cada tema con su <h2>, así se puede recorrer por
+//   encabezados con el lector de pantalla.
+// ============================================================================
 import { Link } from 'react-router-dom'
 import PageHeader from '../components/layout/PageHeader'
 import './privacy/Privacy.css'

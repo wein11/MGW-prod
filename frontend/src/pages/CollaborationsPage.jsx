@@ -1,3 +1,20 @@
+// ============================================================================
+// PARA ESTUDIAR: CollaborationsPage.jsx (ruta "/colaboraciones")
+// ----------------------------------------------------------------------------
+// QUÉ ES: la bandeja de colaboraciones de un artista. Dos secciones:
+//   1. ProposalsSection: toplines que otros subieron a MIS beats (propuestas).
+//   2. MyToplinesSection: toplines que YO subí a beats de otros.
+// CONTROL DE ACCESO (con returns tempranos, en orden):
+//   - Sin sesión → EmptyState "Tenés que iniciar sesión" + botón Entrar.
+//   - Discográfica (LABEL) → "Las colaboraciones son solo para artistas".
+//   - Artista → se calculan los datos y se muestran las dos secciones.
+// DATOS DERIVADOS con .filter(): myBeats, received, pending, myToplines.
+//   Se calculan de lo que hay en el Context; no hay estados duplicados.
+// Los números del encabezado (recibidas, pendientes, subidos) se actualizan
+//   solos al aceptar o borrar, porque salen de esos cálculos.
+// REGLA DE NEGOCIO: un topline sobre un beat = una propuesta de colaboración
+//   (estados PENDING → ACCEPTED o REJECTED), igual que en el backend (collab).
+// ============================================================================
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'

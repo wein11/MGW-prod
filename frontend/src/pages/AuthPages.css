@@ -1,3 +1,8 @@
+/* PARA ESTUDIAR: AuthPages.css
+   Estilos de Login y Registro: formulario en columna angosta y las tarjetas
+   de tipo de cuenta (son radios con aspecto de tarjeta). CSS Grid para las
+   tarjetas y una media query para pantallas chicas.
+*/
 /* Login y Registro: viven dentro de AuthLayout (columna angosta, sin menú).
    El PageHeader trae su propio contenedor y padding: acá se anulan para que
    el título quede alineado con el formulario, y se achica el h1 para que

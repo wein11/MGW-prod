@@ -1,3 +1,12 @@
+// ============================================================================
+// PARA ESTUDIAR: AboutPage.jsx (Nosotros, ruta "/nosotros")
+// ----------------------------------------------------------------------------
+// QUÉ ES: qué es MGW Prod y quiénes lo hacemos. TEAM es un array con los
+//   cuatro integrantes y el módulo del backend de cada uno; se dibuja con .map().
+// CRITERIO 1: refuerza la propuesta del negocio.
+// IMAGEN: se importa el SVG (import studioImage from '...svg') y Vite le da
+//   la ruta final. Tiene texto alternativo (alt) porque aporta contenido.
+// ============================================================================
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
 import studioImage from '../assets/about/studio.svg'
