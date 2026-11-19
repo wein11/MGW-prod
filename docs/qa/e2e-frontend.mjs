@@ -179,10 +179,10 @@ await t('Global', 'Login y Registro tienen link a la Política de privacidad (pl
   assert(await page.getByRole('link', { name: /privacidad/i }).count() > 0, 'Login no tiene link a Privacidad')
 })
 
-await t('Global', 'F5 conserva la sesión; ruta rara da 404 con link al inicio', async page => {
+await t('Global', 'F5 cierra la sesión (todo vive en memoria); ruta rara da 404 con link al inicio', async page => {
   await login(page, NOVA)
-  await page.goto(BASE + '/beats/1'); await page.reload()
-  assert(await page.getByRole('button', { name: 'Salir' }).isVisible(), 'perdió la sesión')
+  await page.reload()
+  await page.getByRole('link', { name: 'Entrar' }).first().waitFor()
   await page.goto(BASE + '/cualquier/cosa')
   await page.getByRole('heading', { level: 1, name: 'Página no encontrada' }).waitFor()
   await page.locator('main').getByRole('link', { name: 'Ir al inicio' }).click(); await page.waitForURL(BASE + '/')
@@ -196,7 +196,7 @@ await t('Global', 'Vuelve arriba al cambiar de página', async page => {
   eq(await page.evaluate(() => window.scrollY), 0, 'scrollY')
 })
 
-await t('Global', 'Salir cierra la sesión y borra sessionStorage', async page => {
+await t('Global', 'Salir cierra la sesión y no deja nada guardado en el navegador', async page => {
   await login(page, NOVA)
   await logout(page)
   await page.getByRole('link', { name: 'Entrar' }).first().waitFor()
@@ -405,12 +405,13 @@ await t('Detalle', 'Borrar en dos pasos: foco en Cancelar, cancela, confirma y l
 await t('Detalle', 'Aceptar/Rechazar del dueño se refleja en Colaboraciones', async page => {
   await login(page, NOVA); await openBeat(page, 'Noche en Palermo')
   await page.getByRole('button', { name: /Aceptar topline de Kira Beats/ }).click()
-  const row = page.locator('#topline-1')
-  assert((await row.textContent()).includes('Aceptada'), 'badge'); eq(await focusId(page), 'topline-1', 'foco en fila')
+  const row = page.locator('.topline-row', { hasText: 'Kira Beats' })
+  assert((await row.textContent()).includes('Aceptada'), 'badge')
+  await page.getByText('Aceptaste el topline de Kira Beats.').waitFor()
   eq(await row.getByRole('button', { name: /Rechazar/ }).count(), 0, 'botones siguen')
   eq(await page.locator('#topline-url').count(), 0, 'dueño puede subir a su beat')
   await nav(page, 'Colaboraciones')
-  assert((await page.locator('#proposal-1').textContent()).includes('Aceptada'), 'en colaboraciones')
+  assert((await proposal(page, 'Noche en Palermo', 'Kira Beats').textContent()).includes('Aceptada'), 'en colaboraciones')
 })
 await t('Detalle', 'Otro artista: sin gestionar, sube topline (validación), lo borra, y al dueño le llega', async page => {
   await login(page, KIRA); await openBeat(page, 'Tarde de Domingo')
@@ -425,6 +426,10 @@ await t('Detalle', 'Otro artista: sin gestionar, sube topline (validación), lo 
 })
 
 /* ---------- COLABORACIONES ---------- */
+// Una propuesta se busca por el beat al que pertenece y por el artista que la mandó.
+function proposal(page, beat, artist) {
+  return page.locator('.collab-group', { hasText: beat }).locator('.topline-row', { hasText: artist })
+}
 await t('Colaboraciones', 'Visitante y discográfica ven su aviso', async page => {
   await page.goto(BASE + '/colaboraciones')
   await page.getByText('Tenés que iniciar sesión para ver tus colaboraciones.').waitFor()
@@ -437,56 +442,63 @@ await t('Colaboraciones', 'Stats, agrupado por beat y filtro de estado', async p
   const txt = await page.locator('.page-header').textContent()
   assert(/Propuestas recibidas\s*4/i.test(txt) && /Pendientes\s*1/i.test(txt) && /Toplines subidos\s*2/i.test(txt), 'stats: ' + txt)
   eq(await page.locator('.collab-group').count(), 2, 'grupos')
-  const n = () => page.locator('[id^=proposal-]').count()
+  const n = () => page.locator('.collab-group .topline-row').count()
   eq(await n(), 4, 'todas')
   await page.locator('#status-filter').selectOption('PENDING'); eq(await n(), 1, 'pend')
   await page.locator('#status-filter').selectOption('ACCEPTED'); eq(await n(), 1, 'acep')
   await page.locator('#status-filter').selectOption('REJECTED'); eq(await n(), 2, 'rech')
 })
-await t('Colaboraciones', 'Aceptar, rechazar, quitar y borrar en dos pasos actualizan stats y foco', async page => {
+await t('Colaboraciones', 'Aceptar, quitar y borrar en dos pasos actualizan stats y muestran mensaje', async page => {
   await login(page, NOVA); await nav(page, 'Colaboraciones')
-  await page.locator('#proposal-1').getByRole('button', { name: /Aceptar/ }).click()
-  assert((await page.locator('#proposal-1').textContent()).includes('Aceptada'), 'aceptar')
-  eq(await focusId(page), 'proposal-1', 'foco fila')
+  const kira = proposal(page, 'Noche en Palermo', 'Kira Beats')
+  await kira.getByRole('button', { name: /Aceptar/ }).click()
+  assert((await kira.textContent()).includes('Aceptada'), 'aceptar')
+  await page.getByText('Aceptaste la propuesta de Kira Beats.').waitFor()
   assert(/Pendientes\s*0/i.test(await page.locator('.page-header').textContent()), 'stat pendientes')
-  await page.locator('#proposal-3').getByRole('button', { name: /Quitar propuesta/ }).click()
-  eq(await page.locator('#proposal-3').count(), 0, 'quitar'); eq(await focusId(page), 'proposal-3' === 0 ? '' : 'proposals-title', 'foco título')
-  await page.locator('#proposal-2').getByRole('button', { name: 'Borrar topline' }).click()
+  const luna = proposal(page, 'Noche en Palermo', 'Luna Sur')
+  await luna.getByRole('button', { name: /Quitar propuesta/ }).click()
+  eq(await luna.count(), 0, 'quitar')
+  await page.getByText('Quitaste la propuesta de Luna Sur.').waitFor()
+  const tomi = proposal(page, 'Noche en Palermo', 'Tomi Loop')
+  await tomi.getByRole('button', { name: 'Borrar topline' }).click()
   eq(await page.evaluate(() => document.activeElement.textContent), 'Cancelar', 'foco cancelar')
-  await page.locator('#proposal-2').getByRole('button', { name: 'Sí, borrar' }).click()
-  eq(await page.locator('#proposal-2').count(), 0, 'borrar')
+  await tomi.getByRole('button', { name: 'Sí, borrar' }).click()
+  eq(await tomi.count(), 0, 'borrar')
   assert(/Propuestas recibidas\s*2/i.test(await page.locator('.page-header').textContent()), 'stat recibidas')
 })
-await t('Colaboraciones', 'Filtro en Pendiente: al aceptar la última aparece estado vacío y foco en título', async page => {
+await t('Colaboraciones', 'Filtro en Pendiente: al aceptar la última aparece estado vacío', async page => {
   await login(page, NOVA); await nav(page, 'Colaboraciones')
   await page.locator('#status-filter').selectOption('PENDING')
-  await page.locator('#proposal-1').getByRole('button', { name: /Aceptar/ }).click()
+  await proposal(page, 'Noche en Palermo', 'Kira Beats').getByRole('button', { name: /Aceptar/ }).click()
   await page.getByText('No hay propuestas con ese estado').waitFor()
-  eq(await focusId(page), 'proposals-title', 'foco')
 })
+// "Editar link" del topline que DJ Nova subió sobre Cumbia Lunar.
+function editCumbiaLunar(page) {
+  return page.locator('.my-topline', { hasText: 'Cumbia Lunar' }).getByRole('button', { name: /Editar link/ })
+}
 await t('Colaboraciones', 'Mis toplines: editar con validación, cancelar, guardar y borrar', async page => {
   await login(page, NOVA); await nav(page, 'Colaboraciones')
-  await page.locator('#edit-5').click()
+  await editCumbiaLunar(page).click()
   eq(await page.locator('#topline-url').inputValue(), 'https://soundcloud.com/kira/cumbia-lunar-v2', 'valor')
   await page.locator('#topline-url').fill('http://a.b'); await page.getByRole('button', { name: 'Guardar' }).click()
   eq(await focusId(page), 'topline-url', 'foco error')
   await page.locator('.inline-edit').getByRole('button', { name: 'Cancelar' }).click()
-  eq(await focusId(page), 'edit-5', 'foco tras cancelar')
-  await page.locator('#edit-5').click()
+  eq(await page.locator('#topline-url').count(), 0, 'cancelar cierra el formulario')
+  await editCumbiaLunar(page).click()
   await page.locator('#topline-url').fill('https://soundcloud.com/nuevo/link'); await page.getByRole('button', { name: 'Guardar' }).click()
-  await page.getByText('Listo: el link se actualizó.').waitFor()
+  await page.getByText('El link se actualizó.').waitFor()
   await page.locator('.my-topline').first().getByRole('button', { name: 'Borrar topline' }).click()
   await page.locator('.my-topline').first().getByRole('button', { name: 'Sí, borrar' }).click()
   eq(await page.locator('.my-topline').count(), 1, 'borrado')
-  eq(await focusId(page), 'my-toplines-title', 'foco título')
+  await page.getByText(/Borraste tu topline para/).waitFor()
 })
 await t('Colaboraciones', 'El link editado se ve en el detalle del beat', async page => {
   await login(page, NOVA); await nav(page, 'Colaboraciones')
-  await page.locator('#edit-5').click()
+  await editCumbiaLunar(page).click()
   await page.locator('#topline-url').fill('https://soundcloud.com/nuevo/link'); await page.getByRole('button', { name: 'Guardar' }).click()
-  await page.getByText('Listo: el link se actualizó.').waitFor()
+  await page.getByText('El link se actualizó.').waitFor()
   await openBeat(page, 'Cumbia Lunar')
-  eq(await page.locator('#topline-5 a').first().getAttribute('href'), 'https://soundcloud.com/nuevo/link', 'href')
+  eq(await page.locator('.topline-row', { hasText: 'DJ Nova' }).locator('a').first().getAttribute('href'), 'https://soundcloud.com/nuevo/link', 'href')
 })
 
 /* ---------- DESAFIOS ---------- */
@@ -621,8 +633,10 @@ async function fillCard(page, n = '4111 1111 1111 1111', exp = '1028', cvv = '12
   await page.locator('#cardName').fill('Dj Nova'); await page.locator('#cardNumber').fill(n)
   await page.locator('#cardExpiry').fill(exp); await page.locator('#cardCvv').fill(cvv)
 }
-await t('Premium', 'Sin sesión manda a Login', async page => {
-  await page.goto(BASE + '/premium'); await page.waitForURL(BASE + '/login')
+await t('Premium', 'Sin sesión avisa y ofrece entrar', async page => {
+  await page.goto(BASE + '/premium')
+  await page.getByText('Entrá para pasar a Premium.').waitFor()
+  await page.locator('main').getByRole('link', { name: 'Entrar' }).click(); await page.waitForURL(BASE + '/login')
 })
 await t('Premium', 'Paso 1: precios, stepper con aria-current', async page => {
   await login(page, NOVA); await nav(page, 'Premium')
@@ -654,7 +668,7 @@ await t('Premium', 'Volver descarta los datos de tarjeta', async page => {
   await page.getByRole('button', { name: 'Continuar con Premium' }).click()
   eq(await page.locator('#cardNumber').inputValue(), '', 'número sigue')
 })
-await t('Premium', 'Pago OK: espera, •••• 1111, sin datos en storage/DOM/consola, plan queda tras F5', async page => {
+await t('Premium', 'Pago OK: espera, •••• 1111, sin datos en storage/DOM/consola, plan queda al cambiar de página', async page => {
   const logs = []
   page.on('console', m => logs.push(m.text()))
   await login(page, NOVA); await toPayment(page); await fillCard(page)
@@ -668,7 +682,7 @@ await t('Premium', 'Pago OK: espera, •••• 1111, sin datos en storage/DOM
   const st = await page.evaluate(() => JSON.stringify({ ...sessionStorage }) + JSON.stringify({ ...localStorage }) + document.cookie)
   assert(!/4111|123"|@/.test(st), 'storage: ' + st)
   assert(!logs.join().includes('4111'), 'consola')
-  await page.reload()
+  await nav(page, 'Inicio'); await nav(page, 'Premium')
   await page.getByText('Tu plan actual').waitFor()
   eq(await page.getByRole('button', { name: 'Continuar con Premium' }).count(), 0, 'sigue ofreciendo')
   await page.getByRole('link', { name: 'Publicar un beat' }).count()
@@ -691,13 +705,12 @@ await t('Premium', 'Salir estando en /premium lleva al inicio (como en el resto 
   eq(new URL(page.url()).pathname, '/', 'ruta tras Salir')
 })
 
-await t('Premium', 'Premium sobrevive a F5 + salir + entrar; otro usuario sigue en Free', async page => {
+await t('Premium', 'Premium sobrevive a salir + entrar; otro usuario sigue en Free', async page => {
   await login(page, NOVA); await toPayment(page); await fillCard(page); await page.locator('#privacy').check()
   await page.getByRole('button', { name: /^Pagar/ }).click()
   await page.getByRole('heading', { level: 1, name: 'Bienvenido a Premium' }).waitFor()
-  await page.reload(); await page.getByText('Tu plan actual').waitFor()
   await nav(page, 'Inicio'); await logout(page); await page.waitForTimeout(100); await loginSpa(page, NOVA); await nav(page, 'Premium')
-  eq(await page.getByRole('button', { name: 'Continuar con Premium' }).count(), 0, 'perdió Premium tras F5')
+  eq(await page.getByRole('button', { name: 'Continuar con Premium' }).count(), 0, 'perdió Premium al volver a entrar')
   await nav(page, 'Inicio'); await logout(page); await page.waitForTimeout(100); await loginSpa(page, KIRA); await nav(page, 'Premium')
   eq(await page.getByRole('button', { name: 'Continuar con Premium' }).count(), 1, 'Kira no debería ser Premium')
 })
@@ -725,9 +738,10 @@ await t('Login', 'Vacío, email inválido, credenciales mal y bien; con sesión 
   await page.locator('#email').fill(' ARTISTA@mgw.com '); await page.locator('#password').fill(PASS); await go.click()
   await page.waitForURL(BASE + '/')
   assert((await body(page)).includes('DJ Nova'), 'nombre')
-  const st = await page.evaluate(() => sessionStorage.getItem('mgw-session'))
-  assert(!/@|password|mgw12345/.test(st), 'sensible en sesión: ' + st)
-  await page.goto(BASE + '/login'); await page.waitForURL(BASE + '/')
+  eq(await page.evaluate(() => sessionStorage.length + localStorage.length), 0, 'la sesión se guardó en el navegador')
+  // Con sesión, ir a /login sin recargar (como un link interno) devuelve al inicio.
+  await page.evaluate(() => { history.pushState({}, '', '/login'); dispatchEvent(new PopStateEvent('popstate')) })
+  await page.waitForURL(BASE + '/')
 })
 await t('Login', 'Links: Registrate, logo al inicio', async page => {
   await page.goto(BASE + '/login')
@@ -752,7 +766,6 @@ await t('Registro', 'Discográfica: se elige con teclado y queda como LABEL', as
   await page.locator('#name').fill('Sello QA'); await page.locator('#email').fill('s@t.co'); await page.locator('#password').fill('12345678'); await page.locator('#privacy').check()
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await page.waitForURL(BASE + '/')
-  assert((await page.evaluate(() => sessionStorage.getItem('mgw-session'))).includes('LABEL'), 'rol')
   await nav(page, 'Colaboraciones'); await page.getByText('Las colaboraciones son solo para artistas.').waitFor()
 })
 await t('Registro', 'Después de registrarme, salir y volver a entrar con esa cuenta funciona', async page => {
@@ -782,7 +795,7 @@ await t('Registro', 'La cuenta nueva conserva su rol y plan al volver a entrar',
   await page.getByRole('button', { name: 'Crear cuenta' }).click(); await page.waitForURL(BASE + '/')
   await logout(page); await page.getByRole('link', { name: 'Entrar' }).first().click()
   await page.locator('#email').fill('sello@t.co'); await page.locator('#password').fill('12345678'); await page.getByRole('button', { name: 'Entrar' }).click(); await page.waitForURL(BASE + '/')
-  assert((await page.evaluate(() => sessionStorage.getItem('mgw-session'))).includes('LABEL'), 'rol')
+  await nav(page, 'Colaboraciones'); await page.getByText('Las colaboraciones son solo para artistas.').waitFor()
 })
 await t('Registro', 'El link de Política de privacidad abre sin perder lo escrito', async (page, ctx) => {
   await page.goto(BASE + '/registro')

@@ -45,7 +45,8 @@ Las pruebas nuevas cubren cada corrección, para que el problema no vuelva sin q
 
 ## Comportamiento simulado (no son errores)
 
-- F5 borra lo creado durante la visita: beats, comentarios, toplines, votos, cuentas nuevas y el plan de usuarios sin sesión abierta. La sesión abierta sí se mantiene. **No recargar en medio de la demo.**
+- F5 borra lo creado durante la visita: beats, comentarios, toplines, votos, cuentas nuevas y planes Premium. También cierra la sesión, porque desde la simplificación del 18/11 nada se guarda en el navegador. **No recargar en medio de la demo.**
+- Actualización 19/11: la suite se adaptó a la versión simplificada (sin `sessionStorage` y sin manejo de foco con `useRef`): las pruebas de foco ahora revisan el mensaje de confirmación. Resultado: 116 pruebas OK, 0 fallan.
 - El front no se conecta al backend, como permite la rúbrica. Por eso el precio simulado de $15.000 / mes no coincide con los 15 USD de pago único de `SubscriptionService`.
 - El link "Escuchar" lleva a URLs de ejemplo de SoundCloud, que pueden no existir.
 
